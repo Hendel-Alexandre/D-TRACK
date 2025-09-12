@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from '@/hooks/use-toast'
 
-// Declare global grecaptcha
+// reCAPTCHA configuration
+const RECAPTCHA_SITE_KEY = '6LfYourRealSiteKeyHere' // Replace with your actual site key
 declare global {
   interface Window {
     grecaptcha: {
@@ -50,7 +51,7 @@ export default function Signup() {
     const initRecaptcha = () => {
       if (window.grecaptcha && captchaRef.current) {
         const widgetId = window.grecaptcha.render(captchaRef.current, {
-          sitekey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // Test site key
+          sitekey: RECAPTCHA_SITE_KEY,
           theme: 'light'
         })
         setCaptchaWidgetId(widgetId)
