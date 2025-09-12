@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Clock, CheckSquare, FileText, BarChart3, Users, FolderOpen } from 'lucide-react'
+import { Clock, CheckSquare, FileText, BarChart3, Users, FolderOpen, Circle } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/AuthContext'
@@ -88,7 +88,20 @@ const stats = [
 
 export default function Dashboard() {
   const { t } = useTranslation()
-  const { userProfile } = useAuth()
+  const { userProfile, updateUserStatus } = useAuth()
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Available': return 'text-green-500'
+      case 'Away': return 'text-yellow-500'  
+      case 'Busy': return 'text-red-500'
+      default: return 'text-gray-500'
+    }
+  }
+
+  const handleStatusChange = async (status: 'Available' | 'Away' | 'Busy') => {
+    await updateUserStatus(status)
+  }
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -102,9 +115,41 @@ export default function Dashboard() {
         <motion.div variants={itemVariants} className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
-                Welcome back, {userProfile?.first_name || 'User'}!
-              </h1>
+              <div className="flex items-center gap-4 mb-2">
+                <h1 className="text-3xl font-bold text-foreground">
+                  Welcome back, {userProfile?.first_name || 'User'}!
+                </h1>
+                <div className="flex items-center gap-2">
+                  <Circle className={`h-3 w-3 fill-current ${getStatusColor(userProfile?.status || 'Available')}`} />
+                  <span className="text-sm text-muted-foreground">{userProfile?.status || 'Available'}</span>
+                  <div className="flex gap-1 ml-2">
+                    <Button
+                      size="sm"
+                      variant={userProfile?.status === 'Available' ? 'default' : 'outline'}
+                      className="h-6 px-2 text-xs"
+                      onClick={() => handleStatusChange('Available')}
+                    >
+                      Available
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={userProfile?.status === 'Away' ? 'default' : 'outline'}
+                      className="h-6 px-2 text-xs"
+                      onClick={() => handleStatusChange('Away')}
+                    >
+                      Away
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={userProfile?.status === 'Busy' ? 'default' : 'outline'}
+                      className="h-6 px-2 text-xs"
+                      onClick={() => handleStatusChange('Busy')}
+                    >
+                      Busy
+                    </Button>
+                  </div>
+                </div>
+              </div>
               <p className="text-lg text-muted-foreground">
                 {t('dashboard')} - {new Date().toLocaleDateString('en-US', { 
                   weekday: 'long', 
