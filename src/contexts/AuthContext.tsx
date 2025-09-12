@@ -48,15 +48,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('users')
         .select('*')
         .eq('id', userId)
-        .single()
+        .maybeSingle()
 
       if (error) {
         console.error('Error fetching user profile:', error)
+        setUserProfile(null)
       } else {
         setUserProfile(data)
       }
     } catch (error) {
       console.error('Error fetching user profile:', error)
+      setUserProfile(null)
     } finally {
       setLoading(false)
     }
