@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Search, FolderOpen, Calendar, Users, MoreHorizontal } from 'lucide-react'
+import { Plus, Search, FolderOpen, Calendar, Users, MoreHorizontal, Edit, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -29,6 +31,8 @@ export default function Projects() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [newProject, setNewProject] = useState({
     name: '',
     description: '',
@@ -99,6 +103,74 @@ export default function Projects() {
         variant: 'destructive'
       })
     }
+  }
+
+  const updateProject = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user || !editingProject) return
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({
+          name: editingProject.name,
+          description: editingProject.description || null,
+          status: editingProject.status,
+          start_date: editingProject.start_date || null,
+          end_date: editingProject.end_date || null
+        })
+        .eq('id', editingProject.id)
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      toast({
+        title: 'Success',
+        description: 'Project updated successfully'
+      })
+
+      setIsEditDialogOpen(false)
+      setEditingProject(null)
+      fetchProjects()
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive'
+      })
+    }
+  }
+
+  const deleteProject = async (projectId: string) => {
+    if (!user) return
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId)
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      toast({
+        title: 'Success',
+        description: 'Project deleted successfully'
+      })
+
+      fetchProjects()
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive'
+      })
+    }
+  }
+
+  const handleEditProject = (project: Project) => {
+    setEditingProject(project)
+    setIsEditDialogOpen(true)
   }
 
   useEffect(() => {
@@ -212,6 +284,84 @@ export default function Projects() {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Edit Project Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Project</DialogTitle>
+            </DialogHeader>
+            {editingProject && (
+              <form onSubmit={updateProject} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Project Name</Label>
+                  <Input
+                    id="edit-name"
+                    value={editingProject.name}
+                    onChange={(e) => setEditingProject({ ...editingProject, name: e.target.value })}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="edit-description">Description</Label>
+                  <Textarea
+                    id="edit-description"
+                    value={editingProject.description || ''}
+                    onChange={(e) => setEditingProject({ ...editingProject, description: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-status">Status</Label>
+                    <Select value={editingProject.status} onValueChange={(value) => setEditingProject({ ...editingProject, status: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="On Hold">On Hold</SelectItem>
+                        <SelectItem value="Completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-start-date">Start Date</Label>
+                    <Input
+                      id="edit-start-date"
+                      type="date"
+                      value={editingProject.start_date || ''}
+                      onChange={(e) => setEditingProject({ ...editingProject, start_date: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-end-date">End Date</Label>
+                  <Input
+                    id="edit-end-date"
+                    type="date"
+                    value={editingProject.end_date || ''}
+                    onChange={(e) => setEditingProject({ ...editingProject, end_date: e.target.value })}
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => {
+                    setIsEditDialogOpen(false)
+                    setEditingProject(null)
+                  }}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Update Project</Button>
+                </div>
+              </form>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="flex items-center space-x-4">
@@ -243,9 +393,42 @@ export default function Projects() {
                     {project.name}
                   </CardTitle>
                 </div>
-                <Button variant="ghost" size="sm">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleEditProject(project)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Project
+                    </DropdownMenuItem>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Project
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the project
+                            "{project.name}" and all associated data.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deleteProject(project.id)}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
