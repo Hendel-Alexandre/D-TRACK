@@ -231,6 +231,20 @@ export default function Timesheets() {
     e.preventDefault()
     if (!user) return
 
+    // Frontend validation: Check if date is in the future
+    const selectedDate = new Date(newAdjustment.date)
+    const today = new Date()
+    today.setHours(23, 59, 59, 999) // Set to end of today for comparison
+    
+    if (selectedDate > today) {
+      toast({
+        title: 'Error',
+        description: 'You cannot adjust hours for future dates.',
+        variant: 'destructive'
+      })
+      return
+    }
+
     try {
       const { error } = await supabase
         .from('hour_adjustments')
@@ -377,6 +391,7 @@ export default function Timesheets() {
                         mode="single"
                         selected={newAdjustment.date}
                         onSelect={(date) => setNewAdjustment({ ...newAdjustment, date: date || new Date() })}
+                        disabled={(date) => date > new Date()}
                         initialFocus
                         className="p-3 pointer-events-auto"
                       />
