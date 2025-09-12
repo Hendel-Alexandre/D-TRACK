@@ -49,6 +49,8 @@ const GAMES = [
     name: 'Tic Tac Toe',
     description: 'Classic 3x3 grid strategy game',
     icon: '🎯',
+    gradient: 'from-blue-500 to-purple-600',
+    color: 'text-blue-600',
     component: TicTacToe
   },
   {
@@ -56,6 +58,8 @@ const GAMES = [
     name: 'Rock Paper Scissors',
     description: 'The timeless hand game',
     icon: '✂️',
+    gradient: 'from-green-500 to-teal-600',
+    color: 'text-green-600',
     component: RockPaperScissors
   },
   {
@@ -63,6 +67,8 @@ const GAMES = [
     name: 'Hangman',
     description: 'Guess the word letter by letter',
     icon: '🔤',
+    gradient: 'from-orange-500 to-red-600',
+    color: 'text-orange-600',
     component: Hangman
   }
 ]
@@ -197,6 +203,7 @@ export default function Games() {
         })
 
       setCurrentRoom(room)
+      setSelectedGame(gameName)
       setGameMode('multiplayer')
       
       toast({
@@ -326,100 +333,136 @@ export default function Games() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-foreground mb-2">Games Center</h1>
-        <p className="text-muted-foreground">Play solo or challenge your team!</p>
+    <div className="container mx-auto p-6 space-y-8">
+      {/* Header with animated background */}
+      <div className="text-center relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-3xl blur-3xl animate-pulse"></div>
+        <div className="relative z-10 py-8">
+          <h1 className="text-5xl font-bold text-foreground mb-4 flex items-center justify-center gap-4">
+            <span className="animate-bounce">🎮</span>
+            Games Center
+            <span className="animate-bounce delay-75">🏆</span>
+          </h1>
+          <p className="text-xl text-muted-foreground">Play solo or challenge your team!</p>
+        </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions with fun styling */}
       <div className="flex justify-center gap-4">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <Users className="h-4 w-4" />
-              Join Room
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Join Game Room</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <Input
-                placeholder="Enter room code"
-                value={roomCode}
-                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                maxLength={6}
-              />
-              <Button 
-                onClick={() => joinRoom(roomCode)} 
-                disabled={roomCode.length !== 6}
-                className="w-full"
-              >
-                Join Room
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200 dark:border-blue-800 hover:shadow-lg transition-all duration-300 hover:scale-105">
+          <CardContent className="p-4">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="gap-2 bg-white/50 dark:bg-black/20 hover:bg-white dark:hover:bg-black/40 border-2 border-blue-300 dark:border-blue-700">
+                  <Users className="h-4 w-4" />
+                  🚪 Join Room
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Gamepad2 className="h-5 w-5" />
+                    Join Game Room
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <Input
+                    placeholder="Enter room code (e.g. ABC123)"
+                    value={roomCode}
+                    onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                    maxLength={6}
+                    className="text-center text-lg font-mono"
+                  />
+                  <Button 
+                    onClick={() => joinRoom(roomCode)} 
+                    disabled={roomCode.length !== 6}
+                    className="w-full gap-2"
+                  >
+                    <Users className="h-4 w-4" />
+                    Join Room
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Games Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Games Grid with enhanced styling */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {GAMES.map((game) => (
-          <Card key={game.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{game.icon}</span>
-                <div>
-                  <CardTitle className="text-xl">{game.name}</CardTitle>
-                  <CardDescription>{game.description}</CardDescription>
+          <Card key={game.id} className="group hover:shadow-2xl transition-all duration-500 hover:scale-105 relative overflow-hidden bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-2 hover:border-primary/50">
+            {/* Animated background gradient */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${game.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
+            
+            <CardHeader className="relative z-10">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className={`absolute inset-0 bg-gradient-to-r ${game.gradient} rounded-full blur opacity-50 group-hover:opacity-75 transition-opacity`}></div>
+                  <div className="relative text-4xl bg-white dark:bg-gray-800 rounded-full w-16 h-16 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    {game.icon}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <CardTitle className={`text-2xl group-hover:${game.color} transition-colors duration-300`}>
+                    {game.name}
+                  </CardTitle>
+                  <CardDescription className="text-base mt-1">{game.description}</CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Leaderboard Preview */}
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Trophy className="h-4 w-4" />
-                  Top Scores
+            <CardContent className="space-y-6 relative z-10">
+              {/* Leaderboard Preview with enhanced styling */}
+              <div className="space-y-3">
+                <h4 className="font-bold flex items-center gap-2 text-lg">
+                  <Trophy className="h-5 w-5 text-yellow-500 animate-pulse" />
+                  🏆 Top Champions
                 </h4>
                 {leaderboard[game.id]?.length > 0 ? (
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {leaderboard[game.id].slice(0, 3).map((entry, index) => (
-                      <div key={entry.id} className="flex items-center justify-between text-sm">
-                        <span className="flex items-center gap-2">
-                          {entry.isGoat && <Crown className="h-3 w-3 text-yellow-500" />}
+                      <div key={entry.id} className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                        index === 0 ? 'bg-gradient-to-r from-yellow-100 to-yellow-50 dark:from-yellow-900/20 dark:to-yellow-800/20 border border-yellow-300 dark:border-yellow-700' :
+                        index === 1 ? 'bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800/50 dark:to-gray-700/50' :
+                        'bg-gradient-to-r from-orange-100 to-orange-50 dark:from-orange-900/20 dark:to-orange-800/20'
+                      }`}>
+                        <span className="flex items-center gap-2 font-medium">
+                          {entry.isGoat && <Crown className="h-4 w-4 text-yellow-500 animate-bounce" />}
+                          {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
                           {entry.user.first_name} {entry.user.last_name}
                           {entry.isGoat && (
-                            <Badge variant="secondary" className="text-xs">
-                              CURRENT GOAT
+                            <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 animate-pulse">
+                              ⚡ GOAT
                             </Badge>
                           )}
                         </span>
-                        <span className="font-medium">{entry.score}</span>
+                        <span className="font-bold text-lg">{entry.score}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No scores yet</p>
+                  <div className="text-center p-4 bg-muted/30 rounded-lg">
+                    <p className="text-sm text-muted-foreground">🎯 Be the first to score!</p>
+                  </div>
                 )}
               </div>
 
-              {/* Game Actions */}
-              <div className="space-y-2">
-                <div className="flex gap-2">
+              {/* Game Actions with enhanced styling */}
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="flex-1 gap-2">
-                        <Bot className="h-4 w-4" />
-                        Solo
+                      <Button variant="outline" size="sm" className="w-full gap-2 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 hover:from-green-100 hover:to-blue-100 dark:hover:from-green-900/30 dark:hover:to-blue-900/30 border-green-300 dark:border-green-700 group">
+                        <Bot className="h-4 w-4 group-hover:animate-spin" />
+                        🤖 Solo
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Solo Game - {game.name}</DialogTitle>
+                        <DialogTitle className="flex items-center gap-2">
+                          <Bot className="h-5 w-5" />
+                          Solo Game - {game.name}
+                        </DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4">
                         <div>
@@ -447,12 +490,12 @@ export default function Games() {
 
                   <Button 
                     size="sm" 
-                    className="flex-1 gap-2"
+                    className="w-full gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
                     onClick={() => createRoom(game.id)}
                     disabled={isCreatingRoom}
                   >
-                    <Users className="h-4 w-4" />
-                    Multiplayer
+                    <Users className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                    {isCreatingRoom ? '🎮 Creating...' : '👥 Multiplayer'}
                   </Button>
                 </div>
               </div>
@@ -461,47 +504,63 @@ export default function Games() {
         ))}
       </div>
 
-      {/* Full Leaderboard */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Crown className="h-5 w-5 text-yellow-500" />
-            Current GOATs
+      {/* Enhanced Full Leaderboard */}
+      <Card className="bg-gradient-to-br from-yellow-50 via-white to-orange-50 dark:from-yellow-950/10 dark:via-gray-900 dark:to-orange-950/10 border-2 border-yellow-200 dark:border-yellow-800">
+        <CardHeader className="text-center">
+          <CardTitle className="flex items-center justify-center gap-3 text-3xl">
+            <Crown className="h-8 w-8 text-yellow-500 animate-bounce" />
+            <span className="bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+              👑 Hall of Champions 👑
+            </span>
+            <Crown className="h-8 w-8 text-yellow-500 animate-bounce delay-75" />
           </CardTitle>
+          <p className="text-muted-foreground text-lg">The greatest players of all time!</p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {GAMES.map((game) => {
               const gameLeaders = leaderboard[game.id]?.slice(0, 5) || []
               return (
-                <div key={game.id} className="space-y-2">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <span>{game.icon}</span>
-                    {game.name}
+                <div key={game.id} className={`space-y-4 p-6 rounded-xl bg-gradient-to-br ${game.gradient} bg-opacity-10 border border-opacity-20`}>
+                  <h4 className="font-bold text-xl flex items-center gap-3 justify-center">
+                    <span className="text-3xl">{game.icon}</span>
+                    <span className={game.color}>{game.name}</span>
                   </h4>
                   {gameLeaders.length > 0 ? (
-                    <div className="space-y-1">
+                    <div className="space-y-3">
                       {gameLeaders.map((entry, index) => (
-                        <div key={entry.id} className="flex items-center justify-between p-2 rounded bg-muted/50">
-                          <span className="flex items-center gap-2">
+                        <div key={entry.id} className={`flex items-center justify-between p-4 rounded-lg transition-all shadow-md ${
+                          index === 0 && entry.score > 0 ? 
+                            'bg-gradient-to-r from-yellow-200 to-yellow-100 dark:from-yellow-800/30 dark:to-yellow-700/30 border-2 border-yellow-400 shadow-yellow-200 dark:shadow-yellow-800/20' :
+                          index === 1 ? 'bg-gradient-to-r from-gray-200 to-gray-100 dark:from-gray-700/50 dark:to-gray-600/50' :
+                          index === 2 ? 'bg-gradient-to-r from-orange-200 to-orange-100 dark:from-orange-800/30 dark:to-orange-700/30' :
+                          'bg-white/50 dark:bg-gray-800/50'
+                        }`}>
+                          <span className="flex items-center gap-3 font-medium">
                             {index === 0 && entry.score > 0 && (
-                              <Crown className="h-4 w-4 text-yellow-500" />
+                              <Crown className="h-5 w-5 text-yellow-500 animate-pulse" />
                             )}
-                            <span className="text-sm">
+                            <span className="text-2xl">
+                              {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🎯'}
+                            </span>
+                            <span className="text-base">
                               {entry.user.first_name} {entry.user.last_name}
                             </span>
                             {index === 0 && entry.score > 0 && (
-                              <Badge variant="secondary" className="text-xs">
-                                GOAT
+                              <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 animate-pulse font-bold">
+                                👑 GOAT
                               </Badge>
                             )}
                           </span>
-                          <span className="font-medium">{entry.score}</span>
+                          <span className="font-bold text-xl">{entry.score}</span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No scores yet</p>
+                    <div className="text-center p-6 bg-muted/20 rounded-lg border-2 border-dashed border-muted">
+                      <p className="text-muted-foreground text-lg">🎯 Be the first champion!</p>
+                      <p className="text-sm text-muted-foreground mt-1">Start playing to claim your throne!</p>
+                    </div>
                   )}
                 </div>
               )
