@@ -365,6 +365,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      is_conversation_creator: {
+        Args: { conversation_id: string; user_id: string }
+        Returns: boolean
+      }
+      is_conversation_member: {
+        Args: { conversation_id: string; user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
