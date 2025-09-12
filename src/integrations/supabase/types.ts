@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      hour_adjustments: {
+        Row: {
+          created_at: string
+          date: string
+          hours: number
+          id: string
+          notes: string | null
+          reason: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          hours: number
+          id?: string
+          notes?: string | null
+          reason: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          hours?: number
+          id?: string
+          notes?: string | null
+          reason?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           content: string | null
@@ -207,7 +243,13 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      hour_bank_view: {
+        Row: {
+          total_balance: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
