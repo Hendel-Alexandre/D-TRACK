@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
-import datadisLogo from '@/assets/datadis-logo.png'
+import datatrackLogo from '@/assets/datatrack-logo.png'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -63,8 +63,8 @@ export default function Login() {
           <CardHeader className="space-y-1 text-center">
             <div className="flex items-center justify-center mb-6">
               <img 
-                src={datadisLogo} 
-                alt="DataDis" 
+                src={datatrackLogo} 
+                alt="DataTrack" 
                 className="h-12 w-auto"
               />
             </div>
