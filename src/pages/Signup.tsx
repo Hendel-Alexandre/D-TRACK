@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { toast } from '@/hooks/use-toast'
 
 // reCAPTCHA configuration
-const RECAPTCHA_SITE_KEY = '6LfYourRealSiteKeyHere' // Replace with your actual site key
+const RECAPTCHA_SITE_KEY = '6Ldn4ccrAAAAAMcX011nB6fXCsC109m0qh7JO6b1'
 declare global {
   interface Window {
     grecaptcha: {
