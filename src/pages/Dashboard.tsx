@@ -89,7 +89,7 @@ const stats = [
 
 export default function Dashboard() {
   const { t } = useTranslation()
-  const { userProfile, updateUserStatus } = useAuth()
+  const { userProfile, user, updateUserStatus } = useAuth()
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -103,6 +103,8 @@ export default function Dashboard() {
   const handleStatusChange = async (status: 'Available' | 'Away' | 'Busy') => {
     await updateUserStatus(status)
   }
+
+  const displayName = userProfile?.first_name || (user?.user_metadata as any)?.first_name || (user?.email ? user.email.split('@')[0] : 'User')
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -118,7 +120,7 @@ export default function Dashboard() {
             <div>
               <div className="flex items-center gap-4 mb-2">
                 <h1 className="text-3xl font-bold text-foreground">
-                  Welcome back, {userProfile?.first_name || 'User'}!
+                  Welcome back, {displayName}!
                 </h1>
                 <div className="flex items-center gap-2">
                   <Circle className={`h-3 w-3 fill-current ${getStatusColor(userProfile?.status || 'Available')}`} />
