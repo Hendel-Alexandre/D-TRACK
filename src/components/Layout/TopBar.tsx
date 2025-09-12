@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Moon, Sun, Globe, ChevronDown, LogOut, User, Circle } from 'lucide-react'
+import datadisLogo from '@/assets/datadis-logo.png'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
@@ -57,11 +58,12 @@ export function TopBar() {
       <div className="flex h-full items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <SidebarTrigger className="h-8 w-8" />
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 bg-gradient-primary flex items-center justify-center">
-              <div className="h-4 w-4 bg-background"></div>
-            </div>
-            <span className="font-bold text-lg tracking-tight">TimeTracker Pro</span>
+          <div className="flex items-center gap-3">
+            <img 
+              src={datadisLogo} 
+              alt="DataDis" 
+              className="h-8 w-auto"
+            />
           </div>
         </div>
 

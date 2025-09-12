@@ -8,6 +8,7 @@ import {
   Settings, 
   Users 
 } from 'lucide-react'
+import datadisLogo from '@/assets/datadis-logo.png'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -86,9 +87,13 @@ export function AppSidebar() {
     >
       <SidebarContent className="bg-sidebar">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-primary font-semibold text-sm uppercase tracking-wide px-4">
-            TimeTracker Pro
-          </SidebarGroupLabel>
+          <div className="px-4 py-4 border-b border-sidebar-border">
+            <img 
+              src={datadisLogo} 
+              alt="DataDis" 
+              className={`transition-all duration-300 ${isCollapsed ? 'h-6 w-auto' : 'h-8 w-auto'}`}
+            />
+          </div>
           
           <SidebarGroupContent className="mt-4">
             <SidebarMenu>

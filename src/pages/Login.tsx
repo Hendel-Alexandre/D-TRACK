@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Clock } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
+import datadisLogo from '@/assets/datadis-logo.png'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -51,25 +52,27 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-dark flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         className="w-full max-w-md"
       >
-        <Card className="shadow-corporate border-border bg-card/95 backdrop-blur">
+        <Card className="shadow-lg border-border bg-card">
           <CardHeader className="space-y-1 text-center">
-            <div className="flex items-center justify-center mb-4">
-              <div className="h-12 w-12 bg-gradient-primary flex items-center justify-center">
-                <Clock className="h-6 w-6 text-primary-foreground" />
-              </div>
+            <div className="flex items-center justify-center mb-6">
+              <img 
+                src={datadisLogo} 
+                alt="DataDis" 
+                className="h-12 w-auto"
+              />
             </div>
             <CardTitle className="text-2xl font-bold text-foreground">
-              TimeTracker Pro
+              Welcome Back
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              {t('login')} to your account
+              Sign in to your account
             </CardDescription>
           </CardHeader>
           <CardContent>

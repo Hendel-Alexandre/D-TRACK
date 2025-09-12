@@ -7,12 +7,14 @@ import { HelpChat } from '@/components/HelpChat/HelpChat'
 export function MainLayout() {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-subtle">
+      <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           <TopBar />
-          <main className="flex-1 overflow-auto">
-            <Outlet />
+          <main className="flex-1 overflow-auto bg-muted/30">
+            <div className="container mx-auto px-4 py-6 max-w-7xl">
+              <Outlet />
+            </div>
           </main>
         </div>
         <HelpChat />
