@@ -243,16 +243,13 @@ export type Database = {
       }
     }
     Views: {
-      hour_bank_view: {
-        Row: {
-          total_balance: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_hour_bank_balance: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
