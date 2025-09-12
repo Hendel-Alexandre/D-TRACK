@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Moon, Sun, Globe, ChevronDown, LogOut, User, Circle } from 'lucide-react'
-import datadisLogo from '@/assets/datadis-logo.png'
+import datatrackLogo from '@/assets/datatrack-logo.png'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
@@ -60,8 +60,8 @@ export function TopBar() {
           <SidebarTrigger className="h-8 w-8" />
           <div className="flex items-center gap-3">
             <img 
-              src={datadisLogo} 
-              alt="DataDis" 
+              src={datatrackLogo} 
+              alt="DataTrack" 
               className="h-8 w-auto"
             />
           </div>

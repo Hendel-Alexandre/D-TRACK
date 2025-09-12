@@ -8,7 +8,7 @@ import {
   Settings, 
   Users 
 } from 'lucide-react'
-import datadisLogo from '@/assets/datadis-logo.png'
+import datatrackLogo from '@/assets/datatrack-logo.png'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -89,8 +89,8 @@ export function AppSidebar() {
         <SidebarGroup>
           <div className="px-4 py-4 border-b border-sidebar-border">
             <img 
-              src={datadisLogo} 
-              alt="DataDis" 
+              src={datatrackLogo} 
+              alt="DataTrack" 
               className={`transition-all duration-300 ${isCollapsed ? 'h-6 w-auto' : 'h-8 w-auto'}`}
             />
           </div>
