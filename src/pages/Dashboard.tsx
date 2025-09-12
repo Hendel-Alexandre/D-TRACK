@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/contexts/AuthContext'
+import { useNavigate } from 'react-router-dom'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -90,6 +91,7 @@ const stats = [
 export default function Dashboard() {
   const { t } = useTranslation()
   const { userProfile, user, updateUserStatus } = useAuth()
+  const navigate = useNavigate()
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -207,37 +209,42 @@ export default function Dashboard() {
         <motion.div variants={itemVariants} className="mb-8">
           <h2 className="text-xl font-semibold text-foreground mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {quickActions.map((action, index) => (
-              <motion.div
-                key={index}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Card className="border-border bg-card hover:shadow-corporate transition-all duration-300 cursor-pointer group">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col items-center text-center space-y-4">
-                      <div className={`h-16 w-16 ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                        <action.icon className="h-8 w-8 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground capitalize">
-                          {t(action.title)}
-                        </h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {action.description}
-                        </p>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-                      >
-                        Open
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+             {quickActions.map((action, index) => (
+               <motion.div
+                 key={index}
+                 whileHover={{ scale: 1.02 }}
+                 whileTap={{ scale: 0.98 }}
+                 onClick={() => navigate(action.href)}
+               >
+                 <Card className="border-border bg-card hover:shadow-corporate transition-all duration-300 cursor-pointer group">
+                   <CardContent className="p-6">
+                     <div className="flex flex-col items-center text-center space-y-4">
+                       <div className={`h-16 w-16 ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                         <action.icon className="h-8 w-8 text-white" />
+                       </div>
+                       <div>
+                         <h3 className="font-semibold text-foreground capitalize">
+                           {t(action.title)}
+                         </h3>
+                         <p className="text-sm text-muted-foreground mt-1">
+                           {action.description}
+                         </p>
+                       </div>
+                       <Button 
+                         variant="outline" 
+                         size="sm"
+                         className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                         onClick={(e) => {
+                           e.stopPropagation()
+                           navigate(action.href)
+                         }}
+                       >
+                         Open
+                       </Button>
+                     </div>
+                   </CardContent>
+                 </Card>
+               </motion.div>
             ))}
           </div>
         </motion.div>
@@ -256,7 +263,7 @@ export default function Dashboard() {
                 <p className="text-sm text-muted-foreground mt-2">
                   Start logging your time to see activity here
                 </p>
-                <Button className="mt-4" variant="outline">
+                <Button className="mt-4" variant="outline" onClick={() => navigate('/timesheets')}>
                   Add Time Entry
                 </Button>
               </div>

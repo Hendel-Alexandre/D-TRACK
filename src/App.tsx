@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { TimeTrackingProvider } from "@/contexts/TimeTrackingContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { MainLayout } from "@/components/Layout/MainLayout";
 import Dashboard from "./pages/Dashboard";
@@ -69,6 +70,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AuthProvider>
+        <TimeTrackingProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -108,6 +110,7 @@ const App = () => (
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
+      </TimeTrackingProvider>
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>

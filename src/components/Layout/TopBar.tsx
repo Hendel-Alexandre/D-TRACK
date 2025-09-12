@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Moon, Sun, Globe, ChevronDown, LogOut, User, Circle } from 'lucide-react'
+import { Moon, Sun, Globe, ChevronDown, LogOut, User, Circle, Clock, Play, Pause } from 'lucide-react'
 import datatrackLogo from '@/assets/datatrack-logo.png'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTimeTracking } from '@/contexts/TimeTrackingContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,6 +22,7 @@ export function TopBar() {
   const { t, i18n } = useTranslation()
   const { theme, toggleTheme } = useTheme()
   const { user, userProfile, signOut, updateUserStatus } = useAuth()
+  const { isTracking, elapsedTime, toggleTracking, formatTime } = useTimeTracking()
   
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng)
@@ -68,6 +70,28 @@ export function TopBar() {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Time Tracking Timer */}
+          {user && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleTracking}
+                className={`gap-2 ${isTracking ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100' : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'}`}
+              >
+                {isTracking ? (
+                  <Pause className="h-4 w-4" />
+                ) : (
+                  <Play className="h-4 w-4" />
+                )}
+                <Clock className="h-4 w-4" />
+                <span className="font-mono text-sm min-w-[60px]">
+                  {formatTime(elapsedTime)}
+                </span>
+              </Button>
+            </div>
+          )}
+
           {/* Language Toggle */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
