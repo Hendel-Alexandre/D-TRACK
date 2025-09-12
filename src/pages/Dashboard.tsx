@@ -120,7 +120,7 @@ export default function Dashboard() {
             <div>
               <div className="flex items-center gap-4 mb-2">
                 <h1 className="text-3xl font-bold text-foreground">
-                  Welcome back, {displayName}!
+                  Hello, {displayName}!
                 </h1>
                 <div className="flex items-center gap-2">
                   <Circle className={`h-3 w-3 fill-current ${getStatusColor(userProfile?.status || 'Available')}`} />
