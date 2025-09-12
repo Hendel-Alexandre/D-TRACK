@@ -5,9 +5,12 @@ import { toast } from '@/hooks/use-toast'
 
 interface TimeTrackingContextType {
   isTracking: boolean
+  isPaused: boolean
   elapsedTime: number
   startTracking: () => void
   stopTracking: () => void
+  pauseTracking: () => void
+  resumeTracking: () => void
   toggleTracking: () => void
   formatTime: (seconds: number) => string
 }
@@ -17,16 +20,18 @@ const TimeTrackingContext = createContext<TimeTrackingContextType | undefined>(u
 export function TimeTrackingProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
   const [isTracking, setIsTracking] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
   const [elapsedTime, setElapsedTime] = useState(0)
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef<Date | null>(null)
+  const pausedTimeRef = useRef<number>(0) // Store accumulated time when paused
 
   // Auto-start tracking when user logs in
   useEffect(() => {
-    if (user && !isTracking) {
+    if (user && !isTracking && !currentSessionId) {
       startTracking()
-    } else if (!user && isTracking) {
+    } else if (!user && (isTracking || currentSessionId)) {
       stopTracking()
     }
   }, [user])
@@ -41,7 +46,7 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
   }, [])
 
   const startTracking = async () => {
-    if (!user || isTracking) return
+    if (!user || currentSessionId) return
 
     try {
       // Create a new time tracking session
@@ -62,15 +67,17 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
 
       setCurrentSessionId(data.id)
       setIsTracking(true)
+      setIsPaused(false)
       startTimeRef.current = new Date()
+      pausedTimeRef.current = 0
       setElapsedTime(0)
 
       // Start the timer
       intervalRef.current = setInterval(() => {
         if (startTimeRef.current) {
           const now = new Date()
-          const elapsed = Math.floor((now.getTime() - startTimeRef.current.getTime()) / 1000)
-          setElapsedTime(elapsed)
+          const currentElapsed = Math.floor((now.getTime() - startTimeRef.current.getTime()) / 1000)
+          setElapsedTime(pausedTimeRef.current + currentElapsed)
         }
       }, 1000)
 
@@ -84,8 +91,42 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
     }
   }
 
+  const pauseTracking = () => {
+    if (!isTracking || isPaused) return
+
+    // Stop the interval and save the current elapsed time
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+
+    // Save accumulated time
+    pausedTimeRef.current = elapsedTime
+    setIsTracking(false)
+    setIsPaused(true)
+    startTimeRef.current = null
+  }
+
+  const resumeTracking = () => {
+    if (!isPaused || !currentSessionId) return
+
+    // Resume timing from where we left off
+    setIsTracking(true)
+    setIsPaused(false)
+    startTimeRef.current = new Date()
+
+    // Start the timer again
+    intervalRef.current = setInterval(() => {
+      if (startTimeRef.current) {
+        const now = new Date()
+        const currentElapsed = Math.floor((now.getTime() - startTimeRef.current.getTime()) / 1000)
+        setElapsedTime(pausedTimeRef.current + currentElapsed)
+      }
+    }, 1000)
+  }
+
   const stopTracking = async () => {
-    if (!user || !isTracking || !currentSessionId) return
+    if (!user || !currentSessionId) return
 
     try {
       // Calculate final hours
@@ -103,16 +144,18 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
 
       if (error) throw error
 
-      // Clear the timer
+      // Clear everything
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
         intervalRef.current = null
       }
 
       setIsTracking(false)
+      setIsPaused(false)
       setElapsedTime(0)
       setCurrentSessionId(null)
       startTimeRef.current = null
+      pausedTimeRef.current = 0
 
       toast({
         title: 'Session Saved',
@@ -130,8 +173,12 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
   }
 
   const toggleTracking = () => {
-    if (isTracking) {
-      stopTracking()
+    if (isPaused) {
+      resumeTracking()
+    } else if (isTracking) {
+      pauseTracking()
+    } else if (currentSessionId) {
+      resumeTracking()
     } else {
       startTracking()
     }
@@ -150,9 +197,12 @@ export function TimeTrackingProvider({ children }: { children: React.ReactNode }
 
   const value = {
     isTracking,
+    isPaused,
     elapsedTime,
     startTracking,
     stopTracking,
+    pauseTracking,
+    resumeTracking,
     toggleTracking,
     formatTime
   }

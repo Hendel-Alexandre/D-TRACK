@@ -22,7 +22,7 @@ export function TopBar() {
   const { t, i18n } = useTranslation()
   const { theme, toggleTheme } = useTheme()
   const { user, userProfile, signOut, updateUserStatus } = useAuth()
-  const { isTracking, elapsedTime, toggleTracking, formatTime } = useTimeTracking()
+  const { isTracking, isPaused, elapsedTime, toggleTracking, formatTime } = useTimeTracking()
   
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng)
@@ -77,7 +77,13 @@ export function TopBar() {
                 variant="outline"
                 size="sm"
                 onClick={toggleTracking}
-                className={`gap-2 ${isTracking ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100' : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'}`}
+                className={`gap-2 ${
+                  isTracking 
+                    ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100' 
+                    : isPaused 
+                    ? 'bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100'
+                    : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                }`}
               >
                 {isTracking ? (
                   <Pause className="h-4 w-4" />
