@@ -20,6 +20,7 @@ interface User {
   first_name: string
   last_name: string
   email: string
+  role?: string
 }
 
 interface Conversation {
@@ -78,11 +79,30 @@ export default function Messages() {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, first_name, last_name, email')
+        .select(`
+          id, 
+          first_name, 
+          last_name, 
+          email
+        `)
         .neq('id', user?.id)
 
       if (error) throw error
-      setUsers(data || [])
+
+      // Fetch user roles
+      const userIds = data?.map(u => u.id) || []
+      const { data: rolesData } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', userIds)
+
+      // Combine users with their roles
+      const usersWithRoles = data?.map(u => ({
+        ...u,
+        role: rolesData?.find(r => r.user_id === u.id)?.role || 'team_member'
+      })) || []
+
+      setUsers(usersWithRoles)
     } catch (error: any) {
       console.error('Error fetching users:', error)
     }
@@ -158,6 +178,18 @@ export default function Messages() {
 
       if (usersError) throw usersError
 
+      // Get user roles
+      const { data: rolesData } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', userIds)
+
+      // Combine users with roles
+      const usersWithRoles = usersData?.map(u => ({
+        ...u,
+        role: rolesData?.find(r => r.user_id === u.id)?.role || 'team_member'
+      })) || []
+
       // Process conversations
       const processedConversations = conversationData?.map(item => {
         const conversation = item.conversations
@@ -165,7 +197,7 @@ export default function Messages() {
         
         // Get members for this conversation
         const memberIds = membersData?.filter(m => m.conversation_id === conversation.id).map(m => m.user_id) || []
-        const members = usersData?.filter(u => memberIds.includes(u.id)) || []
+        const members = usersWithRoles?.filter(u => memberIds.includes(u.id)) || []
 
         return {
           ...conversation,
@@ -175,7 +207,7 @@ export default function Messages() {
             sender_id: lastMsg.sender_id,
             message: lastMsg.message,
             created_at: lastMsg.created_at,
-            sender: usersData?.find(u => u.id === lastMsg.sender_id)
+            sender: usersWithRoles?.find(u => u.id === lastMsg.sender_id)
           } : undefined,
           members
         }
@@ -210,7 +242,7 @@ export default function Messages() {
 
       if (error) throw error
 
-      // Get sender details
+      // Get sender details with roles
       const senderIds = [...new Set(data?.map(m => m.sender_id) || [])]
       const { data: sendersData, error: sendersError } = await supabase
         .from('users')
@@ -219,9 +251,21 @@ export default function Messages() {
 
       if (sendersError) throw sendersError
 
+      // Get sender roles
+      const { data: rolesData } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', senderIds)
+
+      // Combine senders with roles
+      const sendersWithRoles = sendersData?.map(s => ({
+        ...s,
+        role: rolesData?.find(r => r.user_id === s.id)?.role || 'team_member'
+      })) || []
+
       const processedMessages = data?.map(msg => ({
         ...msg,
-        sender: sendersData?.find(s => s.id === msg.sender_id)
+        sender: sendersWithRoles?.find(s => s.id === msg.sender_id)
       })) || []
 
       setMessages(processedMessages)
@@ -372,6 +416,17 @@ export default function Messages() {
     fetchMessages(conversation.id)
   }
 
+  const formatRole = (role: string) => {
+    switch (role) {
+      case 'admin': return 'Admin'
+      case 'project_manager': return 'Project Manager'
+      case 'developer': return 'Developer'
+      case 'designer': return 'Designer'
+      case 'team_member': return 'Team Member'
+      default: return 'Team Member'
+    }
+  }
+
   const getConversationDisplayName = (conversation: Conversation) => {
     if (conversation.is_group) {
       return conversation.name || 'Group Chat'
@@ -449,9 +504,9 @@ export default function Messages() {
 
                   <div className="space-y-2">
                     <Label>Select Users</Label>
-                    <Select value="" onValueChange={(userId) => {
-                      if (userId && !newChatUsers.includes(userId)) {
-                        setNewChatUsers(prev => [...prev, userId])
+                    <Select value="" onValueChange={(selectedUserId) => {
+                      if (selectedUserId && !newChatUsers.includes(selectedUserId)) {
+                        setNewChatUsers(prev => [...prev, selectedUserId])
                       }
                     }}>
                       <SelectTrigger>
@@ -460,7 +515,12 @@ export default function Messages() {
                       <SelectContent>
                         {users.filter(u => !newChatUsers.includes(u.id)).map(user => (
                           <SelectItem key={user.id} value={user.id}>
-                            {user.first_name} {user.last_name}
+                            <div className="flex flex-col">
+                              <span>{user.first_name} {user.last_name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {formatRole(user.role || 'team_member')}
+                              </span>
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -472,12 +532,18 @@ export default function Messages() {
                       <Label>Selected Users</Label>
                       <div className="flex flex-wrap gap-2">
                         {newChatUsers.map(userId => {
-                          const user = users.find(u => u.id === userId)
-                          return user ? (
+                          const selectedUser = users.find(u => u.id === userId)
+                          return selectedUser ? (
                             <Badge key={userId} variant="secondary" className="cursor-pointer" onClick={() => {
                               setNewChatUsers(prev => prev.filter(id => id !== userId))
                             }}>
-                              {user.first_name} {user.last_name} ×
+                              <div className="flex flex-col text-left">
+                                <span>{selectedUser.first_name} {selectedUser.last_name}</span>
+                                <span className="text-xs opacity-70">
+                                  {formatRole(selectedUser.role || 'team_member')}
+                                </span>
+                              </div>
+                              <span className="ml-2">×</span>
                             </Badge>
                           ) : null
                         })}
@@ -541,6 +607,12 @@ export default function Messages() {
                         {conversation.last_message.sender?.first_name}: {conversation.last_message.message}
                       </p>
                     )}
+                    {/* Show role in conversation list for DMs */}
+                    {!conversation.is_group && conversation.members?.find(m => m.id !== user?.id)?.role && (
+                      <p className="text-xs opacity-50">
+                        {formatRole(conversation.members.find(m => m.id !== user?.id)?.role || '')}
+                      </p>
+                    )}
                   </div>
                   {conversation.last_message && (
                     <div className="text-xs opacity-60">
@@ -587,34 +659,46 @@ export default function Messages() {
             </CardHeader>
 
             <ScrollArea className="flex-1 p-4">
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {messages.map(message => (
-                  <div
-                    key={message.id}
-                    className={`flex gap-3 ${message.sender_id === user?.id ? 'justify-end' : ''}`}
-                  >
+                  <div key={message.id} className="flex items-start gap-3">
+                    {/* Avatar for other users */}
                     {message.sender_id !== user?.id && (
-                      <Avatar className="h-8 w-8">
+                      <Avatar className="h-8 w-8 flex-shrink-0">
                         <AvatarFallback className="text-xs">
                           {message.sender ? `${message.sender.first_name?.charAt(0)}${message.sender.last_name?.charAt(0)}` : 'U'}
                         </AvatarFallback>
                       </Avatar>
                     )}
-                    <div className={`max-w-[70%] ${message.sender_id === user?.id ? 'order-first' : ''}`}>
-                      <div
-                        className={`rounded-lg px-3 py-2 ${
-                          message.sender_id === user?.id
-                            ? 'bg-primary text-primary-foreground ml-auto'
-                            : 'bg-muted'
-                        }`}
-                      >
-                        {message.sender_id !== user?.id && selectedConversation.is_group && (
-                          <p className="text-xs font-medium mb-1 opacity-70">
+                    
+                    {/* Message content */}
+                    <div className={`flex flex-col max-w-[70%] ${
+                      message.sender_id === user?.id ? 'ml-auto items-end' : 'items-start'
+                    }`}>
+                      {/* Sender name and role for other users */}
+                      {message.sender_id !== user?.id && (
+                        <div className="mb-1 px-1">
+                          <p className="text-sm font-medium text-foreground">
                             {message.sender?.first_name} {message.sender?.last_name}
                           </p>
-                        )}
-                        <p className="break-words">{message.message}</p>
+                          {message.sender?.role && (
+                            <p className="text-xs text-muted-foreground">
+                              ({formatRole(message.sender.role)})
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Message bubble */}
+                      <div className={`rounded-2xl px-4 py-2 shadow-sm max-w-full ${
+                        message.sender_id === user?.id
+                          ? 'bg-primary text-primary-foreground rounded-br-md'
+                          : 'bg-muted text-foreground rounded-bl-md border'
+                      }`}>
+                        <p className="break-words text-sm leading-relaxed">{message.message}</p>
                       </div>
+                      
+                      {/* Timestamp */}
                       <p className="text-xs text-muted-foreground mt-1 px-1">
                         {format(new Date(message.created_at), 'HH:mm')}
                       </p>
