@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Clock, CheckSquare, FileText, BarChart3, Users, FolderOpen, Circle } from 'lucide-react'
+import { Clock, CheckSquare, FileText, BarChart3, Users, FolderOpen, Circle, ChevronDown } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/contexts/AuthContext'
 
 const containerVariants = {
@@ -121,33 +122,37 @@ export default function Dashboard() {
                 </h1>
                 <div className="flex items-center gap-2">
                   <Circle className={`h-3 w-3 fill-current ${getStatusColor(userProfile?.status || 'Available')}`} />
-                  <span className="text-sm text-muted-foreground">{userProfile?.status || 'Available'}</span>
-                  <div className="flex gap-1 ml-2">
-                    <Button
-                      size="sm"
-                      variant={userProfile?.status === 'Available' ? 'default' : 'outline'}
-                      className="h-6 px-2 text-xs"
-                      onClick={() => handleStatusChange('Available')}
-                    >
-                      Available
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={userProfile?.status === 'Away' ? 'default' : 'outline'}
-                      className="h-6 px-2 text-xs"
-                      onClick={() => handleStatusChange('Away')}
-                    >
-                      Away
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={userProfile?.status === 'Busy' ? 'default' : 'outline'}
-                      className="h-6 px-2 text-xs"
-                      onClick={() => handleStatusChange('Busy')}
-                    >
-                      Busy
-                    </Button>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                        <span>{userProfile?.status || 'Available'}</span>
+                        <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-32 bg-background border border-border shadow-lg z-50">
+                      <DropdownMenuItem 
+                        onClick={() => handleStatusChange('Available')}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <Circle className="h-3 w-3 fill-current text-green-500" />
+                        Available
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleStatusChange('Away')}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <Circle className="h-3 w-3 fill-current text-yellow-500" />
+                        Away
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleStatusChange('Busy')}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <Circle className="h-3 w-3 fill-current text-red-500" />
+                        Busy
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
               <p className="text-lg text-muted-foreground">
