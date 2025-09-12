@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
-import datadisLogo from '@/assets/datadis-logo.png'
+import datatrackLogo from '@/assets/datatrack-logo.png'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,6 +11,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from '@/hooks/use-toast'
+
+// Declare global grecaptcha
+declare global {
+  interface Window {
+    grecaptcha: {
+      render: (element: string | Element, options: any) => number;
+      getResponse: (widgetId?: number) => string;
+      reset: (widgetId?: number) => void;
+    };
+  }
+}
 
 const departments = [
   { value: 'Marketing', label: 'marketing' },
@@ -28,16 +39,59 @@ export default function Signup() {
   const [department, setDepartment] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [captchaWidgetId, setCaptchaWidgetId] = useState<number | null>(null)
+  const captchaRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
   const { signUp } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    // Initialize reCAPTCHA when the component mounts
+    const initRecaptcha = () => {
+      if (window.grecaptcha && captchaRef.current) {
+        const widgetId = window.grecaptcha.render(captchaRef.current, {
+          sitekey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // Test site key
+          theme: 'light'
+        })
+        setCaptchaWidgetId(widgetId)
+      }
+    }
+
+    // Check if reCAPTCHA is already loaded
+    if (window.grecaptcha) {
+      initRecaptcha()
+    } else {
+      // Wait for reCAPTCHA to load
+      const checkRecaptcha = setInterval(() => {
+        if (window.grecaptcha) {
+          initRecaptcha()
+          clearInterval(checkRecaptcha)
+        }
+      }, 100)
+
+      return () => clearInterval(checkRecaptcha)
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
-      const { error } = await signUp(email, password, firstName, lastName, department)
+      // Get captcha token
+      const captchaToken = window.grecaptcha?.getResponse(captchaWidgetId || undefined)
+      
+      if (!captchaToken) {
+        toast({
+          title: "Error",
+          description: "Please complete the captcha verification",
+          variant: "destructive",
+        })
+        setIsLoading(false)
+        return
+      }
+
+      const { error } = await signUp(email, password, firstName, lastName, department, captchaToken)
       
       if (error) {
         toast({
@@ -45,6 +99,10 @@ export default function Signup() {
           description: error.message || "Failed to create account",
           variant: "destructive",
         })
+        // Reset captcha on error
+        if (captchaWidgetId !== null) {
+          window.grecaptcha?.reset(captchaWidgetId)
+        }
       } else {
         toast({
           title: "Success",
@@ -58,6 +116,10 @@ export default function Signup() {
         description: "An unexpected error occurred",
         variant: "destructive",
       })
+      // Reset captcha on error
+      if (captchaWidgetId !== null) {
+        window.grecaptcha?.reset(captchaWidgetId)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -75,8 +137,8 @@ export default function Signup() {
           <CardHeader className="space-y-1 text-center">
             <div className="flex items-center justify-center mb-6">
               <img 
-                src={datadisLogo} 
-                alt="DataDis" 
+                src={datatrackLogo} 
+                alt="DataTrack" 
                 className="h-12 w-auto"
               />
             </div>
@@ -84,7 +146,7 @@ export default function Signup() {
               Create Account
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              Join DataDis Platform
+              Join DataTrack Platform
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -185,7 +247,12 @@ export default function Signup() {
                 </div>
               </div>
 
-              <Button 
+              {/* reCAPTCHA */}
+              <div className="flex justify-center">
+                <div ref={captchaRef} className="captcha-container"></div>
+              </div>
+
+              <Button
                 type="submit" 
                 className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
                 disabled={isLoading}

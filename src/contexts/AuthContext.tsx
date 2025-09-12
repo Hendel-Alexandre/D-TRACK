@@ -6,8 +6,8 @@ interface AuthContextType {
   user: User | null
   userProfile: any | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error?: any }>
-  signUp: (email: string, password: string, firstName: string, lastName: string, department: string) => Promise<{ error?: any }>
+  signIn: (email: string, password: string, captchaToken?: string) => Promise<{ error?: any }>
+  signUp: (email: string, password: string, firstName: string, lastName: string, department: string, captchaToken?: string) => Promise<{ error?: any }>
   signOut: () => Promise<void>
   updateUserStatus: (status: 'Available' | 'Away' | 'Busy') => Promise<void>
 }
@@ -71,12 +71,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const signIn = async (email: string, password: string, captchaToken?: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ 
+      email, 
+      password,
+      options: {
+        captchaToken
+      }
+    })
     return { error }
   }
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string, department: string) => {
+  const signUp = async (email: string, password: string, firstName: string, lastName: string, department: string, captchaToken?: string) => {
     const redirectUrl = `${window.location.origin}/`
     
     const { data, error } = await supabase.auth.signUp({ 
@@ -84,6 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
       options: {
         emailRedirectTo: redirectUrl,
+        captchaToken,
         data: {
           first_name: firstName,
           last_name: lastName,
