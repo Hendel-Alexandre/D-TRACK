@@ -104,7 +104,7 @@ export default function Dashboard() {
     await updateUserStatus(status)
   }
 
-  const displayName = userProfile?.first_name || (user?.user_metadata as any)?.first_name || (user?.email ? user.email.split('@')[0] : 'User')
+  const displayName = userProfile?.first_name || (user?.user_metadata as any)?.first_name || 'User'
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
