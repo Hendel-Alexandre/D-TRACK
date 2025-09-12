@@ -62,7 +62,7 @@ export function TopBar() {
             <img 
               src={datatrackLogo} 
               alt="DataTrack" 
-              className="h-48 w-auto"
+              className="h-32 w-auto"
             />
           </div>
         </div>
