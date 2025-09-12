@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
@@ -11,76 +11,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from '@/hooks/use-toast'
 
-// reCAPTCHA configuration
-const RECAPTCHA_SITE_KEY = '6Ldn4ccrAAAAAMcX011nB6fXCsC109m0qh7JO6b1'
-declare global {
-  interface Window {
-    grecaptcha: {
-      render: (element: string | Element, options: any) => number;
-      getResponse: (widgetId?: number) => string;
-      reset: (widgetId?: number) => void;
-    };
-  }
-}
-
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [captchaWidgetId, setCaptchaWidgetId] = useState<number | null>(null)
-  const captchaRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
   const { signIn } = useAuth()
   const navigate = useNavigate()
-
-  useEffect(() => {
-    // Initialize reCAPTCHA when the component mounts
-    const initRecaptcha = () => {
-      if (window.grecaptcha && captchaRef.current) {
-        const widgetId = window.grecaptcha.render(captchaRef.current, {
-          sitekey: RECAPTCHA_SITE_KEY,
-          theme: 'light'
-        })
-        setCaptchaWidgetId(widgetId)
-      }
-    }
-
-    // Check if reCAPTCHA is already loaded
-    if (window.grecaptcha) {
-      initRecaptcha()
-    } else {
-      // Wait for reCAPTCHA to load
-      const checkRecaptcha = setInterval(() => {
-        if (window.grecaptcha) {
-          initRecaptcha()
-          clearInterval(checkRecaptcha)
-        }
-      }, 100)
-
-      return () => clearInterval(checkRecaptcha)
-    }
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
-      // Get captcha token
-      const captchaToken = window.grecaptcha?.getResponse(captchaWidgetId || undefined)
-      
-      if (!captchaToken) {
-        toast({
-          title: "Error",
-          description: "Please complete the captcha verification",
-          variant: "destructive",
-        })
-        setIsLoading(false)
-        return
-      }
-
-      const { error } = await signIn(email, password, captchaToken)
+      const { error } = await signIn(email, password)
       
       if (error) {
         toast({
@@ -88,10 +33,6 @@ export default function Login() {
           description: error.message || "Failed to sign in",
           variant: "destructive",
         })
-        // Reset captcha on error
-        if (captchaWidgetId !== null) {
-          window.grecaptcha?.reset(captchaWidgetId)
-        }
       } else {
         toast({
           title: "Success",
@@ -105,10 +46,6 @@ export default function Login() {
         description: "An unexpected error occurred",
         variant: "destructive",
       })
-      // Reset captcha on error
-      if (captchaWidgetId !== null) {
-        window.grecaptcha?.reset(captchaWidgetId)
-      }
     } finally {
       setIsLoading(false)
     }
@@ -185,10 +122,6 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* reCAPTCHA */}
-              <div className="flex justify-center">
-                <div ref={captchaRef} className="captcha-container"></div>
-              </div>
 
               <div className="flex items-center justify-between">
                 <Link 
