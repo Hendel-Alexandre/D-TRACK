@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Crown, Gamepad2, Users, Bot, Trophy } from 'lucide-react'
+import { Crown, Gamepad2, Users, Bot, Trophy, AlertTriangle } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { TicTacToe } from '@/components/Games/TicTacToe'
 import { RockPaperScissors } from '@/components/Games/RockPaperScissors'
@@ -70,6 +70,7 @@ const GAMES = [
 export default function Games() {
   const { user } = useAuth()
   const { toast } = useToast()
+  const [showWarning, setShowWarning] = useState(true)
   const [leaderboard, setLeaderboard] = useState<Record<string, LeaderboardEntry[]>>({})
   const [selectedGame, setSelectedGame] = useState<string | null>(null)
   const [gameMode, setGameMode] = useState<'solo' | 'multiplayer' | null>(null)
@@ -78,10 +79,20 @@ export default function Games() {
   const [isCreatingRoom, setIsCreatingRoom] = useState(false)
   const [currentRoom, setCurrentRoom] = useState<GameRoom | null>(null)
 
+  // Check if warning has been shown this session
+  useEffect(() => {
+    const warningShown = sessionStorage.getItem('gamesWarningShown')
+    if (warningShown === 'true') {
+      setShowWarning(false)
+    }
+  }, [])
+
   // Fetch leaderboard data
   useEffect(() => {
-    fetchLeaderboard()
-  }, [])
+    if (!showWarning) {
+      fetchLeaderboard()
+    }
+  }, [showWarning])
 
   const fetchLeaderboard = async () => {
     try {
@@ -246,6 +257,39 @@ export default function Games() {
   const startSoloGame = (gameName: string) => {
     setSelectedGame(gameName)
     setGameMode('solo')
+  }
+
+  const acknowledgeWarning = () => {
+    setShowWarning(false)
+    sessionStorage.setItem('gamesWarningShown', 'true')
+  }
+
+  // Show warning modal if not acknowledged
+  if (showWarning) {
+    return (
+      <div className="container mx-auto p-6">
+        <Dialog open={showWarning} onOpenChange={() => {}}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-warning">
+                <AlertTriangle className="h-5 w-5" />
+                Company Hours Notice
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-muted-foreground">
+                Please do not spend excessive time on games during work hours. Respect company policies regarding work time.
+              </p>
+              <div className="flex justify-center">
+                <Button onClick={acknowledgeWarning} className="px-8">
+                  OK
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    )
   }
 
   const exitGame = () => {
