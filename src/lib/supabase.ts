@@ -1,12 +1,16 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-// Lovable note: Env variables are not supported. We read from window or localStorage.
+// Safe, lazy Supabase client factory to avoid runtime crashes when keys are missing.
+// Keys can be provided via window.SUPABASE_URL / window.SUPABASE_ANON_KEY or localStorage.
+
 declare global {
   interface Window {
     SUPABASE_URL?: string
     SUPABASE_ANON_KEY?: string
   }
 }
+
+let _client: SupabaseClient | null = null
 
 const getFromStorage = (key: string) => {
   try {
@@ -16,14 +20,24 @@ const getFromStorage = (key: string) => {
   }
 }
 
-const supabaseUrl = (typeof window !== 'undefined' && (window.SUPABASE_URL || getFromStorage('supabaseUrl'))) || ''
-const supabaseAnonKey = (typeof window !== 'undefined' && (window.SUPABASE_ANON_KEY || getFromStorage('supabaseAnonKey'))) || ''
+function getKeys() {
+  const supabaseUrl = (typeof window !== 'undefined' && (window.SUPABASE_URL || getFromStorage('supabaseUrl'))) || ''
+  const supabaseAnonKey = (typeof window !== 'undefined' && (window.SUPABASE_ANON_KEY || getFromStorage('supabaseAnonKey'))) || ''
+  return { supabaseUrl, supabaseAnonKey }
+}
 
-export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey)
+export function isSupabaseConfigured() {
+  const { supabaseUrl, supabaseAnonKey } = getKeys()
+  return Boolean(supabaseUrl && supabaseAnonKey)
+}
 
-export const supabase: SupabaseClient | null = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null
+export function getSupabase(): SupabaseClient | null {
+  const { supabaseUrl, supabaseAnonKey } = getKeys()
+  if (!supabaseUrl || !supabaseAnonKey) return null
+  if (_client) return _client
+  _client = createClient(supabaseUrl, supabaseAnonKey)
+  return _client
+}
 
 export type Database = {
   public: {
