@@ -6,7 +6,8 @@ import {
   FolderOpen, 
   Home, 
   Settings, 
-  Users 
+  Users,
+  Activity
 } from 'lucide-react'
 import datatrackLogo from '@/assets/datatrack-logo.png'
 import { NavLink, useLocation } from 'react-router-dom'
@@ -58,6 +59,11 @@ const navigationItems = [
     title: 'team', 
     url: '/team', 
     icon: Users 
+  },
+  { 
+    title: 'history', 
+    url: '/history', 
+    icon: Activity 
   },
   { 
     title: 'settings', 

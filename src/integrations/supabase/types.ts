@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      history_logs: {
+        Row: {
+          action: string
+          category: string
+          created_at: string
+          details: Json | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          category: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          category?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       hour_adjustments: {
         Row: {
           created_at: string

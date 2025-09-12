@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/hooks/use-toast'
+import { logProject } from '@/lib/history'
 
 interface Project {
   id: string
@@ -82,6 +83,12 @@ export default function Projects() {
 
       if (error) throw error
 
+      // Log the activity
+      await logProject('Created', {
+        name: newProject.name,
+        status: newProject.status
+      })
+
       toast({
         title: 'Success',
         description: 'Project created successfully'
@@ -124,6 +131,12 @@ export default function Projects() {
 
       if (error) throw error
 
+      // Log the activity
+      await logProject('Updated', {
+        name: editingProject.name,
+        status: editingProject.status
+      })
+
       toast({
         title: 'Success',
         description: 'Project updated successfully'
@@ -144,6 +157,10 @@ export default function Projects() {
   const deleteProject = async (projectId: string) => {
     if (!user) return
 
+    // Get project name for logging before deletion
+    const project = projects.find(p => p.id === projectId)
+    const projectName = project?.name || 'Unknown Project'
+
     try {
       const { error } = await supabase
         .from('projects')
@@ -152,6 +169,11 @@ export default function Projects() {
         .eq('user_id', user.id)
 
       if (error) throw error
+
+      // Log the activity
+      await logProject('Deleted', {
+        name: projectName
+      })
 
       toast({
         title: 'Success',

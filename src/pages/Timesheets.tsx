@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
+import { logHourAdjustment } from '@/lib/history'
 
 interface TimeEntry {
   id: string
@@ -258,6 +259,14 @@ export default function Timesheets() {
         })
 
       if (error) throw error
+
+      // Log the activity
+      await logHourAdjustment('Created', {
+        hours: parseFloat(newAdjustment.hours),
+        reason: newAdjustment.reason,
+        date: format(newAdjustment.date, 'yyyy-MM-dd'),
+        type: newAdjustment.type
+      })
 
       toast({
         title: 'Success',

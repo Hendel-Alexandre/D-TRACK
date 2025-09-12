@@ -15,6 +15,7 @@ import Notes from "./pages/Notes";
 import Reports from "./pages/Reports";
 import Team from "./pages/Team";
 import Settings from "./pages/Settings";
+import History from "./pages/History";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -102,6 +103,7 @@ const App = () => (
                 <Route path="notes" element={<Notes />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="team" element={<Team />} />
+                <Route path="history" element={<History />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
               
