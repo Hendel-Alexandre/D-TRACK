@@ -1,9 +1,29 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+// Lovable note: Env variables are not supported. We read from window or localStorage.
+declare global {
+  interface Window {
+    SUPABASE_URL?: string
+    SUPABASE_ANON_KEY?: string
+  }
+}
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+const getFromStorage = (key: string) => {
+  try {
+    return typeof window !== 'undefined' ? localStorage.getItem(key) || undefined : undefined
+  } catch {
+    return undefined
+  }
+}
+
+const supabaseUrl = (typeof window !== 'undefined' && (window.SUPABASE_URL || getFromStorage('supabaseUrl'))) || ''
+const supabaseAnonKey = (typeof window !== 'undefined' && (window.SUPABASE_ANON_KEY || getFromStorage('supabaseAnonKey'))) || ''
+
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey)
+
+export const supabase: SupabaseClient | null = isSupabaseConfigured
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null
 
 export type Database = {
   public: {

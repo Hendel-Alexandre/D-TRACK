@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 
 interface AuthContextType {
   user: User | null
@@ -20,6 +20,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) {
+      setLoading(false)
+      return
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
@@ -46,6 +51,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      if (!supabase) {
+        setLoading(false)
+        return
+      }
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -65,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) return { error: { message: 'Supabase is not configured' } }
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -73,14 +83,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string, department: string) => {
-    const { data, error } = await supabase.auth.signUp({
+    if (!supabase) return { error: { message: 'Supabase is not configured' } }
+    const sb = supabase
+    const { data, error } = await sb.auth.signUp({
       email,
       password,
     })
 
     if (!error && data.user) {
       // Create user profile
-      const { error: profileError } = await supabase
+      const { error: profileError } = await sb
         .from('users')
         .insert({
           id: data.user.id,
