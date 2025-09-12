@@ -126,8 +126,8 @@ export default function Timesheets() {
           description: newEntry.description,
           hours: parseFloat(newEntry.hours),
           date: newEntry.date,
-          project_id: newEntry.project_id || null,
-          task_id: newEntry.task_id || null
+          project_id: newEntry.project_id && newEntry.project_id !== 'no-project' ? newEntry.project_id : null,
+          task_id: newEntry.task_id && newEntry.task_id !== 'no-task' ? newEntry.task_id : null
         })
 
       if (error) throw error
@@ -255,14 +255,14 @@ export default function Timesheets() {
                 <div className="space-y-2">
                   <Label htmlFor="project">Project</Label>
                   <Select 
-                    value={newEntry.project_id} 
-                    onValueChange={(value) => setNewEntry({ ...newEntry, project_id: value, task_id: '' })}
+                    value={newEntry.project_id || 'no-project'} 
+                    onValueChange={(value) => setNewEntry({ ...newEntry, project_id: value === 'no-project' ? '' : value, task_id: '' })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select project" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No project</SelectItem>
+                      <SelectItem value="no-project">No project</SelectItem>
                       {projects.map((project) => (
                         <SelectItem key={project.id} value={project.id}>
                           {project.name}
@@ -274,12 +274,12 @@ export default function Timesheets() {
 
                 <div className="space-y-2">
                   <Label htmlFor="task">Task</Label>
-                  <Select value={newEntry.task_id} onValueChange={(value) => setNewEntry({ ...newEntry, task_id: value })}>
+                  <Select value={newEntry.task_id || 'no-task'} onValueChange={(value) => setNewEntry({ ...newEntry, task_id: value === 'no-task' ? '' : value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select task" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No task</SelectItem>
+                      <SelectItem value="no-task">No task</SelectItem>
                       {availableTasks.map((task) => (
                         <SelectItem key={task.id} value={task.id}>
                           {task.title}
