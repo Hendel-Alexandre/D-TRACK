@@ -44,7 +44,7 @@ export default function Tasks() {
     status: 'Todo',
     priority: 'Medium',
     due_date: '',
-    project_id: ''
+        project_id: 'none'
   })
 
   const fetchTasks = async () => {
@@ -105,7 +105,7 @@ export default function Tasks() {
           status: newTask.status,
           priority: newTask.priority,
           due_date: newTask.due_date || null,
-          project_id: newTask.project_id || null
+          project_id: newTask.project_id === 'none' ? null : newTask.project_id || null
         })
 
       if (error) throw error
@@ -121,7 +121,7 @@ export default function Tasks() {
         status: 'Todo',
         priority: 'Medium',
         due_date: '',
-        project_id: ''
+        project_id: 'none'
       })
       setIsDialogOpen(false)
       fetchTasks()
@@ -276,7 +276,7 @@ export default function Tasks() {
                       <SelectValue placeholder="Select project" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No project</SelectItem>
+                      <SelectItem value="none">No project</SelectItem>
                       {projects.map((project) => (
                         <SelectItem key={project.id} value={project.id}>
                           {project.name}
