@@ -7,6 +7,13 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { MainLayout } from "@/components/Layout/MainLayout";
 import Dashboard from "./pages/Dashboard";
+import Projects from "./pages/Projects";
+import Tasks from "./pages/Tasks";
+import Timesheets from "./pages/Timesheets";
+import Notes from "./pages/Notes";
+import Reports from "./pages/Reports";
+import Team from "./pages/Team";
+import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -87,13 +94,13 @@ const App = () => (
               }>
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<Dashboard />} />
-                <Route path="timesheets" element={<div className="p-6">Timesheets - Coming Soon</div>} />
-                <Route path="tasks" element={<div className="p-6">Tasks - Coming Soon</div>} />
-                <Route path="projects" element={<div className="p-6">Projects - Coming Soon</div>} />
-                <Route path="notes" element={<div className="p-6">Notes - Coming Soon</div>} />
-                <Route path="reports" element={<div className="p-6">Reports - Coming Soon</div>} />
-                <Route path="team" element={<div className="p-6">Team - Coming Soon</div>} />
-                <Route path="settings" element={<div className="p-6">Settings - Coming Soon</div>} />
+                <Route path="timesheets" element={<Timesheets />} />
+                <Route path="tasks" element={<Tasks />} />
+                <Route path="projects" element={<Projects />} />
+                <Route path="notes" element={<Notes />} />
+                <Route path="reports" element={<Reports />} />
+                <Route path="team" element={<Team />} />
+                <Route path="settings" element={<Settings />} />
               </Route>
               
               {/* Catch-all route */}
