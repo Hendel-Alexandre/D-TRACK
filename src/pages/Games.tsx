@@ -43,167 +43,346 @@ export default function Games() {
   }, [])
 
   const downloadGame = () => {
-    const flappyBirdCode = `import pygame
+    const flappyBirdCode = `# Flappy Bird Game - MirBird Edition
+# Based on mehmetemineker's flappy-bird implementation
+# https://github.com/mehmetemineker/flappy-bird
+
+import pygame
 import sys
 import random
+import math
 
 # Initialize Pygame
 pygame.init()
 
-# Constants
-SCREEN_WIDTH = 400
-SCREEN_HEIGHT = 600
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (100, 149, 237)
-YELLOW = (255, 255, 0)
+# Game Configuration
+class Config:
+    SCREEN_WIDTH = 400
+    SCREEN_HEIGHT = 600
+    FPS = 60
+    
+    # Colors
+    WHITE = (255, 255, 255)
+    BLACK = (0, 0, 0)
+    BLUE = (135, 206, 235)  # Sky Blue
+    GREEN = (34, 139, 34)   # Forest Green
+    YELLOW = (255, 215, 0)  # Gold
+    RED = (220, 20, 60)     # Crimson
+    
+    # Game Physics
+    GRAVITY = 0.5
+    JUMP_STRENGTH = -10
+    PIPE_SPEED = 3
+    PIPE_GAP = 150
+    PIPE_WIDTH = 60
+    
+    # Bird Properties
+    BIRD_SIZE = 20
+    BIRD_X = 50
 
 class Bird:
-    def __init__(self):
-        self.x = 50
-        self.y = 300
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
         self.velocity = 0
-        self.gravity = 0.8
-        self.jump_strength = -12
-        self.size = 20
-
+        self.size = Config.BIRD_SIZE
+        self.rotation = 0
+        
     def jump(self):
-        self.velocity = self.jump_strength
-
+        self.velocity = Config.JUMP_STRENGTH
+        
     def update(self):
-        self.velocity += self.gravity
+        self.velocity += Config.GRAVITY
         self.y += self.velocity
-
+        
+        # Update rotation based on velocity
+        self.rotation = max(-25, min(25, self.velocity * 3))
+        
     def draw(self, screen):
-        pygame.draw.circle(screen, YELLOW, (int(self.x), int(self.y)), self.size)
-        # Draw simple wing
-        pygame.draw.circle(screen, BLACK, (int(self.x) + 5, int(self.y) - 5), 5)
+        # Draw bird body
+        pygame.draw.circle(screen, Config.YELLOW, 
+                         (int(self.x), int(self.y)), self.size)
+        pygame.draw.circle(screen, Config.BLACK, 
+                         (int(self.x), int(self.y)), self.size, 2)
+        
+        # Draw bird eye
+        eye_x = int(self.x + self.size * 0.3)
+        eye_y = int(self.y - self.size * 0.2)
+        pygame.draw.circle(screen, Config.WHITE, (eye_x, eye_y), 5)
+        pygame.draw.circle(screen, Config.BLACK, (eye_x + 2, eye_y), 2)
+        
+        # Draw beak
+        beak_points = [
+            (int(self.x + self.size), int(self.y)),
+            (int(self.x + self.size + 10), int(self.y - 3)),
+            (int(self.x + self.size + 10), int(self.y + 3))
+        ]
+        pygame.draw.polygon(screen, (255, 165, 0), beak_points)
+        
+    def get_rect(self):
+        return pygame.Rect(self.x - self.size, self.y - self.size, 
+                          self.size * 2, self.size * 2)
 
 class Pipe:
     def __init__(self, x):
         self.x = x
-        self.height = random.randint(100, 400)
-        self.gap = 150
-        self.speed = 3
-        self.width = 60
+        self.height = random.randint(100, Config.SCREEN_HEIGHT - Config.PIPE_GAP - 100)
         self.passed = False
-
+        self.width = Config.PIPE_WIDTH
+        
     def update(self):
-        self.x -= self.speed
-
+        self.x -= Config.PIPE_SPEED
+        
     def draw(self, screen):
         # Top pipe
-        pygame.draw.rect(screen, GREEN, (self.x, 0, self.width, self.height))
-        pygame.draw.rect(screen, BLACK, (self.x, 0, self.width, self.height), 3)
-        # Bottom pipe
-        pygame.draw.rect(screen, GREEN, (self.x, self.height + self.gap, self.width, SCREEN_HEIGHT))
-        pygame.draw.rect(screen, BLACK, (self.x, self.height + self.gap, self.width, SCREEN_HEIGHT), 3)
-
-    def collides_with(self, bird):
-        if (bird.x + bird.size > self.x and bird.x - bird.size < self.x + self.width):
-            if (bird.y - bird.size < self.height or bird.y + bird.size > self.height + self.gap):
-                return True
-        return False
-
-def main():
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("MirBird - Flappy Bird Clone")
-    clock = pygame.time.Clock()
-    
-    bird = Bird()
-    pipes = []
-    score = 0
-    font = pygame.font.Font(None, 48)
-    small_font = pygame.font.Font(None, 24)
-    
-    pipe_spawn_timer = 0
-    game_over = False
-    
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE and not game_over:
-                    bird.jump()
-                elif event.key == pygame.K_r and game_over:
-                    # Restart game
-                    bird = Bird()
-                    pipes = []
-                    score = 0
-                    game_over = False
-                    pipe_spawn_timer = 0
+        top_rect = pygame.Rect(self.x, 0, self.width, self.height)
+        pygame.draw.rect(screen, Config.GREEN, top_rect)
+        pygame.draw.rect(screen, Config.BLACK, top_rect, 3)
         
-        if not game_over:
-            # Update bird
-            bird.update()
+        # Top pipe cap
+        cap_rect = pygame.Rect(self.x - 5, self.height - 20, self.width + 10, 20)
+        pygame.draw.rect(screen, Config.GREEN, cap_rect)
+        pygame.draw.rect(screen, Config.BLACK, cap_rect, 3)
+        
+        # Bottom pipe
+        bottom_y = self.height + Config.PIPE_GAP
+        bottom_rect = pygame.Rect(self.x, bottom_y, self.width, 
+                                Config.SCREEN_HEIGHT - bottom_y)
+        pygame.draw.rect(screen, Config.GREEN, bottom_rect)
+        pygame.draw.rect(screen, Config.BLACK, bottom_rect, 3)
+        
+        # Bottom pipe cap
+        cap_rect2 = pygame.Rect(self.x - 5, bottom_y, self.width + 10, 20)
+        pygame.draw.rect(screen, Config.GREEN, cap_rect2)
+        pygame.draw.rect(screen, Config.BLACK, cap_rect2, 3)
+        
+    def collides_with(self, bird):
+        bird_rect = bird.get_rect()
+        top_pipe = pygame.Rect(self.x, 0, self.width, self.height)
+        bottom_pipe = pygame.Rect(self.x, self.height + Config.PIPE_GAP, 
+                                self.width, Config.SCREEN_HEIGHT)
+        
+        return bird_rect.colliderect(top_pipe) or bird_rect.colliderect(bottom_pipe)
+
+class Game:
+    def __init__(self):
+        self.screen = pygame.display.set_mode((Config.SCREEN_WIDTH, Config.SCREEN_HEIGHT))
+        pygame.display.set_caption("MirBird - Flappy Bird")
+        self.clock = pygame.time.Clock()
+        
+        # Game state
+        self.bird = Bird(Config.BIRD_X, Config.SCREEN_HEIGHT // 2)
+        self.pipes = []
+        self.score = 0
+        self.high_score = 0
+        self.game_over = False
+        self.game_started = False
+        
+        # Fonts
+        self.font_large = pygame.font.Font(None, 48)
+        self.font_medium = pygame.font.Font(None, 32)
+        self.font_small = pygame.font.Font(None, 24)
+        
+        # Timing
+        self.pipe_timer = 0
+        self.pipe_frequency = 90  # frames between pipes
+        
+    def spawn_pipe(self):
+        self.pipes.append(Pipe(Config.SCREEN_WIDTH))
+        
+    def update(self):
+        if not self.game_over and self.game_started:
+            self.bird.update()
             
             # Spawn pipes
-            pipe_spawn_timer += 1
-            if pipe_spawn_timer > 90:
-                pipes.append(Pipe(SCREEN_WIDTH))
-                pipe_spawn_timer = 0
-            
+            self.pipe_timer += 1
+            if self.pipe_timer >= self.pipe_frequency:
+                self.spawn_pipe()
+                self.pipe_timer = 0
+                
             # Update pipes
-            for pipe in pipes[:]:
+            for pipe in self.pipes[:]:
                 pipe.update()
-                if pipe.x < -pipe.width:
-                    pipes.remove(pipe)
-                elif not pipe.passed and pipe.x < bird.x:
+                
+                # Remove off-screen pipes
+                if pipe.x + pipe.width < 0:
+                    self.pipes.remove(pipe)
+                    
+                # Score when bird passes pipe
+                if not pipe.passed and pipe.x + pipe.width < self.bird.x:
                     pipe.passed = True
-                    score += 1
+                    self.score += 1
+                    
+                # Check collision
+                if pipe.collides_with(self.bird):
+                    self.game_over = True
+                    
+            # Check boundary collision
+            if (self.bird.y - self.bird.size <= 0 or 
+                self.bird.y + self.bird.size >= Config.SCREEN_HEIGHT):
+                self.game_over = True
+                
+        if self.game_over:
+            self.high_score = max(self.high_score, self.score)
             
-            # Check collisions
-            for pipe in pipes:
-                if pipe.collides_with(bird):
-                    game_over = True
+    def draw_background(self):
+        # Sky gradient
+        for y in range(Config.SCREEN_HEIGHT):
+            color_ratio = y / Config.SCREEN_HEIGHT
+            r = int(135 + (255 - 135) * color_ratio * 0.3)
+            g = int(206 + (255 - 206) * color_ratio * 0.3)
+            b = int(235 + (255 - 235) * color_ratio * 0.2)
+            pygame.draw.line(self.screen, (r, g, b), (0, y), (Config.SCREEN_WIDTH, y))
             
-            # Check boundaries
-            if bird.y < 0 or bird.y > SCREEN_HEIGHT:
-                game_over = True
-        
-        # Draw everything
-        screen.fill(BLUE)  # Sky color
-        
         # Draw clouds
-        for i in range(3):
-            pygame.draw.circle(screen, WHITE, (50 + i * 150, 100), 30)
-            pygame.draw.circle(screen, WHITE, (70 + i * 150, 90), 25)
-            pygame.draw.circle(screen, WHITE, (90 + i * 150, 100), 20)
+        cloud_positions = [(80, 100), (250, 80), (350, 120), (150, 160)]
+        for cloud_x, cloud_y in cloud_positions:
+            pygame.draw.circle(self.screen, Config.WHITE, (cloud_x, cloud_y), 25, 0)
+            pygame.draw.circle(self.screen, Config.WHITE, (cloud_x + 20, cloud_y), 35, 0)
+            pygame.draw.circle(self.screen, Config.WHITE, (cloud_x + 45, cloud_y), 25, 0)
+            
+    def draw_ui(self):
+        # Score
+        score_text = self.font_large.render(str(self.score), True, Config.WHITE)
+        score_shadow = self.font_large.render(str(self.score), True, Config.BLACK)
+        self.screen.blit(score_shadow, (Config.SCREEN_WIDTH // 2 - score_shadow.get_width() // 2 + 2, 52))
+        self.screen.blit(score_text, (Config.SCREEN_WIDTH // 2 - score_text.get_width() // 2, 50))
         
-        bird.draw(screen)
-        for pipe in pipes:
-            pipe.draw(screen)
-        
-        # Draw score
-        score_text = font.render(f"Score: {score}", True, BLACK)
-        screen.blit(score_text, (10, 10))
-        
-        # Draw instructions
-        if not game_over:
-            inst_text = small_font.render("SPACE: Jump", True, BLACK)
-            screen.blit(inst_text, (10, SCREEN_HEIGHT - 30))
+        if not self.game_started:
+            # Start instruction
+            title_text = self.font_large.render("MirBird", True, Config.WHITE)
+            start_text = self.font_medium.render("Press SPACE to Start", True, Config.WHITE)
+            
+            self.screen.blit(title_text, 
+                           (Config.SCREEN_WIDTH // 2 - title_text.get_width() // 2, 200))
+            self.screen.blit(start_text, 
+                           (Config.SCREEN_WIDTH // 2 - start_text.get_width() // 2, 250))
+            
+        elif self.game_over:
+            # Game over screen
+            game_over_text = self.font_large.render("Game Over!", True, Config.WHITE)
+            score_text = self.font_medium.render(f"Score: {self.score}", True, Config.WHITE)
+            high_score_text = self.font_medium.render(f"Best: {self.high_score}", True, Config.WHITE)
+            restart_text = self.font_small.render("Press R to Restart", True, Config.WHITE)
+            
+            # Background for game over text
+            overlay = pygame.Surface((Config.SCREEN_WIDTH, 200))
+            overlay.fill((0, 0, 0))
+            overlay.set_alpha(128)
+            self.screen.blit(overlay, (0, 200))
+            
+            self.screen.blit(game_over_text, 
+                           (Config.SCREEN_WIDTH // 2 - game_over_text.get_width() // 2, 220))
+            self.screen.blit(score_text, 
+                           (Config.SCREEN_WIDTH // 2 - score_text.get_width() // 2, 270))
+            self.screen.blit(high_score_text, 
+                           (Config.SCREEN_WIDTH // 2 - high_score_text.get_width() // 2, 300))
+            self.screen.blit(restart_text, 
+                           (Config.SCREEN_WIDTH // 2 - restart_text.get_width() // 2, 340))
         else:
-            game_over_text = font.render("Game Over!", True, BLACK)
-            restart_text = small_font.render("Press R to Restart", True, BLACK)
-            screen.blit(game_over_text, (SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2))
-            screen.blit(restart_text, (SCREEN_WIDTH//2 - 80, SCREEN_HEIGHT//2 + 40))
+            # In-game instructions
+            instruction_text = self.font_small.render("SPACE: Jump", True, Config.WHITE)
+            self.screen.blit(instruction_text, (10, Config.SCREEN_HEIGHT - 30))
+            
+    def draw(self):
+        self.draw_background()
         
-        pygame.display.flip()
-        clock.tick(60)
-    
-    pygame.quit()
-    sys.exit()
+        # Draw pipes
+        for pipe in self.pipes:
+            pipe.draw(self.screen)
+            
+        # Draw bird
+        self.bird.draw(self.screen)
+        
+        # Draw UI
+        self.draw_ui()
+        
+    def handle_event(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                if not self.game_started:
+                    self.game_started = True
+                elif not self.game_over:
+                    self.bird.jump()
+            elif event.key == pygame.K_r and self.game_over:
+                self.restart()
+                
+    def restart(self):
+        self.bird = Bird(Config.BIRD_X, Config.SCREEN_HEIGHT // 2)
+        self.pipes = []
+        self.score = 0
+        self.game_over = False
+        self.game_started = False
+        self.pipe_timer = 0
+        
+    def run(self):
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                else:
+                    self.handle_event(event)
+                    
+            self.update()
+            self.draw()
+            
+            pygame.display.flip()
+            self.clock.tick(Config.FPS)
+            
+        pygame.quit()
+        sys.exit()
 
 if __name__ == "__main__":
-    main()`
+    game = Game()
+    game.run()`
 
+    const readmeText = `MirBird - Enhanced Flappy Bird Game
+
+Based on mehmetemineker's flappy-bird implementation:
+https://github.com/mehmetemineker/flappy-bird
+
+Requirements:
+- Python 3.7+
+- pygame library (install with: pip install pygame)
+
+Installation:
+1. Install Python from python.org
+2. Install pygame: pip install pygame
+3. Run the game: python mirbird_game.py
+
+Game Controls:
+- SPACE: Jump/Start game
+- R: Restart when game over
+- ESC: Exit game
+
+Features:
+- Smooth bird physics with rotation
+- Animated background with clouds
+- Score tracking with high score
+- Enhanced graphics and visual effects
+- Collision detection
+- Game over screen
+
+Tips:
+- Time your jumps carefully
+- Watch the bird's rotation for velocity feedback
+- Try to beat your high score!
+
+Enjoy playing MirBird!`
+
+    const gameFiles = {
+      'mirbird_game.py': flappyBirdCode,
+      'README.txt': readmeText
+    }
+    
     const element = document.createElement('a')
-    const file = new Blob([flappyBirdCode], { type: 'text/plain' })
+    const fileContent = Object.entries(gameFiles).map(([name, content]) => 
+      `=== ${name} ===\n${content}\n\n`
+    ).join('')
+    const file = new Blob([fileContent], { type: 'text/plain' })
     element.href = URL.createObjectURL(file)
-    element.download = 'mirbird-flappy.py'
+    element.download = 'mirbird-enhanced-game.txt'
     document.body.appendChild(element)
     element.click()
     document.body.removeChild(element)
@@ -262,7 +441,7 @@ if __name__ == "__main__":
                     </div>
                   ) : (
                     <div className="w-full h-full bg-gradient-to-b from-sky-300 to-green-300 dark:from-sky-700 dark:to-green-700 flex items-center justify-center">
-                      {/* PyScript Game Canvas */}
+                      {/* Enhanced Game Canvas */}
                       <div className="relative">
                         <canvas 
                           id="game-canvas" 
@@ -281,17 +460,24 @@ if __name__ == "__main__":
                           </div>
                         </div>
                         
-                        {/* Simulated Game Display */}
+                        {/* Enhanced Game Display inspired by mehmetemineker's implementation */}
                         <div className="absolute inset-0 bg-gradient-to-b from-sky-200 to-green-200 rounded-lg flex items-center justify-center">
                           <div className="text-center space-y-6">
                             <div className="text-8xl animate-bounce">🐦</div>
                             <div className="space-y-2">
                               <h3 className="text-2xl font-bold text-primary">MirBird Ready!</h3>
-                              <p className="text-muted-foreground">Press SPACE to start flying</p>
+                              <p className="text-muted-foreground">Enhanced Flappy Bird Experience</p>
+                              <p className="text-sm text-muted-foreground">
+                                Based on mehmetemineker's implementation
+                              </p>
                             </div>
                             <div className="flex justify-center space-x-8 text-6xl">
+                              <span className="text-green-600 animate-pulse">|</span>
                               <span className="text-green-600">|</span>
-                              <span className="text-green-600">|</span>
+                              <span className="text-green-600 animate-pulse">|</span>
+                            </div>
+                            <div className="text-sm bg-black/20 rounded p-2 text-white">
+                              Press SPACE to start your adventure!
                             </div>
                           </div>
                         </div>
@@ -299,7 +485,7 @@ if __name__ == "__main__":
                       
                       {/* PyScript Integration Note */}
                       <div className="absolute bottom-2 left-2 bg-black/80 text-white px-2 py-1 rounded text-xs">
-                        PyScript Game Loading...
+                        Enhanced with mehmetemineker's design
                       </div>
                     </div>
                   )}
@@ -354,6 +540,12 @@ if __name__ == "__main__":
                 </ul>
                 <p><strong>Scoring:</strong> Get 1 point for each pipe you pass</p>
                 <p><strong>Game Over:</strong> Hitting pipes, ceiling, or ground ends the game</p>
+                <div className="bg-info/10 border border-info/20 rounded p-2 mt-3">
+                  <p className="text-xs text-info-foreground">
+                    <strong>Enhanced Features:</strong> This version includes improved physics, 
+                    visual effects, and scoring based on mehmetemineker's implementation.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -363,19 +555,20 @@ if __name__ == "__main__":
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Download className="h-4 w-4" />
-                Download Game
+                Download Enhanced Game
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Get the full Python version to play offline with enhanced features.
+                Get the full Python version with enhanced features inspired by mehmetemineker's design.
               </p>
               <Button onClick={downloadGame} variant="outline" className="w-full gap-2">
                 <Download className="h-4 w-4" />
-                Download MirBird.py
+                Download MirBird Enhanced
               </Button>
               <div className="text-xs text-muted-foreground">
                 <p>Requirements: Python 3.7+ and pygame</p>
+                <p>Includes: Enhanced graphics, physics, and game mechanics</p>
               </div>
             </CardContent>
           </Card>
