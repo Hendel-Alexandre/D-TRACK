@@ -271,11 +271,18 @@ export default function Reports() {
     }
   }
 
-  const pieData = [
+  const hasData = totalHours > 0 || filteredNotes.length > 0 || filteredTasks.length > 0 || filteredProjects.length > 0
+
+  const pieData = hasData ? [
     { name: 'Hours', value: totalHours, color: 'hsl(var(--primary))' },
     { name: 'Notes', value: filteredNotes.length, color: 'hsl(142, 76%, 36%)' },
     { name: 'Tasks', value: filteredTasks.length, color: 'hsl(346, 87%, 43%)' },
     { name: 'Projects', value: filteredProjects.length, color: 'hsl(262, 83%, 58%)' }
+  ] : [
+    { name: 'Hours', value: 25, color: 'hsl(var(--primary))' },
+    { name: 'Notes', value: 25, color: 'hsl(142, 76%, 36%)' },
+    { name: 'Tasks', value: 25, color: 'hsl(346, 87%, 43%)' },
+    { name: 'Projects', value: 25, color: 'hsl(262, 83%, 58%)' }
   ]
 
   const exportToCSV = () => {
@@ -546,6 +553,11 @@ export default function Reports() {
                       </Pie>
                       <ChartTooltip content={<ChartTooltipContent className="bg-background border border-border shadow-lg" />} />
                       <ChartLegend content={<ChartLegendContent />} />
+                      {!hasData && (
+                        <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-muted-foreground text-sm">
+                          No data yet
+                        </text>
+                      )}
                     </PieChart>
                   )}
                 </>
