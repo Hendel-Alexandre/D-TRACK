@@ -92,7 +92,7 @@ export function AppSidebar() {
             src={datatrackLogo} 
             alt="D-Track" 
             className={`transition-all duration-300 mx-auto ${
-              isCollapsed ? 'h-8 w-auto' : 'h-12 w-auto'
+              isCollapsed ? 'h-14 w-auto' : 'h-20 w-auto'
             }`}
           />
         </div>
