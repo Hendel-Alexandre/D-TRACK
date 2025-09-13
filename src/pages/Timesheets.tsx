@@ -360,19 +360,20 @@ export default function Timesheets() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Timesheets</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Timesheets</h1>
           <p className="text-muted-foreground">Track your time and manage work hours</p>
         </div>
         
-        <div className="flex space-x-2">
+        <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
           <Dialog open={isAdjustmentDialogOpen} onOpenChange={setIsAdjustmentDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" className="w-full sm:w-auto h-11 sm:h-10">
                 <Minus className="h-4 w-4 mr-2" />
-                Add Adjustment
+                <span className="sm:hidden">Hour Adjustment</span>
+                <span className="hidden sm:inline">Add Adjustment</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -474,7 +475,7 @@ export default function Timesheets() {
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-primary hover:opacity-90">
+              <Button className="bg-gradient-primary hover:opacity-90 w-full sm:w-auto h-11 sm:h-10">
                 <Plus className="h-4 w-4 mr-2" />
                 Log Time
               </Button>
@@ -575,7 +576,7 @@ export default function Timesheets() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Hour Bank Balance</CardTitle>
@@ -644,62 +645,115 @@ export default function Timesheets() {
       </div>
 
       <div className="flex items-center space-x-4">
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1 max-w-full sm:max-w-md">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search time entries..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 h-11 sm:h-10"
           />
         </div>
       </div>
 
-      {/* Enhanced table view */}
+      {/* Enhanced sessions view */}
       {sessionsList.length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle>Work Sessions</CardTitle>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Total Hours</TableHead>
-                  <TableHead>Break Duration</TableHead>
-                  <TableHead>Adjustments</TableHead>
-                  <TableHead>Net Hours</TableHead>
-                  <TableHead>Description</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sessionsList.map((session) => (
-                  <TableRow key={session.date}>
-                    <TableCell className="font-medium">
-                      {new Date(session.date).toLocaleDateString('en-US', { 
-                        weekday: 'short', 
-                        month: 'short', 
-                        day: 'numeric' 
-                      })}
-                    </TableCell>
-                    <TableCell>{session.totalHours.toFixed(2)}h</TableCell>
-                    <TableCell>{session.breakDuration.toFixed(2)}h</TableCell>
-                    <TableCell>
-                      <span className={session.adjustmentHours >= 0 ? 'text-green-600' : 'text-red-600'}>
+          <CardContent className="p-0 sm:p-6">
+            {/* Mobile: Card-based layout */}
+            <div className="block sm:hidden space-y-3 p-3">
+              {sessionsList.map((session) => (
+                <div key={session.date} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium">
+                        {new Date(session.date).toLocaleDateString('en-US', { 
+                          weekday: 'short', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Net: <span className="font-semibold">
+                          {(session.totalHours + session.adjustmentHours - session.breakDuration).toFixed(2)}h
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div>
+                      <div className="text-muted-foreground">Total</div>
+                      <div className="font-medium">{session.totalHours.toFixed(2)}h</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Break</div>
+                      <div className="font-medium">{session.breakDuration.toFixed(2)}h</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Adjust</div>
+                      <div className={`font-medium ${session.adjustmentHours >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {session.adjustmentHours >= 0 ? '+' : ''}{session.adjustmentHours.toFixed(2)}h
-                      </span>
-                    </TableCell>
-                    <TableCell className="font-semibold">
-                      {(session.totalHours + session.adjustmentHours - session.breakDuration).toFixed(2)}h
-                    </TableCell>
-                    <TableCell className="max-w-xs truncate">
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Description</div>
+                    <div className="text-sm break-words">
                       {session.entries.map(e => e.description).join(', ')}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: Table layout */}
+            <div className="hidden sm:block">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Total Hours</TableHead>
+                      <TableHead>Break Duration</TableHead>
+                      <TableHead>Adjustments</TableHead>
+                      <TableHead>Net Hours</TableHead>
+                      <TableHead>Description</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sessionsList.map((session) => (
+                      <TableRow key={session.date}>
+                        <TableCell className="font-medium">
+                          {new Date(session.date).toLocaleDateString('en-US', { 
+                            weekday: 'short', 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </TableCell>
+                        <TableCell>{session.totalHours.toFixed(2)}h</TableCell>
+                        <TableCell>{session.breakDuration.toFixed(2)}h</TableCell>
+                        <TableCell>
+                          <span className={session.adjustmentHours >= 0 ? 'text-green-600' : 'text-red-600'}>
+                            {session.adjustmentHours >= 0 ? '+' : ''}{session.adjustmentHours.toFixed(2)}h
+                          </span>
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          {(session.totalHours + session.adjustmentHours - session.breakDuration).toFixed(2)}h
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate">
+                          {session.entries.map(e => e.description).join(', ')}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -710,7 +764,7 @@ export default function Timesheets() {
             {searchTerm ? 'No entries match your search.' : 'Start logging your time to track your work hours.'}
           </p>
           {!searchTerm && (
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button onClick={() => setIsDialogOpen(true)} className="h-11 sm:h-10">
               <Plus className="h-4 w-4 mr-2" />
               Log Time
             </Button>
@@ -724,38 +778,77 @@ export default function Timesheets() {
           <CardHeader>
             <CardTitle>Recent Hour Adjustments</CardTitle>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Hours</TableHead>
-                  <TableHead>Reason</TableHead>
-                  <TableHead>Notes</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {hourAdjustments.slice(0, 10).map((adjustment) => (
-                  <TableRow key={adjustment.id}>
-                    <TableCell>
-                      {new Date(adjustment.date).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric' 
-                      })}
-                    </TableCell>
-                    <TableCell>{adjustment.type}</TableCell>
-                    <TableCell>
-                      <span className={adjustment.hours >= 0 ? 'text-green-600' : 'text-red-600'}>
-                        {adjustment.hours >= 0 ? '+' : ''}{adjustment.hours.toFixed(2)}h
-                      </span>
-                    </TableCell>
-                    <TableCell>{adjustment.reason}</TableCell>
-                    <TableCell className="max-w-xs truncate">{adjustment.notes || '-'}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <CardContent className="p-0 sm:p-6">
+            {/* Mobile: Card-based layout */}
+            <div className="block sm:hidden space-y-3 p-3">
+              {hourAdjustments.slice(0, 10).map((adjustment) => (
+                <div key={adjustment.id} className="border rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium">
+                        {new Date(adjustment.date).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </div>
+                      <div className="text-sm text-muted-foreground">{adjustment.type}</div>
+                    </div>
+                    <div className={`font-semibold ${adjustment.hours >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {adjustment.hours >= 0 ? '+' : ''}{adjustment.hours.toFixed(2)}h
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="text-sm text-muted-foreground">Reason</div>
+                    <div className="text-sm">{adjustment.reason}</div>
+                  </div>
+                  
+                  {adjustment.notes && (
+                    <div>
+                      <div className="text-sm text-muted-foreground">Notes</div>
+                      <div className="text-sm break-words">{adjustment.notes}</div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: Table layout */}
+            <div className="hidden sm:block">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Hours</TableHead>
+                      <TableHead>Reason</TableHead>
+                      <TableHead>Notes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {hourAdjustments.slice(0, 10).map((adjustment) => (
+                      <TableRow key={adjustment.id}>
+                        <TableCell>
+                          {new Date(adjustment.date).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </TableCell>
+                        <TableCell>{adjustment.type}</TableCell>
+                        <TableCell>
+                          <span className={adjustment.hours >= 0 ? 'text-green-600' : 'text-red-600'}>
+                            {adjustment.hours >= 0 ? '+' : ''}{adjustment.hours.toFixed(2)}h
+                          </span>
+                        </TableCell>
+                        <TableCell>{adjustment.reason}</TableCell>
+                        <TableCell className="max-w-xs truncate">{adjustment.notes || '-'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
