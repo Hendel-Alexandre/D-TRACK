@@ -276,6 +276,7 @@ export type Database = {
         Row: {
           conversation_id: string
           created_at: string
+          delivered_at: string | null
           id: string
           message: string
           read_at: string | null
@@ -284,6 +285,7 @@ export type Database = {
         Insert: {
           conversation_id: string
           created_at?: string
+          delivered_at?: string | null
           id?: string
           message: string
           read_at?: string | null
@@ -292,6 +294,7 @@ export type Database = {
         Update: {
           conversation_id?: string
           created_at?: string
+          delivered_at?: string | null
           id?: string
           message?: string
           read_at?: string | null

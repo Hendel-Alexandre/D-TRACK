@@ -48,7 +48,6 @@ interface Message {
   message: string
   created_at: string
   read_at?: string | null
-  delivered_at?: string | null
   sender?: User
 }
 
@@ -312,7 +311,6 @@ export default function Messages() {
           message, 
           created_at,
           read_at,
-          delivered_at,
           users (
             id,
             first_name,
@@ -983,24 +981,29 @@ export default function Messages() {
                       }`}>
                         <p className="break-words text-sm leading-relaxed">{message.message}</p>
                         
-                        {/* Read receipts - only show for sender's messages */}
+                        {/* WhatsApp-style message status indicators - only show for sender's messages */}
                         {message.sender_id === user?.id && (
-                          <div className="flex justify-end mt-1">
-                            <span className="text-xs opacity-70">
-                              {message.read_at ? '✅✅' : '✅'}
-                            </span>
+                          <div className="flex justify-end mt-1 items-center gap-0.5">
+                            {message.read_at ? (
+                              // 2 green checks for read
+                              <div className="flex items-center text-green-500">
+                                <Check className="h-3 w-3 -mr-1" />
+                                <CheckCheck className="h-3 w-3" />
+                              </div>
+                            ) : (
+                              // 2 gray checks for delivered (we assume all messages are delivered immediately)
+                              <div className="flex items-center text-muted-foreground/60">
+                                <Check className="h-3 w-3 -mr-1" />
+                                <CheckCheck className="h-3 w-3" />
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
                       
-                      {/* Timestamp */}
+                      {/* Timestamp - removed read status from here since it's now in message bubble */}
                       <p className="text-xs text-muted-foreground mt-1 px-1">
                         {format(new Date(message.created_at), 'HH:mm')}
-                        {message.sender_id === user?.id && message.read_at && (
-                          <span className="ml-2 opacity-60">
-                            • Read {format(new Date(message.read_at), 'HH:mm')}
-                          </span>
-                        )}
                       </p>
                     </div>
                   </div>
