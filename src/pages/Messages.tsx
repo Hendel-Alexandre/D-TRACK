@@ -46,11 +46,12 @@ interface Message {
   sender_id: string
   message: string
   created_at: string
+  read_at?: string | null
   sender?: User
 }
 
 export default function Messages() {
-  const { user } = useAuth()
+  const { user, userProfile } = useAuth()
   const [searchParams] = useSearchParams()
   const isMobile = useIsMobile()
   const [showChat, setShowChat] = useState(false)
@@ -283,6 +284,7 @@ export default function Messages() {
           sender_id, 
           message, 
           created_at,
+          read_at,
           users (
             id,
             first_name,
@@ -313,6 +315,29 @@ export default function Messages() {
       })) || []
 
       setMessages(processedMessages)
+
+      // Mark messages as read for the current user (except their own messages)
+      if (user) {
+        const unreadMessages = processedMessages.filter(msg => 
+          msg.sender_id !== user.id && !msg.read_at
+        )
+        
+        if (unreadMessages.length > 0) {
+          const messageIds = unreadMessages.map(msg => msg.id)
+          await supabase
+            .from('messages')
+            .update({ read_at: new Date().toISOString() })
+            .in('id', messageIds)
+            .eq('conversation_id', conversationId)
+
+          // Update local state to reflect read status
+          setMessages(prev => prev.map(msg => 
+            messageIds.includes(msg.id) 
+              ? { ...msg, read_at: new Date().toISOString() }
+              : msg
+          ))
+        }
+      }
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -325,7 +350,7 @@ export default function Messages() {
   const setupRealtimeSubscriptions = () => {
     // Listen for new messages
     const messagesChannel = supabase
-      .channel('messages')
+      .channel('schema-db-changes')
       .on(
         'postgres_changes',
         {
@@ -334,27 +359,31 @@ export default function Messages() {
           table: 'messages'
         },
         async (payload) => {
-          const newMessage = payload.new as Message
-
-          // Fetch sender info
-          const { data: senderData } = await supabase
-            .from('users')
-            .select('id, first_name, last_name, email, department, status')
-            .eq('id', newMessage.sender_id)
-            .single()
-
-          const messageWithSender = {
-            ...newMessage,
-            sender: senderData
+          console.log('New message received:', payload)
+          
+          // If we're viewing the conversation where the message was sent, refresh messages
+          if (selectedConversation && payload.new.conversation_id === selectedConversation.id) {
+            await fetchMessages(selectedConversation.id)
           }
-
-          // If this message is for the currently selected conversation, add it
-          if (selectedConversation && newMessage.conversation_id === selectedConversation.id) {
-            setMessages(prev => [...prev, messageWithSender])
-          }
-
-          // Update conversations list
+          
+          // Always refresh conversations to update last message
           fetchConversations()
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages'
+        },
+        async (payload) => {
+          console.log('Message updated (read receipt):', payload)
+          
+          // If we're viewing the conversation where the message was updated, refresh messages
+          if (selectedConversation && payload.new.conversation_id === selectedConversation.id) {
+            await fetchMessages(selectedConversation.id)
+          }
         }
       )
       .subscribe()
@@ -385,33 +414,65 @@ export default function Messages() {
     e.preventDefault()
     if (!newMessage.trim() || !selectedConversation || !user) return
 
-    // Sanitize input to prevent XSS and limit message length
-    const sanitizedMessage = newMessage.trim()
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/javascript:/gi, '')
-      .replace(/on\w+\s*=/gi, '')
-      .slice(0, 1000) // Limit to 1000 characters
+    const messageText = newMessage.trim()
+    const tempMessage: Message = {
+      id: `temp-${Date.now()}`,
+      conversation_id: selectedConversation.id,
+      sender_id: user.id,
+      message: messageText,
+      created_at: new Date().toISOString(),
+      read_at: null,
+      sender: {
+        id: user.id,
+        first_name: userProfile?.first_name || 'User',
+        last_name: userProfile?.last_name || '',
+        email: userProfile?.email || user.email || '',
+        department: userProfile?.department || '',
+        status: userProfile?.status || 'Available',
+        role: 'team_member'
+      }
+    }
 
-    if (!sanitizedMessage) return
+    // Optimistic UI update - add message immediately
+    setMessages(prev => [...prev, tempMessage])
+    setNewMessage('')
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('messages')
         .insert({
           conversation_id: selectedConversation.id,
           sender_id: user.id,
-          message: sanitizedMessage
+          message: messageText
         })
+        .select('*')
+        .single()
 
       if (error) throw error
 
-      setNewMessage('')
+      // Replace temp message with real message
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === tempMessage.id 
+            ? { ...tempMessage, id: data.id, created_at: data.created_at }
+            : msg
+        )
+      )
+
     } catch (error: any) {
+      console.error('Error sending message:', error)
+      
+      // Remove temp message on error
+      setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id))
+      
       toast({
         title: 'Error',
-        description: error.message,
+        description: 'Failed to send message. Please try again.',
         variant: 'destructive'
       })
+      
+      // Restore the message text if sending failed
+      setNewMessage(messageText)
     }
   }
 
@@ -879,11 +940,25 @@ export default function Messages() {
                           : 'bg-muted text-foreground rounded-bl-md border'
                       }`}>
                         <p className="break-words text-sm leading-relaxed">{message.message}</p>
+                        
+                        {/* Read receipts - only show for sender's messages */}
+                        {message.sender_id === user?.id && (
+                          <div className="flex justify-end mt-1">
+                            <span className="text-xs opacity-70">
+                              {message.read_at ? '✅✅' : '✅'}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       
                       {/* Timestamp */}
                       <p className="text-xs text-muted-foreground mt-1 px-1">
                         {format(new Date(message.created_at), 'HH:mm')}
+                        {message.sender_id === user?.id && message.read_at && (
+                          <span className="ml-2 opacity-60">
+                            • Read {format(new Date(message.read_at), 'HH:mm')}
+                          </span>
+                        )}
                       </p>
                     </div>
                   </div>
