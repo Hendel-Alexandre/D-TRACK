@@ -43,6 +43,8 @@ export default function Notes() {
     content: ''
   })
   const [sendTo, setSendTo] = useState<'none' | 'calendar' | 'colleague'>('none')
+  const [sendToCalendar, setSendToCalendar] = useState(false)
+  const [sendToColleague, setSendToColleague] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [selectedTime, setSelectedTime] = useState('')
   const [users, setUsers] = useState<User[]>([])
@@ -105,7 +107,9 @@ export default function Notes() {
       if (noteError) throw noteError
 
       // Handle calendar or colleague actions
-      if (sendTo === 'calendar' && selectedDate) {
+      let successMessage = 'Note created successfully'
+
+      if (sendToCalendar && selectedDate) {
         const dueDate = format(selectedDate, 'yyyy-MM-dd')
         const taskTitle = `Note: ${newNote.title}`
         const taskDescription = newNote.content
@@ -122,12 +126,10 @@ export default function Notes() {
           })
 
         if (taskError) throw taskError
-        
-        toast({
-          title: 'Success',
-          description: 'Note created and added to calendar'
-        })
-      } else if (sendTo === 'colleague' && selectedUser) {
+        successMessage += ' and added to calendar'
+      }
+
+      if (sendToColleague && selectedUser) {
         // Start a conversation and send the note
         const { data: conversation, error: convError } = await supabase
           .rpc('start_direct_conversation', { recipient_id: selectedUser })
@@ -145,17 +147,13 @@ export default function Notes() {
           })
 
         if (messageError) throw messageError
-        
-        toast({
-          title: 'Success',
-          description: 'Note created and sent to colleague'
-        })
-      } else {
-        toast({
-          title: 'Success',
-          description: 'Note created successfully'
-        })
+        successMessage += ' and sent to colleague'
       }
+
+      toast({
+        title: 'Success',
+        description: successMessage
+      })
 
       resetForm()
       fetchNotes()
@@ -239,6 +237,8 @@ export default function Notes() {
   const resetForm = () => {
     setNewNote({ title: '', content: '' })
     setSendTo('none')
+    setSendToCalendar(false)
+    setSendToColleague(false)
     setSelectedDate(undefined)
     setSelectedTime('')
     setSelectedUser('')
@@ -324,44 +324,41 @@ export default function Notes() {
               {!editingNote && (
                 <div className="space-y-4 p-4 bg-card/50 rounded-lg border">
                   <div className="flex items-center space-x-2">
-                    <Label className="text-sm font-medium">Send note to:</Label>
+                    <Label className="text-sm font-medium">Send note to (select any combination):</Label>
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button
-                      type="button"
-                      variant={sendTo === 'none' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setSendTo('none')}
-                      className="justify-start"
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Just Save
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={sendTo === 'calendar' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setSendTo('calendar')}
-                      className="justify-start"
-                    >
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Calendar
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={sendTo === 'colleague' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setSendTo('colleague')}
-                      className="justify-start"
-                    >
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Colleague
-                    </Button>
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="sendToCalendar"
+                        checked={sendToCalendar}
+                        onChange={(e) => setSendToCalendar(e.target.checked)}
+                        className="rounded border-border"
+                      />
+                      <Label htmlFor="sendToCalendar" className="flex items-center space-x-2 cursor-pointer">
+                        <Calendar className="h-4 w-4" />
+                        <span>Add to Calendar</span>
+                      </Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="sendToColleague"
+                        checked={sendToColleague}
+                        onChange={(e) => setSendToColleague(e.target.checked)}
+                        className="rounded border-border"
+                      />
+                      <Label htmlFor="sendToColleague" className="flex items-center space-x-2 cursor-pointer">
+                        <MessageCircle className="h-4 w-4" />
+                        <span>Send to Colleague</span>
+                      </Label>
+                    </div>
                   </div>
 
-                  {sendTo === 'calendar' && (
-                    <div className="space-y-3">
+                  {sendToCalendar && (
+                    <div className="space-y-3 pl-6 border-l-2 border-primary/20">
                       <div className="space-y-2">
                         <Label>Select Date</Label>
                         <Popover>
@@ -402,8 +399,8 @@ export default function Notes() {
                     </div>
                   )}
 
-                  {sendTo === 'colleague' && (
-                    <div className="space-y-2">
+                  {sendToColleague && (
+                    <div className="space-y-2 pl-6 border-l-2 border-primary/20">
                       <Label>Select Colleague</Label>
                       <div className="space-y-2">
                         <Input
