@@ -21,9 +21,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Set up auth state listener FIRST to avoid missing events and deadlocks
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) {
+        // Set status to Available when logging in
+        if (event === 'SIGNED_IN') {
+          await supabase
+            .from('users')
+            .update({ status: 'Available' })
+            .eq('id', session.user.id)
+        }
+        
         // Defer Supabase calls from inside the callback
         setTimeout(() => {
           if (session?.user?.id) {
@@ -31,22 +39,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }, 0)
       } else {
+        // Set status to Away when logging out
+        if (event === 'SIGNED_OUT' && user?.id) {
+          await supabase
+            .from('users')
+            .update({ status: 'Away' })
+            .eq('id', user.id)
+        }
         setUserProfile(null)
         setLoading(false)
       }
     })
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null)
       if (session?.user) {
+        // Set status to Available for existing session
+        await supabase
+          .from('users')
+          .update({ status: 'Available' })
+          .eq('id', session.user.id)
         fetchUserProfile(session.user.id)
       } else {
         setLoading(false)
       }
     })
 
-    return () => subscription.unsubscribe()
+    // Set status to Away when page is closed/refreshed
+    const handleBeforeUnload = async () => {
+      if (user?.id) {
+        await supabase
+          .from('users')
+          .update({ status: 'Away' })
+          .eq('id', user.id)
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
   }, [])
 
   const fetchUserProfile = async (userId: string) => {

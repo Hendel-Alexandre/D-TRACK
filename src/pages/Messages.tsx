@@ -11,11 +11,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Search, Plus, Send, Users, MessageCircle, User, ArrowLeft } from 'lucide-react'
+import { Search, Plus, Send, Users, MessageCircle, User, ArrowLeft, Check, CheckCheck } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
 import { useSearchParams } from 'react-router-dom'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { StatusIndicator } from '@/components/ui/status-indicator'
 
 interface User {
   id: string
@@ -47,6 +48,7 @@ interface Message {
   message: string
   created_at: string
   read_at?: string | null
+  delivered_at?: string | null
   sender?: User
 }
 
@@ -81,6 +83,31 @@ export default function Messages() {
       fetchConversations()
       fetchUsers()
       setupRealtimeSubscriptions()
+    }
+  }, [user])
+
+  // Set up user status subscription for real-time updates
+  useEffect(() => {
+    if (!user) return
+
+    const statusChannel = supabase
+      .channel('user-status-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'users'
+        },
+        () => {
+          fetchUsers()
+          fetchConversations()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(statusChannel)
     }
   }, [user])
 
@@ -285,6 +312,7 @@ export default function Messages() {
           message, 
           created_at,
           read_at,
+          delivered_at,
           users (
             id,
             first_name,
@@ -816,6 +844,12 @@ export default function Messages() {
                         {getConversationAvatar(conversation)}
                       </AvatarFallback>
                     </Avatar>
+                    {!conversation.is_group && (
+                      <StatusIndicator 
+                        status={conversation.members?.find(m => m.id !== user?.id)?.status} 
+                        className="w-3 h-3"
+                      />
+                    )}
                     {conversation.unread_count && conversation.unread_count > 0 && (
                       <Badge 
                         variant="destructive" 
@@ -883,11 +917,19 @@ export default function Messages() {
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                 )}
-                <Avatar className={isMobile ? 'h-10 w-10' : 'h-8 w-8'}>
-                  <AvatarFallback>
-                    {getConversationAvatar(selectedConversation)}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative">
+                  <Avatar className={isMobile ? 'h-10 w-10' : 'h-8 w-8'}>
+                    <AvatarFallback>
+                      {getConversationAvatar(selectedConversation)}
+                    </AvatarFallback>
+                  </Avatar>
+                  {!selectedConversation.is_group && (
+                    <StatusIndicator 
+                      status={selectedConversation.members?.find(m => m.id !== user?.id)?.status} 
+                      className="w-2.5 h-2.5"
+                    />
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold truncate">
                     {getConversationDisplayName(selectedConversation)}
