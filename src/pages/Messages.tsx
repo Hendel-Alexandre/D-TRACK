@@ -11,10 +11,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Search, Plus, Send, Users, MessageCircle, User } from 'lucide-react'
+import { Search, Plus, Send, Users, MessageCircle, User, ArrowLeft } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
 import { useSearchParams } from 'react-router-dom'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 interface User {
   id: string
@@ -36,6 +37,7 @@ interface Conversation {
   last_message?: Message
   unread_count?: number
   members?: User[]
+  last_read_at?: string
 }
 
 interface Message {
@@ -50,6 +52,8 @@ interface Message {
 export default function Messages() {
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
+  const isMobile = useIsMobile()
+  const [showChat, setShowChat] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -130,6 +134,7 @@ export default function Messages() {
         .from('conversation_members')
         .select(`
           conversation_id,
+          last_read_at,
           conversations!inner (
             id,
             name,
@@ -213,6 +218,14 @@ export default function Messages() {
         const memberIds = membersData?.filter(m => m.conversation_id === conversation.id).map(m => m.user_id) || []
         const members = usersWithRoles?.filter(u => memberIds.includes(u.id)) || []
 
+        // Calculate unread count
+        const lastReadAt = item.last_read_at
+        const unreadMessages = lastMessages?.filter(msg => 
+          msg.conversation_id === conversation.id && 
+          msg.sender_id !== user.id &&
+          (!lastReadAt || new Date(msg.created_at) > new Date(lastReadAt))
+        ) || []
+
         return {
           ...conversation,
           last_message: lastMsg ? {
@@ -223,12 +236,17 @@ export default function Messages() {
             created_at: lastMsg.created_at,
             sender: usersWithRoles?.find(u => u.id === lastMsg.sender_id)
           } : undefined,
-          members
+          members,
+          unread_count: unreadMessages.length,
+          last_read_at: lastReadAt
         }
       }) || []
 
-      // Sort by last message time
+      // Sort by unread count first, then by last message time
       processedConversations.sort((a, b) => {
+        if (a.unread_count !== b.unread_count) {
+          return (b.unread_count || 0) - (a.unread_count || 0)
+        }
         const aTime = a.last_message?.created_at || a.created_at
         const bTime = b.last_message?.created_at || b.created_at
         return new Date(bTime).getTime() - new Date(aTime).getTime()
@@ -458,9 +476,38 @@ export default function Messages() {
     }
   }
 
-  const selectConversation = (conversation: Conversation) => {
+  const selectConversation = async (conversation: Conversation) => {
     setSelectedConversation(conversation)
     fetchMessages(conversation.id)
+    
+    if (isMobile) {
+      setShowChat(true)
+    }
+
+    // Mark conversation as read
+    if (user && conversation.unread_count && conversation.unread_count > 0) {
+      try {
+        await supabase
+          .from('conversation_members')
+          .update({ last_read_at: new Date().toISOString() })
+          .eq('conversation_id', conversation.id)
+          .eq('user_id', user.id)
+
+        // Update local state
+        setConversations(prev => prev.map(conv => 
+          conv.id === conversation.id 
+            ? { ...conv, unread_count: 0, last_read_at: new Date().toISOString() }
+            : conv
+        ))
+      } catch (error) {
+        console.error('Error marking conversation as read:', error)
+      }
+    }
+  }
+
+  const handleBackToConversations = () => {
+    setShowChat(false)
+    setSelectedConversation(null)
   }
 
   const handleStartConversationWithUser = async (targetUserId: string) => {
@@ -554,9 +601,10 @@ export default function Messages() {
   }
 
   return (
-    <div className="h-[calc(100vh-180px)] flex gap-4">
-      {/* Conversations Sidebar */}
-      <Card className="w-80 flex flex-col">
+    <div className={`h-[calc(100vh-180px)] ${isMobile ? 'flex flex-col' : 'flex gap-4'}`}>
+      {/* Conversations Sidebar - Mobile: conditional render, Desktop: always show */}
+      {(!isMobile || !showChat) && (
+        <Card className={`${isMobile ? 'flex-1' : 'w-80'} flex flex-col`}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -565,9 +613,9 @@ export default function Messages() {
             </CardTitle>
             <Dialog open={isNewChatOpen} onOpenChange={setIsNewChatOpen}>
               <DialogTrigger asChild>
-                <Button size="sm" variant="outline">
-                  <Plus className="h-4 w-4" />
-                </Button>
+                 <Button size="sm" variant="outline" className="shrink-0">
+                   <Plus className="h-4 w-4" />
+                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -670,7 +718,7 @@ export default function Messages() {
               placeholder="Search conversations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 text-sm"
             />
           </div>
         </CardHeader>
@@ -688,22 +736,32 @@ export default function Messages() {
                 onClick={() => selectConversation(conversation)}
               >
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback>
-                      {getConversationAvatar(conversation)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative">
+                    <Avatar className={`${isMobile ? 'h-12 w-12' : 'h-10 w-10'}`}>
+                      <AvatarFallback>
+                        {getConversationAvatar(conversation)}
+                      </AvatarFallback>
+                    </Avatar>
+                    {conversation.unread_count && conversation.unread_count > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs font-bold"
+                      >
+                        {conversation.unread_count > 9 ? '9+' : conversation.unread_count}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-medium truncate">
+                      <h4 className={`truncate ${conversation.unread_count && conversation.unread_count > 0 ? 'font-semibold' : 'font-medium'}`}>
                         {getConversationDisplayName(conversation)}
                       </h4>
                       {conversation.is_group && (
-                        <Users className="h-3 w-3" />
+                        <Users className="h-3 w-3 shrink-0" />
                       )}
                     </div>
                     {conversation.last_message && (
-                      <p className="text-sm opacity-70 truncate">
+                      <p className={`text-sm truncate ${conversation.unread_count && conversation.unread_count > 0 ? 'opacity-90 font-medium' : 'opacity-70'}`}>
                         {conversation.last_message.sender?.first_name}: {conversation.last_message.message}
                       </p>
                     )}
@@ -715,8 +773,8 @@ export default function Messages() {
                     )}
                   </div>
                   {conversation.last_message && (
-                    <div className="text-xs opacity-60">
-                      {format(new Date(conversation.last_message.created_at), 'HH:mm')}
+                    <div className="text-xs opacity-60 shrink-0">
+                      {format(new Date(conversation.last_message.created_at), isMobile ? 'HH:mm' : 'HH:mm')}
                     </div>
                   )}
                 </div>
@@ -732,20 +790,32 @@ export default function Messages() {
           </div>
         </ScrollArea>
       </Card>
+      )}
 
-      {/* Chat Area */}
-      <Card className="flex-1 flex flex-col">
+      {/* Chat Area - Mobile: conditional render, Desktop: always show */}
+      {(!isMobile || showChat) && (
+        <Card className={`${isMobile ? 'flex-1' : 'flex-1'} flex flex-col`}>
         {selectedConversation ? (
           <>
             <CardHeader className="border-b">
               <div className="flex items-center gap-3">
-                <Avatar>
+                {isMobile && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleBackToConversations}
+                    className="shrink-0"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                )}
+                <Avatar className={isMobile ? 'h-10 w-10' : 'h-8 w-8'}>
                   <AvatarFallback>
                     {getConversationAvatar(selectedConversation)}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <h3 className="font-semibold">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold truncate">
                     {getConversationDisplayName(selectedConversation)}
                   </h3>
                   <p className="text-sm text-muted-foreground">
@@ -758,13 +828,13 @@ export default function Messages() {
               </div>
             </CardHeader>
 
-            <ScrollArea className="flex-1 p-4">
+            <ScrollArea className="flex-1 p-3 md:p-4">
               <div className="space-y-3">
                 {messages.map(message => (
-                  <div key={message.id} className="flex items-start gap-3">
+                  <div key={message.id} className="flex items-start gap-2 md:gap-3">
                     {/* Avatar for other users */}
                     {message.sender_id !== user?.id && (
-                      <Avatar className="h-8 w-8 flex-shrink-0">
+                      <Avatar className={`${isMobile ? 'h-7 w-7' : 'h-8 w-8'} flex-shrink-0`}>
                         <AvatarFallback className="text-xs">
                           {message.sender ? `${message.sender.first_name?.charAt(0)}${message.sender.last_name?.charAt(0)}` : 'U'}
                         </AvatarFallback>
@@ -772,7 +842,7 @@ export default function Messages() {
                     )}
                     
                     {/* Message content */}
-                    <div className={`flex flex-col max-w-[70%] ${
+                    <div className={`flex flex-col ${isMobile ? 'max-w-[85%]' : 'max-w-[70%]'} ${
                       message.sender_id === user?.id ? 'ml-auto items-end' : 'items-start'
                     }`}>
                       {/* Sender name and role for other users */}
@@ -790,7 +860,7 @@ export default function Messages() {
                       )}
                       
                       {/* Message bubble */}
-                      <div className={`rounded-2xl px-4 py-2 shadow-sm max-w-full ${
+                      <div className={`rounded-2xl px-3 py-2 md:px-4 md:py-2 shadow-sm max-w-full ${
                         message.sender_id === user?.id
                           ? 'bg-primary text-primary-foreground rounded-br-md'
                           : 'bg-muted text-foreground rounded-bl-md border'
@@ -809,15 +879,15 @@ export default function Messages() {
               </div>
             </ScrollArea>
 
-            <CardContent className="border-t p-4">
+            <CardContent className="border-t p-3 md:p-4">
               <form onSubmit={sendMessage} className="flex gap-2">
                 <Input
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1"
+                  className="flex-1 text-sm md:text-base"
                 />
-                <Button type="submit" disabled={!newMessage.trim()}>
+                <Button type="submit" disabled={!newMessage.trim()} size={isMobile ? "sm" : "default"}>
                   <Send className="h-4 w-4" />
                 </Button>
               </form>
@@ -825,14 +895,15 @@ export default function Messages() {
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
+            <div className="text-center p-4">
               <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <h3 className="text-lg font-semibold mb-2">Select a conversation</h3>
-              <p>Choose a conversation from the sidebar to start messaging</p>
+              <p className={isMobile ? 'text-sm' : ''}>Choose a conversation from the sidebar to start messaging</p>
             </div>
           </div>
         )}
       </Card>
+      )}
     </div>
   )
 }
