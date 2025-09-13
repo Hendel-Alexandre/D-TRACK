@@ -1,13 +1,16 @@
-import React, { useEffect } from 'react'
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Download, Play, ArrowLeft } from 'lucide-react'
+import { Download, Play, ArrowLeft, Grid3x3, Bird, Gamepad2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-export default function MirBird() {
-  const navigate = useNavigate()
+type GameType = 'flappy' | 'connect4' | null
 
-  useEffect(() => {
+export default function Games() {
+  const navigate = useNavigate()
+  const [selectedGame, setSelectedGame] = useState<GameType>(null)
+
+  React.useEffect(() => {
     // Load PyScript CSS and JS
     const pyscriptCSS = document.createElement('link')
     pyscriptCSS.rel = 'stylesheet'
@@ -34,245 +37,430 @@ export default function MirBird() {
     }
   }, [])
 
-  const downloadGame = () => {
-    // Create zip file content for download
+  const downloadFlappyBird = () => {
     const gameFiles = {
-      'main.py': `import pygame, sys
-from settings import WIDTH, HEIGHT, ground_space
-from world import World
+      'flappy.py': `import pygame
+import sys
+import random
 
+# Initialize Pygame
 pygame.init()
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT + ground_space))
-pygame.display.set_caption("MirBird")  # Updated title
+# Constants
+SCREEN_WIDTH = 400
+SCREEN_HEIGHT = 600
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
 
-class Main:
-    def __init__(self, screen):
-        self.screen = screen
-        self.bg_img = pygame.image.load('assets/terrain/bg.png')
-        self.bg_img = pygame.transform.scale(self.bg_img, (WIDTH, HEIGHT))
-        self.ground_img = pygame.image.load('assets/terrain/ground.png')
-        self.ground_scroll = 0
-        self.scroll_speed = -6
-        self.FPS = pygame.time.Clock()
-        self.stop_ground_scroll = False
+class Bird:
+    def __init__(self):
+        self.x = 50
+        self.y = 300
+        self.velocity = 0
+        self.gravity = 0.8
+        self.jump_strength = -12
+        self.size = 20
 
-    def main(self):
-        world = World(screen)
-        while True:
-            self.stop_ground_scroll = world.game_over
-            self.screen.blit(self.bg_img, (0, 0))
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                elif event.type == pygame.KEYDOWN:
-                    if not world.playing and not world.game_over:
-                        world.playing = True
-                    if event.key == pygame.K_SPACE:
-                        world.update("jump")
-                    if event.key == pygame.K_r:
-                        world.update("restart")
-            world.update()
-            self.screen.blit(self.ground_img, (self.ground_scroll, HEIGHT))
-            if not self.stop_ground_scroll:
-                self.ground_scroll += self.scroll_speed
-                if abs(self.ground_scroll) > 35:
-                    self.ground_scroll = 0
-            pygame.display.update()
-            self.FPS.tick(60)
+    def jump(self):
+        self.velocity = self.jump_strength
+
+    def update(self):
+        self.velocity += self.gravity
+        self.y += self.velocity
+
+    def draw(self, screen):
+        pygame.draw.circle(screen, BLUE, (int(self.x), int(self.y)), self.size)
+
+class Pipe:
+    def __init__(self, x):
+        self.x = x
+        self.height = random.randint(100, 400)
+        self.gap = 150
+        self.speed = 3
+        self.width = 60
+
+    def update(self):
+        self.x -= self.speed
+
+    def draw(self, screen):
+        # Top pipe
+        pygame.draw.rect(screen, GREEN, (self.x, 0, self.width, self.height))
+        # Bottom pipe
+        pygame.draw.rect(screen, GREEN, (self.x, self.height + self.gap, self.width, SCREEN_HEIGHT))
+
+    def collides_with(self, bird):
+        if (bird.x + bird.size > self.x and bird.x - bird.size < self.x + self.width):
+            if (bird.y - bird.size < self.height or bird.y + bird.size > self.height + self.gap):
+                return True
+        return False
+
+def main():
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption("Flappy Bird")
+    clock = pygame.time.Clock()
+    
+    bird = Bird()
+    pipes = []
+    score = 0
+    font = pygame.font.Font(None, 36)
+    
+    pipe_spawn_timer = 0
+    
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    bird.jump()
+        
+        # Update bird
+        bird.update()
+        
+        # Spawn pipes
+        pipe_spawn_timer += 1
+        if pipe_spawn_timer > 90:
+            pipes.append(Pipe(SCREEN_WIDTH))
+            pipe_spawn_timer = 0
+        
+        # Update pipes
+        for pipe in pipes[:]:
+            pipe.update()
+            if pipe.x < -pipe.width:
+                pipes.remove(pipe)
+                score += 1
+        
+        # Check collisions
+        for pipe in pipes:
+            if pipe.collides_with(bird):
+                running = False
+        
+        # Check boundaries
+        if bird.y < 0 or bird.y > SCREEN_HEIGHT:
+            running = False
+        
+        # Draw everything
+        screen.fill(WHITE)
+        bird.draw(screen)
+        for pipe in pipes:
+            pipe.draw(screen)
+        
+        # Draw score
+        score_text = font.render(f"Score: {score}", True, BLACK)
+        screen.blit(score_text, (10, 10))
+        
+        pygame.display.flip()
+        clock.tick(60)
+    
+    pygame.quit()
+    sys.exit()
 
 if __name__ == "__main__":
-    play = Main(screen)
-    play.main()`,
-      'settings.py': `from os import walk
-import pygame
-
-WIDTH, HEIGHT = 600, 650
-
-pipe_pair_sizes = [
-    (1, 7),
-    (2, 6),
-    (3, 5),
-    (4, 4),
-    (5, 3),
-    (6, 2),
-    (7, 1)
-]
-pipe_size = HEIGHT // 10
-pipe_gap = (pipe_size * 2) + (pipe_size // 2)
-ground_space = 50
-
-def import_sprite(path):
-    surface_list = []
-    for _, __, img_file in walk(path):
-        for image in img_file:
-            full_path = f"{path}/{image}"
-            img_surface = pygame.image.load(full_path).convert_alpha()
-            surface_list.append(img_surface)
-    return surface_list`,
-      'README.txt': `MirBird - Python Pygame Game
+    main()`,
+      'README.txt': `Flappy Bird - Python Pygame Game
 
 Requirements:
 - Python 3.7+
 - pygame library (install with: pip install pygame)
 
 Instructions:
-1. Extract all files to a folder
-2. Make sure you have the assets folder with terrain and bird images
-3. Run: python main.py
-4. Press SPACE to jump, R to restart
+1. Run: python flappy.py
+2. Press SPACE to jump
+3. Avoid the green pipes
+4. Try to get the highest score!
 
 Game Controls:
 - SPACE: Jump
-- R: Restart game
 - ESC: Exit
 
-Enjoy playing MirBird!`
+Enjoy playing Flappy Bird!`
     }
     
-    // Create and download zip file (simplified version)
     const element = document.createElement('a')
     const fileContent = Object.entries(gameFiles).map(([name, content]) => 
       `=== ${name} ===\n${content}\n\n`
     ).join('')
     const file = new Blob([fileContent], { type: 'text/plain' })
     element.href = URL.createObjectURL(file)
-    element.download = 'mirbird-game.txt'
+    element.download = 'flappy-bird-game.txt'
     document.body.appendChild(element)
     element.click()
     document.body.removeChild(element)
   }
 
+  const Connect4Game = () => {
+    const [board, setBoard] = useState<(number | null)[][]>(
+      Array(6).fill(null).map(() => Array(7).fill(null))
+    )
+    const [currentPlayer, setCurrentPlayer] = useState<1 | 2>(1)
+    const [winner, setWinner] = useState<number | null>(null)
+
+    const dropPiece = (col: number) => {
+      if (winner) return
+      
+      const newBoard = [...board]
+      for (let row = 5; row >= 0; row--) {
+        if (newBoard[row][col] === null) {
+          newBoard[row][col] = currentPlayer
+          setBoard(newBoard)
+          
+          if (checkWinner(newBoard, row, col)) {
+            setWinner(currentPlayer)
+          } else {
+            setCurrentPlayer(currentPlayer === 1 ? 2 : 1)
+          }
+          break
+        }
+      }
+    }
+
+    const checkWinner = (board: (number | null)[][], row: number, col: number): boolean => {
+      const directions = [
+        [0, 1], [1, 0], [1, 1], [1, -1]
+      ]
+      
+      for (const [dr, dc] of directions) {
+        let count = 1
+        
+        // Check positive direction
+        let r = row + dr, c = col + dc
+        while (r >= 0 && r < 6 && c >= 0 && c < 7 && board[r][c] === currentPlayer) {
+          count++
+          r += dr
+          c += dc
+        }
+        
+        // Check negative direction
+        r = row - dr
+        c = col - dc
+        while (r >= 0 && r < 6 && c >= 0 && c < 7 && board[r][c] === currentPlayer) {
+          count++
+          r -= dr
+          c -= dc
+        }
+        
+        if (count >= 4) return true
+      }
+      
+      return false
+    }
+
+    const resetGame = () => {
+      setBoard(Array(6).fill(null).map(() => Array(7).fill(null)))
+      setCurrentPlayer(1)
+      setWinner(null)
+    }
+
+    return (
+      <div className="flex flex-col items-center space-y-4">
+        <div className="text-lg font-semibold">
+          {winner ? `Player ${winner} Wins! 🎉` : `Player ${currentPlayer}'s Turn`}
+        </div>
+        
+        <div className="grid grid-cols-7 gap-1 bg-primary/20 p-4 rounded-lg">
+          {board.map((row, rowIndex) =>
+            row.map((cell, colIndex) => (
+              <button
+                key={`${rowIndex}-${colIndex}`}
+                onClick={() => dropPiece(colIndex)}
+                className="w-12 h-12 rounded-full border-2 border-muted-foreground/20 flex items-center justify-center hover:bg-muted/50 transition-colors"
+                disabled={!!winner}
+              >
+                {cell && (
+                  <div
+                    className={`w-10 h-10 rounded-full ${
+                      cell === 1 ? 'bg-red-500' : 'bg-yellow-500'
+                    }`}
+                  />
+                )}
+              </button>
+            ))
+          )}
+        </div>
+        
+        <Button onClick={resetGame} variant="outline">
+          New Game
+        </Button>
+      </div>
+    )
+  }
+
+  const FlappyBirdGame = () => (
+    <div className="bg-gradient-to-br from-sky-100 to-blue-200 dark:from-sky-900 dark:to-blue-900 p-6 rounded-lg">
+      <div className="text-center space-y-4">
+        <div className="text-6xl animate-bounce">🐦</div>
+        <h3 className="text-2xl font-bold text-primary">Flappy Bird</h3>
+        <p className="text-muted-foreground">
+          Navigate through pipes and achieve the highest score!
+        </p>
+        
+        <div 
+          className="bg-black rounded-lg p-4 min-h-[300px] flex items-center justify-center text-green-400 font-mono text-sm"
+        >
+          <div className="text-center">
+            🐦 Flappy Bird Game Demo<br/>
+            Press SPACE to jump<br/>
+            Avoid the green pipes!<br/><br/>
+            Download the full Python version<br/>
+            for complete gameplay experience
+          </div>
+        </div>
+        
+        <Button onClick={downloadFlappyBird} className="w-full gap-2">
+          <Download className="h-4 w-4" />
+          Download Python Version
+        </Button>
+      </div>
+    </div>
+  )
+
+  if (selectedGame) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center gap-4 mb-6">
+          <Button variant="outline" onClick={() => setSelectedGame(null)} className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Games
+          </Button>
+          <h1 className="text-3xl font-bold">
+            {selectedGame === 'flappy' ? '🐦 Flappy Bird' : '🔴 Connect Four'}
+          </h1>
+        </div>
+        
+        <div className="max-w-2xl mx-auto">
+          {selectedGame === 'connect4' ? <Connect4Game /> : <FlappyBirdGame />}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="outline" onClick={() => navigate(-1)} className="gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Button>
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center gap-3 text-6xl">
+          <Gamepad2 className="h-16 w-16 text-primary animate-pulse" />
+          <span>🎮</span>
+        </div>
         <div>
-          <h1 className="text-4xl font-bold text-foreground">🐦 MirBird</h1>
-          <p className="text-muted-foreground">Classic Flappy Bird gameplay with a twist!</p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            Games Center
+          </h1>
+          <p className="text-muted-foreground text-lg">Choose your adventure!</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Game Area */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Play className="h-5 w-5" />
-              Play MirBird Online
+      {/* Games Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        {/* Flappy Bird Card */}
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+          <CardHeader className="text-center">
+            <div className="text-5xl mb-4 group-hover:animate-bounce">🐦</div>
+            <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+              <Bird className="h-6 w-6" />
+              Flappy Bird
             </CardTitle>
-            <CardDescription>
-              Python-powered Flappy Bird clone running in your browser
+            <CardDescription className="text-base">
+              Navigate through pipes in this classic arcade game
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="bg-gradient-to-br from-sky-100 to-blue-200 dark:from-sky-900 dark:to-blue-900 p-6 rounded-lg">
-              <div className="text-center space-y-4">
-                <div className="text-6xl animate-bounce">🐦</div>
-                <h3 className="text-2xl font-bold text-primary">MirBird</h3>
-                <p className="text-muted-foreground">
-                  Navigate through pipes and achieve the highest score!
-                </p>
-                
-                {/* PyScript Game Container */}
-                <div 
-                  id="mirbird-game" 
-                  className="bg-black rounded-lg p-4 min-h-[400px] flex items-center justify-center text-green-400 font-mono text-left whitespace-pre-line"
-                >
-                  <div className="w-full">
-                    <div className="text-center mb-4 text-yellow-400">
-                      === MirBird Demo ===
-                    </div>
-                    <div>
-                      🐦 Welcome to MirBird!{'\n'}
-                      Press SPACE to jump, R to restart{'\n'}
-                      {'\n'}
-                      Note: This is a demo version.{'\n'}
-                      Download the complete version below for:{'\n'}
-                      • Full graphics and animations{'\n'}
-                      • Smooth Pygame gameplay{'\n'}
-                      • Sound effects{'\n'}
-                      • Collision detection{'\n'}
-                      • Score tracking{'\n'}
-                      {'\n'}
-                      Loading PyScript environment...{'\n'}
-                      Ready to play! (Full version available for download)
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="text-sm text-muted-foreground">
-                  <p>🎮 Controls:</p>
-                  <p><kbd className="bg-muted px-2 py-1 rounded">SPACE</kbd> - Jump</p>
-                  <p><kbd className="bg-muted px-2 py-1 rounded">R</kbd> - Restart</p>
-                </div>
+          <CardContent className="space-y-4">
+            <div className="bg-gradient-to-br from-sky-100 to-blue-200 dark:from-sky-900/50 dark:to-blue-900/50 p-4 rounded-lg">
+              <div className="text-center text-sm space-y-2">
+                <p className="font-semibold">🎯 How to Play:</p>
+                <p>• Press SPACE to jump</p>
+                <p>• Avoid the green pipes</p>
+                <p>• Score points by passing through gaps</p>
+                <p>• Don't hit the ground or ceiling!</p>
               </div>
             </div>
+            <Button 
+              onClick={() => setSelectedGame('flappy')} 
+              className="w-full gap-2 text-lg py-6"
+              size="lg"
+            >
+              <Play className="h-5 w-5" />
+              Play Flappy Bird
+            </Button>
           </CardContent>
         </Card>
 
-        {/* Download and Info */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Download className="h-5 w-5" />
-                Download Full Game
-              </CardTitle>
-              <CardDescription>
-                Get the complete MirBird experience with full graphics and sound
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <h4 className="font-semibold mb-2">🚀 Features:</h4>
-                <ul className="text-sm space-y-1 text-muted-foreground">
-                  <li>✅ Classic Flappy Bird gameplay</li>
-                  <li>✅ Smooth animations and physics</li>
-                  <li>✅ Score tracking</li>
-                  <li>✅ Collision detection</li>
-                  <li>✅ Restart functionality</li>
-                  <li>✅ Full Python source code</li>
-                </ul>
+        {/* Connect Four Card */}
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+          <CardHeader className="text-center">
+            <div className="text-5xl mb-4 group-hover:animate-pulse">🔴</div>
+            <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+              <Grid3x3 className="h-6 w-6" />
+              Connect Four
+            </CardTitle>
+            <CardDescription className="text-base">
+              Strategic game for two players - get four in a row to win!
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-gradient-to-br from-red-100 to-yellow-200 dark:from-red-900/50 dark:to-yellow-900/50 p-4 rounded-lg">
+              <div className="text-center text-sm space-y-2">
+                <p className="font-semibold">🎯 How to Play:</p>
+                <p>• Drop pieces by clicking columns</p>
+                <p>• Get 4 in a row (any direction)</p>
+                <p>• Red player goes first</p>
+                <p>• Alternate turns with yellow player</p>
               </div>
-              
-              <Button onClick={downloadGame} className="w-full gap-2">
-                <Download className="h-4 w-4" />
-                Download MirBird Source
-              </Button>
-              
-              <div className="text-xs text-muted-foreground">
-                <p><strong>Requirements:</strong></p>
-                <p>• Python 3.7+</p>
-                <p>• pygame library</p>
-                <p>• Game assets (images)</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>🎯 Game Instructions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p><strong>Objective:</strong> Guide MirBird through the pipes without crashing!</p>
-              <p><strong>Scoring:</strong> Gain points by successfully passing through pipe gaps</p>
-              <p><strong>Physics:</strong> Gravity constantly pulls MirBird down</p>
-              <p><strong>Challenge:</strong> Each jump must be precisely timed</p>
-              <div className="bg-warning/10 border border-warning/20 rounded p-3 mt-4">
-                <p className="text-warning-foreground text-xs">
-                  <strong>Note:</strong> The browser version is a demo. For the full MirBird experience with graphics, sound, and smooth gameplay, download and run the Python version locally.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+            <Button 
+              onClick={() => setSelectedGame('connect4')} 
+              className="w-full gap-2 text-lg py-6"
+              size="lg"
+              variant="secondary"
+            >
+              <Play className="h-5 w-5" />
+              Play Connect Four
+            </Button>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Fun Features Section */}
+      <Card className="max-w-4xl mx-auto">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">🌟 Game Features</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-center">
+            <div className="space-y-2">
+              <div className="text-3xl">🏆</div>
+              <h4 className="font-semibold">Classic Gameplay</h4>
+              <p className="text-sm text-muted-foreground">
+                Authentic game mechanics that stay true to the originals
+              </p>
+            </div>
+            <div className="space-y-2">
+              <div className="text-3xl">🎨</div>
+              <h4 className="font-semibold">Modern Design</h4>
+              <p className="text-sm text-muted-foreground">
+                Beautiful, responsive interface with smooth animations
+              </p>
+            </div>
+            <div className="space-y-2">
+              <div className="text-3xl">📱</div>
+              <h4 className="font-semibold">Cross-Platform</h4>
+              <p className="text-sm text-muted-foreground">
+                Play on desktop, tablet, or mobile devices
+              </p>
+            </div>
+            <div className="space-y-2">
+              <div className="text-3xl">⚡</div>
+              <h4 className="font-semibold">Instant Play</h4>
+              <p className="text-sm text-muted-foreground">
+                No downloads required - play directly in your browser
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
