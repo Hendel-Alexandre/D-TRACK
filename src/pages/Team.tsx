@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Users, Mail, Phone, MapPin, UserPlus, Search } from 'lucide-react'
+import { Users, Mail, Phone, MapPin, UserPlus, Search, Calendar, MessageCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/hooks/use-toast'
@@ -27,6 +28,8 @@ export default function Team() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [filterDepartment, setFilterDepartment] = useState('all')
+  const [filterStatus, setFilterStatus] = useState('all')
 
   const fetchTeamMembers = async () => {
     if (!user) return
@@ -54,12 +57,15 @@ export default function Team() {
     fetchTeamMembers()
   }, [user])
 
-  const filteredMembers = teamMembers.filter(member =>
-    member.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.department.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredMembers = teamMembers.filter(member => {
+    const matchesSearch = member.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.department.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesDepartment = filterDepartment === 'all' || member.department === filterDepartment
+    const matchesStatus = filterStatus === 'all' || member.status === filterStatus
+    return matchesSearch && matchesDepartment && matchesStatus
+  })
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -107,172 +113,226 @@ export default function Team() {
   const statusStats = getStatusStats()
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="mobile-dense compact-spacing">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Team</h1>
-          <p className="text-muted-foreground">Manage your team members and collaboration</p>
+          <h1 className="text-4xl font-bold text-gradient mb-2">Team</h1>
+          <p className="text-muted-foreground text-balance">Connect with your team members and collaborate effectively</p>
         </div>
         
-        <Button className="bg-gradient-primary hover:opacity-90">
+        <Button className="button-premium shrink-0">
           <UserPlus className="h-4 w-4 mr-2" />
           Invite Member
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Members</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+      {/* Stats Cards - Compact Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 dense-grid mb-6">
+        <Card className="card-hover">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center justify-between">
+              Total Members
+              <Users className="h-4 w-4 text-primary" />
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{teamMembers.length}</div>
+          <CardContent className="pt-0">
+            <div className="text-2xl font-bold text-gradient">{teamMembers.length}</div>
             <p className="text-xs text-muted-foreground">
-              across {departmentStats.length} departments
+              {departmentStats.length} departments
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Available</CardTitle>
-            <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+        <Card className="card-hover">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center justify-between">
+              Available
+              <div className="h-2 w-2 bg-success rounded-full animate-pulse" />
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{statusStats.Available || 0}</div>
-            <p className="text-xs text-muted-foreground">members online</p>
+          <CardContent className="pt-0">
+            <div className="text-2xl font-bold text-success">{statusStats.Available || 0}</div>
+            <p className="text-xs text-muted-foreground">online now</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Largest Department</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+        <Card className="card-hover">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center justify-between">
+              Largest Dept
+              <Users className="h-4 w-4 text-info" />
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{departmentStats[0]?.[1] || 0}</div>
+          <CardContent className="pt-0">
+            <div className="text-2xl font-bold text-info">{departmentStats[0]?.[1] || 0}</div>
             <p className="text-xs text-muted-foreground truncate">
               {departmentStats[0]?.[0] || 'No departments'}
             </p>
           </CardContent>
         </Card>
+
+        <Card className="card-hover">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center justify-between">
+              Away/Busy
+              <div className="h-2 w-2 bg-warning rounded-full" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="text-2xl font-bold text-warning">
+              {(statusStats.Away || 0) + (statusStats.Busy || 0)}
+            </div>
+            <p className="text-xs text-muted-foreground">unavailable</p>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="flex items-center space-x-4">
+      {/* Enhanced Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search team members..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 input-sleek"
           />
         </div>
+        
+        <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+          <SelectTrigger className="w-40 input-sleek">
+            <SelectValue placeholder="Department" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Departments</SelectItem>
+            {departmentStats.map(([dept]) => (
+              <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-32 input-sleek">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="Available">Available</SelectItem>
+            <SelectItem value="Away">Away</SelectItem>
+            <SelectItem value="Busy">Busy</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredMembers.map((member) => (
+      {/* Dense Team Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 dense-grid">
+        {filteredMembers.map((member, index) => (
           <motion.div
             key={member.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.02 }}
+            transition={{ delay: index * 0.1 }}
             className="h-full"
           >
-            <Card className="h-full hover:shadow-lg transition-all duration-300">
-              <CardHeader className="text-center pb-2">
-                <div className="relative mx-auto">
-                  <Avatar className="h-16 w-16 mx-auto">
-                    <AvatarFallback className="text-lg font-semibold">
-                      {getInitials(member.first_name, member.last_name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className={`absolute -bottom-1 -right-1 h-4 w-4 ${getStatusColor(member.status)} rounded-full border-2 border-background`}></div>
+            <Card className="h-full card-interactive glass-effect hover:shadow-premium">
+              <CardContent className="p-4 space-y-3">
+                <div className="text-center">
+                  <div className="relative mx-auto w-fit">
+                    <Avatar className="h-14 w-14 mx-auto">
+                      <AvatarFallback className="text-lg font-bold bg-gradient-primary text-white">
+                        {getInitials(member.first_name, member.last_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className={`absolute -bottom-1 -right-1 h-4 w-4 ${getStatusColor(member.status)} rounded-full border-2 border-background shadow-sm`}></div>
+                  </div>
+                  
+                  <h3 className="font-bold text-base mt-2 text-balance">
+                    {member.first_name} {member.last_name}
+                  </h3>
+                  
+                  <Badge variant="secondary" className="text-xs mt-1">
+                    {member.department}
+                  </Badge>
                 </div>
-                <CardTitle className="text-lg">
-                  {member.first_name} {member.last_name}
-                </CardTitle>
-                <Badge variant="secondary">{member.department}</Badge>
-              </CardHeader>
-              <CardContent className="space-y-4">
+
                 <div className="flex items-center justify-center">
-                  <Badge className={`${getStatusColor(member.status)} text-white`}>
+                  <Badge className={`${getStatusColor(member.status)} text-white text-xs px-2 py-1`}>
                     {member.status}
                   </Badge>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span className="truncate">{member.email}</span>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center text-muted-foreground">
+                    <Mail className="h-3 w-3 mr-2 flex-shrink-0" />
+                    <span className="truncate text-xs">{member.email}</span>
                   </div>
                   
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span>{member.department} Department</span>
+                  <div className="flex items-center text-muted-foreground">
+                    <Calendar className="h-3 w-3 mr-2 flex-shrink-0" />
+                    <span className="text-xs">
+                      Joined {new Date(member.created_at).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center pt-4">
-                  <div className="text-xs text-muted-foreground">
-                    Joined {new Date(member.created_at).toLocaleDateString()}
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleMessageUser(member.id)}
-                    >
-                      <Mail className="h-3 w-3 mr-1" />
-                      Message
-                    </Button>
-                  </div>
-                </div>
+                <Button 
+                  size="sm"
+                  onClick={() => handleMessageUser(member.id)}
+                  className="w-full button-sleek text-xs"
+                >
+                  <MessageCircle className="h-3 w-3 mr-2" />
+                  Send Message
+                </Button>
               </CardContent>
             </Card>
           </motion.div>
         ))}
       </div>
 
+      {/* Empty State */}
       {filteredMembers.length === 0 && (
         <div className="text-center py-12">
-          <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No team members found</h3>
-          <p className="text-muted-foreground mb-4">
-            {searchTerm ? 'No members match your search.' : 'Start building your team by inviting members.'}
+          <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+          <h3 className="text-xl font-bold mb-2">No team members found</h3>
+          <p className="text-muted-foreground mb-6 text-balance">
+            {searchTerm || filterDepartment !== 'all' || filterStatus !== 'all'
+              ? 'No members match your current filters. Try adjusting your search.'
+              : 'Start building your team by inviting members to collaborate.'}
           </p>
-          {!searchTerm && (
-            <Button>
+          {!searchTerm && filterDepartment === 'all' && filterStatus === 'all' && (
+            <Button className="button-premium">
               <UserPlus className="h-4 w-4 mr-2" />
-              Invite Team Member
+              Invite First Team Member
             </Button>
           )}
         </div>
       )}
 
+      {/* Department Analytics - More Compact */}
       {departmentStats.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Department Breakdown</CardTitle>
+        <Card className="mt-8 card-hover">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Department Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {departmentStats.map(([department, count], index) => (
                 <motion.div
                   key={department}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="flex items-center justify-between"
+                  className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover-lift"
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 rounded-full bg-primary" 
-                         style={{ backgroundColor: `hsl(${index * 60}, 70%, 50%)` }} />
+                    <div 
+                      className="w-4 h-4 rounded-full shadow-sm" 
+                      style={{ backgroundColor: `hsl(${index * 60}, 70%, 50%)` }} 
+                    />
                     <span className="font-medium">{department}</span>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold">{count}</div>
+                    <div className="font-bold text-lg">{count}</div>
                     <div className="text-xs text-muted-foreground">
                       {((count / teamMembers.length) * 100).toFixed(1)}%
                     </div>

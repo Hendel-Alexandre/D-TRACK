@@ -7,11 +7,9 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Search, Plus, Send, Users, MessageCircle, User, ArrowLeft, Check, CheckCheck } from 'lucide-react'
+import { Search, Send, Users, MessageCircle, User, ArrowLeft, Check, CheckCheck, X } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
 import { useSearchParams } from 'react-router-dom'
@@ -63,10 +61,10 @@ export default function Messages() {
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState<User[]>([])
-  const [isNewChatOpen, setIsNewChatOpen] = useState(false)
-  const [newChatUsers, setNewChatUsers] = useState<string[]>([])
-  const [newChatName, setNewChatName] = useState('')
-  const [isGroup, setIsGroup] = useState(false)
+  const [showNewChatForm, setShowNewChatForm] = useState(false)
+  const [newChatType, setNewChatType] = useState<'direct' | 'group'>('direct')
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+  const [groupName, setGroupName] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -85,7 +83,6 @@ export default function Messages() {
     }
   }, [user])
 
-  // Set up user status subscription for real-time updates
   useEffect(() => {
     if (!user) return
 
@@ -110,7 +107,6 @@ export default function Messages() {
     }
   }, [user])
 
-  // Handle URL parameter for starting a conversation with a specific user
   useEffect(() => {
     const targetUserId = searchParams.get('user')
     if (targetUserId && user && conversations.length > 0) {
@@ -134,14 +130,12 @@ export default function Messages() {
 
       if (error) throw error
 
-      // Fetch user roles
       const userIds = data?.map(u => u.id) || []
       const { data: rolesData } = await supabase
         .from('user_roles')
         .select('user_id, role')
         .in('user_id', userIds)
 
-      // Combine users with their roles
       const usersWithRoles = data?.map(u => ({
         ...u,
         role: rolesData?.find(r => r.user_id === u.id)?.role || 'team_member'
@@ -175,7 +169,6 @@ export default function Messages() {
 
       if (error) throw error
 
-      // Get conversation IDs
       const conversationIds = conversationData?.map(item => item.conversation_id) || []
 
       if (conversationIds.length === 0) {
@@ -184,8 +177,7 @@ export default function Messages() {
         return
       }
 
-      // Fetch last message for each conversation
-      const { data: lastMessages, error: msgError } = await supabase
+      const { data: lastMessages } = await supabase
         .from('messages')
         .select(`
           id,
@@ -202,10 +194,7 @@ export default function Messages() {
         .in('conversation_id', conversationIds)
         .order('created_at', { ascending: false })
 
-      if (msgError) throw msgError
-
-      // Get members for each conversation
-      const { data: membersData, error: membersError } = await supabase
+      const { data: membersData } = await supabase
         .from('conversation_members')
         .select(`
           conversation_id,
@@ -213,48 +202,29 @@ export default function Messages() {
         `)
         .in('conversation_id', conversationIds)
 
-      if (membersError) throw membersError
-
-      // Get user details for members
       const userIds = membersData?.map(m => m.user_id) || []
-      const { data: usersData, error: usersError } = await supabase
+      const { data: usersData } = await supabase
         .from('users')
         .select('id, first_name, last_name, email, department, status')
         .in('id', userIds)
 
-      if (usersError) throw usersError
-
-      // Get user roles
       const { data: rolesData } = await supabase
         .from('user_roles')
         .select('user_id, role')
         .in('user_id', userIds)
 
-      // Combine users with roles
       const usersWithRoles = usersData?.map(u => ({
         ...u,
         role: rolesData?.find(r => r.user_id === u.id)?.role || 'team_member'
       })) || []
 
-      // Process conversations with member data
-      const conversationMemberMap = new Map()
-      conversationData?.forEach(item => {
-        conversationMemberMap.set(item.conversation_id, {
-          last_read_at: item.last_read_at,
-          conversation: item.conversations
-        })
-      })
-
-      // Process conversations
       const processedConversations = conversationData?.map(item => {
         const conversation = item.conversations
         const lastMsg = lastMessages?.find(msg => msg.conversation_id === conversation.id)
         
-        // Get members for this conversation
         const memberIds = membersData?.filter(m => m.conversation_id === conversation.id).map(m => m.user_id) || []
         const members = usersWithRoles?.filter(u => memberIds.includes(u.id)) || []
 
-        // Calculate unread count
         const lastReadAt = item.last_read_at
         const unreadMessages = lastMessages?.filter(msg => 
           msg.conversation_id === conversation.id && 
@@ -278,7 +248,6 @@ export default function Messages() {
         }
       }) || []
 
-      // Sort by unread count first, then by last message time
       processedConversations.sort((a, b) => {
         if (a.unread_count !== b.unread_count) {
           return (b.unread_count || 0) - (a.unread_count || 0)
@@ -325,7 +294,6 @@ export default function Messages() {
 
       if (error) throw error
 
-      // Get sender roles
       const senderIds = [...new Set(data?.map(m => m.sender_id) || [])]
       const { data: rolesData } = await supabase
         .from('user_roles')
@@ -342,7 +310,6 @@ export default function Messages() {
 
       setMessages(processedMessages)
 
-      // Mark messages as read for the current user (except their own messages)
       if (user) {
         const unreadMessages = processedMessages.filter(msg => 
           msg.sender_id !== user.id && !msg.read_at
@@ -356,7 +323,6 @@ export default function Messages() {
             .in('id', messageIds)
             .eq('conversation_id', conversationId)
 
-          // Update local state to reflect read status
           setMessages(prev => prev.map(msg => 
             messageIds.includes(msg.id) 
               ? { ...msg, read_at: new Date().toISOString() }
@@ -374,7 +340,6 @@ export default function Messages() {
   }
 
   const setupRealtimeSubscriptions = () => {
-    // Listen for new messages
     const messagesChannel = supabase
       .channel('schema-db-changes')
       .on(
@@ -385,14 +350,9 @@ export default function Messages() {
           table: 'messages'
         },
         async (payload) => {
-          console.log('New message received:', payload)
-          
-          // If we're viewing the conversation where the message was sent, refresh messages
           if (selectedConversation && payload.new.conversation_id === selectedConversation.id) {
             await fetchMessages(selectedConversation.id)
           }
-          
-          // Always refresh conversations to update last message
           fetchConversations()
         }
       )
@@ -404,9 +364,6 @@ export default function Messages() {
           table: 'messages'
         },
         async (payload) => {
-          console.log('Message updated (read receipt):', payload)
-          
-          // If we're viewing the conversation where the message was updated, refresh messages
           if (selectedConversation && payload.new.conversation_id === selectedConversation.id) {
             await fetchMessages(selectedConversation.id)
           }
@@ -414,7 +371,6 @@ export default function Messages() {
       )
       .subscribe()
 
-    // Listen for new conversations
     const conversationsChannel = supabase
       .channel('conversations')
       .on(
@@ -459,7 +415,6 @@ export default function Messages() {
       }
     }
 
-    // Optimistic UI update - add message immediately
     setMessages(prev => [...prev, tempMessage])
     setNewMessage('')
 
@@ -476,7 +431,6 @@ export default function Messages() {
 
       if (error) throw error
 
-      // Replace temp message with real message
       setMessages(prev => 
         prev.map(msg => 
           msg.id === tempMessage.id 
@@ -486,9 +440,6 @@ export default function Messages() {
       )
 
     } catch (error: any) {
-      console.error('Error sending message:', error)
-      
-      // Remove temp message on error
       setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id))
       
       toast({
@@ -497,42 +448,36 @@ export default function Messages() {
         variant: 'destructive'
       })
       
-      // Restore the message text if sending failed
       setNewMessage(messageText)
     }
   }
 
   const createConversation = async () => {
-    if (!user || newChatUsers.length === 0) return
+    if (!user || selectedUsers.length === 0) return
 
     try {
-      if (!isGroup && newChatUsers.length === 1) {
-        // Use the secure function for direct conversations
+      if (newChatType === 'direct' && selectedUsers.length === 1) {
         const { data: conversationId, error } = await supabase.rpc('start_direct_conversation', {
-          recipient_id: newChatUsers[0]
+          recipient_id: selectedUsers[0]
         })
 
         if (error) throw error
 
         toast({
           title: 'Success',
-          description: 'Conversation started successfully'
+          description: 'Direct message started successfully'
         })
 
-        setIsNewChatOpen(false)
-        setNewChatUsers([])
-        setNewChatName('')
-        setIsGroup(false)
+        resetNewChatForm()
         fetchConversations()
         return
       }
 
-      // For group conversations, still use the direct approach since multiple users are involved
       const { data: conversationData, error: convError } = await supabase
         .from('conversations')
         .insert({
-          name: isGroup ? newChatName || 'Group Chat' : null,
-          is_group: isGroup,
+          name: newChatType === 'group' ? groupName || 'Group Chat' : null,
+          is_group: newChatType === 'group',
           created_by: user.id
         })
         .select()
@@ -540,8 +485,7 @@ export default function Messages() {
 
       if (convError) throw convError
 
-      // Add members (including current user)
-      const membersToAdd = [user.id, ...newChatUsers]
+      const membersToAdd = [user.id, ...selectedUsers]
       const { error: membersError } = await supabase
         .from('conversation_members')
         .insert(
@@ -558,10 +502,7 @@ export default function Messages() {
         description: 'Conversation created successfully'
       })
 
-      setIsNewChatOpen(false)
-      setNewChatUsers([])
-      setNewChatName('')
-      setIsGroup(false)
+      resetNewChatForm()
       fetchConversations()
     } catch (error: any) {
       toast({
@@ -572,6 +513,13 @@ export default function Messages() {
     }
   }
 
+  const resetNewChatForm = () => {
+    setShowNewChatForm(false)
+    setSelectedUsers([])
+    setGroupName('')
+    setNewChatType('direct')
+  }
+
   const selectConversation = async (conversation: Conversation) => {
     setSelectedConversation(conversation)
     fetchMessages(conversation.id)
@@ -580,25 +528,19 @@ export default function Messages() {
       setShowChat(true)
     }
 
-    // Mark conversation as read
     if (user && conversation.unread_count && conversation.unread_count > 0) {
       try {
-        const { error } = await supabase
+        await supabase
           .from('conversation_members')
           .update({ last_read_at: new Date().toISOString() })
           .eq('conversation_id', conversation.id)
           .eq('user_id', user.id)
 
-        if (error) {
-          console.error('Error marking conversation as read:', error)
-        } else {
-          // Update local state
-          setConversations(prev => prev.map(conv => 
-            conv.id === conversation.id 
-              ? { ...conv, unread_count: 0, last_read_at: new Date().toISOString() }
-              : conv
-          ))
-        }
+        setConversations(prev => prev.map(conv => 
+          conv.id === conversation.id 
+            ? { ...conv, unread_count: 0, last_read_at: new Date().toISOString() }
+            : conv
+        ))
       } catch (error) {
         console.error('Error marking conversation as read:', error)
       }
@@ -614,7 +556,6 @@ export default function Messages() {
     if (!user) return
 
     try {
-      // Check if a direct conversation already exists between current user and target user
       const existingConversation = conversations.find(conv => {
         if (conv.is_group) return false
         const memberIds = conv.members?.map(m => m.id) || []
@@ -622,28 +563,24 @@ export default function Messages() {
       })
 
       if (existingConversation) {
-        // Open existing conversation
         selectConversation(existingConversation)
         return
       }
 
-      // Use the secure function to create a direct conversation
       const { data: conversationId, error } = await supabase.rpc('start_direct_conversation', {
         recipient_id: targetUserId
       })
 
       if (error) throw error
 
-      // Refresh conversations and select the new one
       await fetchConversations()
       
-      // Find and select the newly created conversation
       setTimeout(() => {
         const newConversation = conversations.find(conv => conv.id === conversationId)
         if (newConversation) {
           selectConversation(newConversation)
         }
-      }, 500) // Small delay to allow conversations to update
+      }, 500)
 
       toast({
         title: 'Success',
@@ -656,17 +593,6 @@ export default function Messages() {
         description: error.message,
         variant: 'destructive'
       })
-    }
-  }
-
-  const formatRole = (role: string) => {
-    switch (role) {
-      case 'admin': return 'Admin'
-      case 'project_manager': return 'Project Manager'
-      case 'developer': return 'Developer'
-      case 'designer': return 'Designer'
-      case 'team_member': return 'Team Member'
-      default: return 'Team Member'
     }
   }
 
@@ -701,342 +627,290 @@ export default function Messages() {
   }
 
   return (
-    <div className={`h-[calc(100vh-180px)] ${isMobile ? 'flex flex-col' : 'flex gap-4'}`}>
-      {/* Conversations Sidebar - Mobile: conditional render, Desktop: always show */}
-      {(!isMobile || !showChat) && (
-        <Card className={`${isMobile ? 'flex-1' : 'w-80'} flex flex-col`}>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5" />
-              Messages
-            </CardTitle>
-            <Dialog open={isNewChatOpen} onOpenChange={setIsNewChatOpen}>
-              <DialogTrigger asChild>
-                 <Button size="sm" variant="outline" className="shrink-0">
-                   <Plus className="h-4 w-4" />
-                 </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Start New Conversation</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Conversation Type</Label>
-                    <Select value={isGroup ? 'group' : 'direct'} onValueChange={(value) => setIsGroup(value === 'group')}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="direct">Direct Message</SelectItem>
-                        <SelectItem value="group">Group Chat</SelectItem>
-                      </SelectContent>
-                    </Select>
+    <div className="mobile-dense">
+      <div className={`h-[calc(100vh-140px)] ${isMobile ? 'flex flex-col' : 'flex gap-4'}`}>
+        {/* Conversations Sidebar */}
+        {(!isMobile || !showChat) && (
+          <Card className={`${isMobile ? 'flex-1' : 'w-80'} flex flex-col glass-effect`}>
+            <CardHeader className="pb-3 compact-spacing">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-gradient">
+                  <MessageCircle className="h-5 w-5" />
+                  Messages
+                </CardTitle>
+              </div>
+              
+              {/* Inline Action Buttons */}
+              <div className="flex gap-2 mt-3">
+                <Button 
+                  size="sm" 
+                  onClick={() => {
+                    setNewChatType('direct')
+                    setShowNewChatForm(true)
+                  }}
+                  className="button-premium flex-1"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Direct Message
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => {
+                    setNewChatType('group')
+                    setShowNewChatForm(true)
+                  }}
+                  className="flex-1 hover-lift"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Group Chat
+                </Button>
+              </div>
+
+              {/* New Chat Form */}
+              {showNewChatForm && (
+                <div className="space-y-3 p-3 border border-border rounded-lg bg-muted/30 animate-slide-up">
+                  <div className="flex items-center justify-between">
+                    <Label className="font-semibold">
+                      {newChatType === 'direct' ? 'Start Direct Message' : 'Create Group Chat'}
+                    </Label>
+                    <Button size="sm" variant="ghost" onClick={resetNewChatForm}>
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
 
-                  {isGroup && (
-                    <div className="space-y-2">
-                      <Label>Group Name</Label>
-                      <Input
-                        value={newChatName}
-                        onChange={(e) => setNewChatName(e.target.value)}
-                        placeholder="Enter group name"
-                      />
-                    </div>
+                  {newChatType === 'group' && (
+                    <Input
+                      placeholder="Group name"
+                      value={groupName}
+                      onChange={(e) => setGroupName(e.target.value)}
+                      className="input-sleek"
+                    />
                   )}
 
-                  <div className="space-y-2">
-                    <Label>Select Users</Label>
-                    <Select value="" onValueChange={(selectedUserId) => {
-                      if (selectedUserId && !newChatUsers.includes(selectedUserId)) {
-                        setNewChatUsers(prev => [...prev, selectedUserId])
+                  <Select
+                    value=""
+                    onValueChange={(selectedUserId) => {
+                      if (selectedUserId && !selectedUsers.includes(selectedUserId)) {
+                        setSelectedUsers(prev => newChatType === 'direct' ? [selectedUserId] : [...prev, selectedUserId])
                       }
-                    }}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Add users to conversation" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {users.filter(u => !newChatUsers.includes(u.id)).map(user => (
-                          <SelectItem key={user.id} value={user.id}>
-                            <div className="flex flex-col">
-                              <span>{user.first_name} {user.last_name}</span>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <span>{user.department || 'No department'}</span>
-                                <span>•</span>
-                                <span>{user.status || 'Available'}</span>
+                    }}
+                  >
+                    <SelectTrigger className="input-sleek">
+                      <span className="text-muted-foreground">
+                        {newChatType === 'direct' ? 'Select a person' : 'Add members'}
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users.filter(u => !selectedUsers.includes(u.id)).map(user => (
+                        <SelectItem key={user.id} value={user.id}>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarFallback className="text-xs">
+                                {user.first_name?.[0]}{user.last_name?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium">{user.first_name} {user.last_name}</div>
+                              <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                <StatusIndicator status={user.status || 'Available'} />
+                                {user.department}
                               </div>
                             </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-                  {newChatUsers.length > 0 && (
-                    <div className="space-y-2">
-                      <Label>Selected Users</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {newChatUsers.map(userId => {
-                          const selectedUser = users.find(u => u.id === userId)
-                          return selectedUser ? (
-                            <Badge key={userId} variant="secondary" className="cursor-pointer" onClick={() => {
-                              setNewChatUsers(prev => prev.filter(id => id !== userId))
-                            }}>
-                              <div className="flex flex-col text-left">
-                                <span>{selectedUser.first_name} {selectedUser.last_name}</span>
-                                <div className="flex items-center gap-1 text-xs opacity-70">
-                                  <span>{selectedUser.department || 'No department'}</span>
-                                  <span>•</span>
-                                  <span>{selectedUser.status || 'Available'}</span>
-                                </div>
-                              </div>
-                              <span className="ml-2">×</span>
+                  {selectedUsers.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedUsers.map(userId => {
+                        const selectedUser = users.find(u => u.id === userId)
+                        return selectedUser ? (
+                          <Badge key={userId} variant="secondary" className="cursor-pointer hover-lift" onClick={() => {
+                            setSelectedUsers(prev => prev.filter(id => id !== userId))
+                          }}>
+                            {selectedUser.first_name} {selectedUser.last_name}
+                            <X className="h-3 w-3 ml-1" />
+                          </Badge>
+                        ) : null
+                      })}
+                    </div>
+                  )}
+
+                  <Button 
+                    onClick={createConversation} 
+                    disabled={selectedUsers.length === 0}
+                    className="w-full button-premium"
+                  >
+                    {newChatType === 'direct' ? 'Start Chat' : 'Create Group'}
+                  </Button>
+                </div>
+              )}
+            </CardHeader>
+
+            <CardContent className="flex-1 p-0">
+              <div className="px-4 pb-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search conversations..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9 input-sleek"
+                  />
+                </div>
+              </div>
+
+              <ScrollArea className="flex-1">
+                <div className="space-y-1 px-2">
+                  {filteredConversations.map((conversation) => (
+                    <div
+                      key={conversation.id}
+                      onClick={() => selectConversation(conversation)}
+                      className={`p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-accent/70 card-interactive ${
+                        selectedConversation?.id === conversation.id ? 'bg-accent' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <Avatar className="h-10 w-10">
+                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                              {getConversationAvatar(conversation)}
+                            </AvatarFallback>
+                          </Avatar>
+                          {conversation.unread_count && conversation.unread_count > 0 && (
+                            <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-primary pulse-glow">
+                              {conversation.unread_count}
                             </Badge>
-                          ) : null
-                        })}
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <p className="font-semibold text-sm truncate">
+                              {getConversationDisplayName(conversation)}
+                            </p>
+                            {conversation.last_message && (
+                              <span className="text-xs text-muted-foreground">
+                                {format(new Date(conversation.last_message.created_at), 'HH:mm')}
+                              </span>
+                            )}
+                          </div>
+                          {conversation.last_message && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {conversation.last_message.sender?.first_name}: {conversation.last_message.message}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  )}
-
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setIsNewChatOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={createConversation} disabled={newChatUsers.length === 0}>
-                      Create Conversation
-                    </Button>
-                  </div>
+                  ))}
                 </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-          
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search conversations..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 text-sm"
-            />
-          </div>
-        </CardHeader>
-        
-        <ScrollArea className="flex-1 px-3">
-          <div className="space-y-2 pb-4">
-            {filteredConversations.map(conversation => (
-              <div
-                key={conversation.id}
-                className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                  selectedConversation?.id === conversation.id 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'hover:bg-muted'
-                }`}
-                onClick={() => selectConversation(conversation)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <Avatar className={`${isMobile ? 'h-12 w-12' : 'h-10 w-10'}`}>
-                      <AvatarFallback>
-                        {getConversationAvatar(conversation)}
-                      </AvatarFallback>
-                    </Avatar>
-                    {!conversation.is_group && (
-                      <StatusIndicator 
-                        status={conversation.members?.find(m => m.id !== user?.id)?.status} 
-                        className="w-3 h-3"
-                      />
-                    )}
-                    {conversation.unread_count && conversation.unread_count > 0 && (
-                      <Badge 
-                        variant="destructive" 
-                        className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs font-bold"
-                      >
-                        {conversation.unread_count > 9 ? '9+' : conversation.unread_count}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h4 className={`truncate ${conversation.unread_count && conversation.unread_count > 0 ? 'font-semibold' : 'font-medium'}`}>
-                        {getConversationDisplayName(conversation)}
-                      </h4>
-                      {conversation.is_group && (
-                        <Users className="h-3 w-3 shrink-0" />
-                      )}
-                    </div>
-                    {conversation.last_message && (
-                      <p className={`text-sm truncate ${conversation.unread_count && conversation.unread_count > 0 ? 'opacity-90 font-medium' : 'opacity-70'}`}>
-                        {conversation.last_message.sender?.first_name}: {conversation.last_message.message}
-                      </p>
-                    )}
-                    {/* Show role in conversation list for DMs */}
-                    {!conversation.is_group && conversation.members?.find(m => m.id !== user?.id)?.role && (
-                      <p className="text-xs opacity-50">
-                        {formatRole(conversation.members.find(m => m.id !== user?.id)?.role || '')}
-                      </p>
-                    )}
-                  </div>
-                  {conversation.last_message && (
-                    <div className="text-xs opacity-60 shrink-0">
-                      {format(new Date(conversation.last_message.created_at), isMobile ? 'HH:mm' : 'HH:mm')}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-            
-            {filteredConversations.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p>No conversations found</p>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-      </Card>
-      )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Chat Area - Mobile: conditional render, Desktop: always show */}
-      {(!isMobile || showChat) && (
-        <Card className={`${isMobile ? 'flex-1' : 'flex-1'} flex flex-col`}>
-        {selectedConversation ? (
-          <>
-            <CardHeader className="border-b">
+        {/* Chat Area */}
+        {(selectedConversation && (!isMobile || showChat)) && (
+          <Card className="flex-1 flex flex-col glass-effect">
+            <CardHeader className="py-3 border-b">
               <div className="flex items-center gap-3">
                 {isMobile && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleBackToConversations}
-                    className="shrink-0"
-                  >
+                  <Button size="sm" variant="ghost" onClick={handleBackToConversations}>
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                 )}
-                <div className="relative">
-                  <Avatar className={isMobile ? 'h-10 w-10' : 'h-8 w-8'}>
-                    <AvatarFallback>
-                      {getConversationAvatar(selectedConversation)}
-                    </AvatarFallback>
-                  </Avatar>
-                  {!selectedConversation.is_group && (
-                    <StatusIndicator 
-                      status={selectedConversation.members?.find(m => m.id !== user?.id)?.status} 
-                      className="w-2.5 h-2.5"
-                    />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate">
-                    {getConversationDisplayName(selectedConversation)}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedConversation.is_group 
-                      ? `${selectedConversation.members?.length || 0} members`
-                      : 'Direct message'
-                    }
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {getConversationAvatar(selectedConversation)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <CardTitle className="text-base">{getConversationDisplayName(selectedConversation)}</CardTitle>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedConversation.is_group ? `${selectedConversation.members?.length || 0} members` : 'Direct message'}
                   </p>
                 </div>
               </div>
             </CardHeader>
 
-            <ScrollArea className="flex-1 p-3 md:p-4">
-              <div className="space-y-3">
-                {messages.map(message => (
-                  <div key={message.id} className="flex items-start gap-2 md:gap-3">
-                    {/* Avatar for other users */}
-                    {message.sender_id !== user?.id && (
-                      <Avatar className={`${isMobile ? 'h-7 w-7' : 'h-8 w-8'} flex-shrink-0`}>
-                        <AvatarFallback className="text-xs">
-                          {message.sender ? `${message.sender.first_name?.charAt(0)}${message.sender.last_name?.charAt(0)}` : 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
+            <CardContent className="flex-1 p-0 flex flex-col">
+              <ScrollArea className="flex-1 p-4">
+                <div className="space-y-3">
+                  {messages.map((message, index) => {
+                    const isFromUser = message.sender_id === user?.id
+                    const showAvatar = index === 0 || messages[index - 1].sender_id !== message.sender_id
                     
-                    {/* Message content */}
-                    <div className={`flex flex-col ${isMobile ? 'max-w-[85%]' : 'max-w-[70%]'} ${
-                      message.sender_id === user?.id ? 'ml-auto items-end' : 'items-start'
-                    }`}>
-                      {/* Sender name and role for other users */}
-                      {message.sender_id !== user?.id && (
-                        <div className="mb-1 px-1">
-                          <p className="text-sm font-medium text-foreground">
-                            {message.sender?.first_name} {message.sender?.last_name}
-                          </p>
-                          {message.sender?.role && (
-                            <p className="text-xs text-muted-foreground">
-                              ({formatRole(message.sender.role)})
-                            </p>
-                          )}
-                        </div>
-                      )}
-                      
-                      {/* Message bubble */}
-                      <div className={`rounded-2xl px-3 py-2 md:px-4 md:py-2 shadow-sm max-w-full ${
-                        message.sender_id === user?.id
-                          ? 'bg-primary text-primary-foreground rounded-br-md'
-                          : 'bg-muted text-foreground rounded-bl-md border'
-                      }`}>
-                        <p className="break-words text-sm leading-relaxed">{message.message}</p>
-                        
-                        {/* WhatsApp-style message status indicators - only show for sender's messages */}
-                        {message.sender_id === user?.id && (
-                          <div className="flex justify-end mt-1 items-center gap-0.5">
-                            {message.read_at ? (
-                              // 2 green checks for read
-                              <div className="flex items-center text-green-500">
-                                <Check className="h-3 w-3 -mr-1" />
-                                <CheckCheck className="h-3 w-3" />
-                              </div>
-                            ) : (
-                              // 2 gray checks for delivered (we assume all messages are delivered immediately)
-                              <div className="flex items-center text-muted-foreground/60">
-                                <Check className="h-3 w-3 -mr-1" />
-                                <CheckCheck className="h-3 w-3" />
-                              </div>
-                            )}
-                          </div>
+                    return (
+                      <div key={message.id} className={`flex gap-2 ${isFromUser ? 'justify-end' : 'justify-start'}`}>
+                        {!isFromUser && showAvatar && (
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                              {message.sender?.first_name?.[0]}{message.sender?.last_name?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
                         )}
+                        
+                        <div className={`max-w-xs ${isFromUser ? 'ml-12' : !showAvatar ? 'ml-10' : ''}`}>
+                          {!isFromUser && showAvatar && (
+                            <div className="text-xs text-muted-foreground mb-1">
+                              {message.sender?.first_name} {message.sender?.last_name}
+                            </div>
+                          )}
+                          
+                          <div className={`p-3 rounded-lg ${
+                            isFromUser 
+                              ? 'bg-primary text-primary-foreground ml-auto' 
+                              : 'bg-muted'
+                          }`}>
+                            <p className="text-sm">{message.message}</p>
+                            <div className="flex items-center justify-end gap-1 mt-1">
+                              <span className="text-xs opacity-70">
+                                {format(new Date(message.created_at), 'HH:mm')}
+                              </span>
+                              {isFromUser && (
+                                message.read_at ? <CheckCheck className="h-3 w-3" /> : <Check className="h-3 w-3" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      
-                      {/* Timestamp - removed read status from here since it's now in message bubble */}
-                      <p className="text-xs text-muted-foreground mt-1 px-1">
-                        {format(new Date(message.created_at), 'HH:mm')}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            </ScrollArea>
+                    )
+                  })}
+                  <div ref={messagesEndRef} />
+                </div>
+              </ScrollArea>
 
-            <CardContent className="border-t p-3 md:p-4">
-              <form onSubmit={sendMessage} className="flex gap-2">
-                <Input
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-1 text-sm md:text-base"
-                />
-                <Button type="submit" disabled={!newMessage.trim()} size={isMobile ? "sm" : "default"}>
-                  <Send className="h-4 w-4" />
-                </Button>
+              <form onSubmit={sendMessage} className="p-4 border-t">
+                <div className="flex gap-2">
+                  <Input
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    className="flex-1 input-sleek"
+                  />
+                  <Button type="submit" size="sm" className="button-premium">
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
               </form>
             </CardContent>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            <div className="text-center p-4">
-              <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-semibold mb-2">Select a conversation</h3>
-              <p className={isMobile ? 'text-sm' : ''}>Choose a conversation from the sidebar to start messaging</p>
+          </Card>
+        )}
+
+        {/* Empty State */}
+        {!selectedConversation && !isMobile && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center space-y-3">
+              <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto" />
+              <h3 className="text-lg font-semibold">Select a conversation</h3>
+              <p className="text-muted-foreground">Choose a conversation from the sidebar to start messaging</p>
             </div>
           </div>
         )}
-      </Card>
-      )}
+      </div>
     </div>
   )
 }
