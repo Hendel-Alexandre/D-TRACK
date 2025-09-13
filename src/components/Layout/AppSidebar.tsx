@@ -104,7 +104,7 @@ export function AppSidebar() {
             <img 
               src={datatrackLogo} 
               alt="DataTrack" 
-              className={`transition-all duration-300 ${isCollapsed ? 'h-8 sm:h-10 w-auto' : 'h-10 sm:h-12 md:h-16 w-auto'}`}
+              className={`transition-all duration-300 ${isCollapsed ? 'h-16 sm:h-20 w-auto' : 'h-20 sm:h-24 md:h-32 w-auto'}`}
             />
           </div>
           
