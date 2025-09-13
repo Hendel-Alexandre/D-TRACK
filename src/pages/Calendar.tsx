@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { Plus, Clock, Bell, Edit2, Trash2, Calendar as CalendarIcon } from 'lucide-react'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths } from 'date-fns'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -35,6 +36,7 @@ interface Project {
 }
 
 export default function Calendar() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -254,8 +256,8 @@ export default function Calendar() {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Calendar</h1>
-          <p className="text-muted-foreground">Manage your tasks and schedule</p>
+          <h1 className="text-3xl font-bold text-foreground">{t('calendarTitle')}</h1>
+          <p className="text-muted-foreground">{t('calendarDescription')}</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -265,12 +267,12 @@ export default function Calendar() {
           <DialogTrigger asChild>
             <Button className="bg-gradient-primary hover:opacity-90">
               <Plus className="h-4 w-4 mr-2" />
-              New Task
+              {t('newTask')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editingTask ? 'Edit Task' : 'Create New Task'}</DialogTitle>
+              <DialogTitle>{editingTask ? t('editTask') : t('createNewTask')}</DialogTitle>
             </DialogHeader>
             <form onSubmit={createOrUpdateTask} className="space-y-4">
               <div className="space-y-2">
@@ -416,21 +418,21 @@ export default function Calendar() {
                   size="sm"
                   onClick={() => setCurrentDate(addMonths(currentDate, -1))}
                 >
-                  Previous
+                  {t('previous')}
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentDate(new Date())}
                 >
-                  Today
+                  {t('today')}
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentDate(addMonths(currentDate, 1))}
                 >
-                  Next
+                  {t('next')}
                 </Button>
               </div>
             </CardHeader>

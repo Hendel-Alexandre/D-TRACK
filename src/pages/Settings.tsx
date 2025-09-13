@@ -106,8 +106,8 @@ export default function Settings() {
   return (
     <div className="p-6 space-y-6 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground">Manage your account and preferences</p>
+        <h1 className="text-3xl font-bold text-foreground">{t('settingsTitle')}</h1>
+        <p className="text-muted-foreground">{t('settingsDescription')}</p>
       </div>
 
       <div className="grid gap-6">
@@ -145,7 +145,7 @@ export default function Settings() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t('email')}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -159,7 +159,7 @@ export default function Settings() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="department">Department</Label>
+                  <Label htmlFor="department">{t('department')}</Label>
                   <Select value={profileData.department} onValueChange={(value) => setProfileData({ ...profileData, department: value })}>
                     <SelectTrigger>
                       <SelectValue />

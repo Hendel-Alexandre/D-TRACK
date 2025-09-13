@@ -148,7 +148,7 @@ export default function Dashboard() {
             <div className="space-y-4">
               <div>
                 <h1 className="text-4xl font-bold text-gradient mb-2">
-                  Welcome back, {displayName}!
+                  {t('dashboardWelcome', { name: displayName })}
                 </h1>
                 <p className="text-lg text-muted-foreground">
                   {new Date().toLocaleDateString('en-US', { 
@@ -171,7 +171,7 @@ export default function Dashboard() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer bg-secondary/50 hover:bg-secondary px-3 py-2 rounded-lg">
-                        <span className="font-medium">{userProfile?.status || 'Available'}</span>
+                        <span className="font-medium">{t(userProfile?.status?.toLowerCase() || 'available')}</span>
                         <ChevronDown className="h-3 w-3" />
                       </button>
                     </DropdownMenuTrigger>
@@ -181,14 +181,14 @@ export default function Dashboard() {
                         className="flex items-center gap-3 cursor-pointer"
                       >
                         <Circle className="h-3 w-3 fill-current text-green-500" />
-                        Available
+                        {t('available')}
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => handleStatusChange('Away')}
                         className="flex items-center gap-3 cursor-pointer"
                       >
                         <Circle className="h-3 w-3 fill-current text-yellow-500" />
-                        Away
+                        {t('away')}
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => handleStatusChange('Busy')}
@@ -210,7 +210,7 @@ export default function Dashboard() {
               </Badge>
               <Button onClick={() => navigate('/timesheets')} className="button-premium gap-2">
                 <Plus className="h-4 w-4" />
-                Start Tracking
+                {t('startTracking')}
               </Button>
             </div>
           </div>
@@ -251,9 +251,9 @@ export default function Dashboard() {
         {/* Quick Actions */}
         <motion.div variants={itemVariants}>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-foreground">Quick Actions</h2>
+            <h2 className="text-2xl font-bold text-foreground">{t('Quick Actions')}</h2>
             <Button variant="ghost" onClick={() => navigate('/timesheets')} className="gap-2 text-muted-foreground hover:text-foreground">
-              View All
+              {t('view')} {t('allStatus')}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { Plus, Search, FileText, Edit, Trash2, Calendar, MessageCircle, Clock, User } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -32,6 +33,7 @@ interface User {
 }
 
 export default function Notes() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [notes, setNotes] = useState<Note[]>([])
   const [loading, setLoading] = useState(true)
@@ -311,27 +313,27 @@ export default function Notes() {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Notes</h1>
-          <p className="text-muted-foreground">Capture your thoughts and ideas</p>
+          <h1 className="text-3xl font-bold text-foreground">{t('notesTitle')}</h1>
+          <p className="text-muted-foreground">{t('notesDescription')}</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
           <DialogTrigger asChild>
             <Button className="bg-gradient-primary hover:opacity-90" onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
-              New Note
+              {t('newNote')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>{editingNote ? 'Edit Note' : 'Create New Note'}</DialogTitle>
+              <DialogTitle>{editingNote ? t('editNote') : t('createNewNote')}</DialogTitle>
             </DialogHeader>
             <form onSubmit={editingNote ? updateNote : createNote} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
+                <Label htmlFor="title">{t('title')}</Label>
                 <Input
                   id="title"
-                  placeholder="Note title..."
+                  placeholder={t('noteTitle')}
                   value={newNote.title}
                   onChange={(e) => setNewNote({ ...newNote, title: e.target.value })}
                   required
@@ -339,10 +341,10 @@ export default function Notes() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="content">Content</Label>
+                <Label htmlFor="content">{t('content')}</Label>
                 <Textarea
                   id="content"
-                  placeholder="Write your note content here..."
+                  placeholder={t('noteContent')}
                   value={newNote.content}
                   onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
                   rows={6}
@@ -491,7 +493,7 @@ export default function Notes() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search notes..."
+            placeholder={t('searchNotes')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"

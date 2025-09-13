@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { Plus, Search, CheckSquare, Calendar, Flag, MoreHorizontal } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -31,6 +32,7 @@ interface Project {
 }
 
 export default function Tasks() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [tasks, setTasks] = useState<Task[]>([])
   const [projects, setProjects] = useState<Project[]>([])
@@ -61,7 +63,7 @@ export default function Tasks() {
       setTasks(data || [])
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: t('error'),
         description: error.message,
         variant: 'destructive'
       })
@@ -117,8 +119,8 @@ export default function Tasks() {
       if (error) throw error
 
       toast({
-        title: 'Success',
-        description: 'Task created successfully'
+        title: t('success'),
+        description: t('taskCreated')
       })
 
       setNewTask({
@@ -213,24 +215,24 @@ export default function Tasks() {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Tasks</h1>
-          <p className="text-muted-foreground">Organize and track your tasks</p>
+          <h1 className="text-3xl font-bold text-foreground">{t('tasksTitle')}</h1>
+          <p className="text-muted-foreground">{t('tasksDescription')}</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-gradient-primary hover:opacity-90">
               <Plus className="h-4 w-4 mr-2" />
-              New Task
+              {t('newTask')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Task</DialogTitle>
+              <DialogTitle>{t('createNewTask')}</DialogTitle>
             </DialogHeader>
             <form onSubmit={createTask} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Task Title</Label>
+                <Label htmlFor="title">{t('taskTitle')}</Label>
                 <Input
                   id="title"
                   value={newTask.title}
@@ -240,7 +242,7 @@ export default function Tasks() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t('description')}</Label>
                 <Textarea
                   id="description"
                   value={newTask.description}
@@ -323,7 +325,7 @@ export default function Tasks() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search tasks..."
+            placeholder={t('searchTasks')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -335,7 +337,7 @@ export default function Tasks() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="all">{t('allStatus')}</SelectItem>
             <SelectItem value="Todo">Todo</SelectItem>
             <SelectItem value="In Progress">In Progress</SelectItem>
             <SelectItem value="Done">Done</SelectItem>
@@ -419,14 +421,14 @@ export default function Tasks() {
       {filteredTasks.length === 0 && (
         <div className="text-center py-12">
           <CheckSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No tasks found</h3>
+          <h3 className="text-lg font-semibold mb-2">{t('noTasksFound')}</h3>
           <p className="text-muted-foreground mb-4">
-            {searchTerm || filterStatus !== 'all' ? 'No tasks match your filters.' : 'Create your first task to get started.'}
+            {searchTerm || filterStatus !== 'all' ? t('noTasksMatch') : t('createFirstTask')}
           </p>
           {!searchTerm && filterStatus === 'all' && (
             <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Create Task
+              {t('createTask')}
             </Button>
           )}
         </div>
