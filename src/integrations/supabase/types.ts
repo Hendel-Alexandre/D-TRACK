@@ -554,6 +554,10 @@ export type Database = {
         Args: { recipient_id: string }
         Returns: string
       }
+      validate_password: {
+        Args: { password: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:
