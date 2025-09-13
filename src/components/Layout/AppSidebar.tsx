@@ -13,7 +13,6 @@ import {
 import datatrackLogo from '@/assets/datatrack-logo.png'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useIsMobile } from '@/hooks/use-mobile'
 import {
   Sidebar,
   SidebarContent,
@@ -81,21 +80,13 @@ const navigationItems = [
 ]
 
 export function AppSidebar() {
-  const { state, setOpen } = useSidebar()
+  const { state } = useSidebar()
   const location = useLocation()
   const { t } = useTranslation()
-  const isMobile = useIsMobile()
   
   const currentPath = location.pathname
   const isActive = (path: string) => currentPath === path
   const isCollapsed = state === "collapsed"
-  
-  const handleNavClick = () => {
-    // Close sidebar on mobile after navigation
-    if (isMobile) {
-      setOpen(false)
-    }
-  }
   
   const getNavClasses = ({ isActive }: { isActive: boolean }) =>
     isActive 
@@ -125,7 +116,6 @@ export function AppSidebar() {
                     <NavLink 
                       to={item.url} 
                       end 
-                      onClick={handleNavClick}
                       className={({ isActive }) => 
                         `flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all ${getNavClasses({ isActive })}`
                       }
