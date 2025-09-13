@@ -100,11 +100,11 @@ export function AppSidebar() {
     >
       <SidebarContent className="bg-sidebar">
         <SidebarGroup>
-          <div className="px-4 py-4 border-b border-sidebar-border">
+          <div className="px-2 sm:px-4 py-4 border-b border-sidebar-border">
             <img 
               src={datatrackLogo} 
               alt="DataTrack" 
-              className={`transition-all duration-300 ${isCollapsed ? 'h-24 w-auto' : 'h-32 w-auto'}`}
+              className={`transition-all duration-300 ${isCollapsed ? 'h-8 sm:h-10 w-auto' : 'h-10 sm:h-12 md:h-16 w-auto'}`}
             />
           </div>
           

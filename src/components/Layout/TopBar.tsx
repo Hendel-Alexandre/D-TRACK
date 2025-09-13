@@ -58,26 +58,26 @@ export function TopBar() {
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
       <div className="flex h-full items-center justify-between px-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <SidebarTrigger className="h-8 w-8" />
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <img 
               src={datatrackLogo} 
               alt="DataTrack" 
-              className="h-32 w-auto"
+              className="h-8 sm:h-10 md:h-12 w-auto"
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
           {/* Time Tracking Timer */}
           {user && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={toggleTracking}
-                className={`gap-2 ${
+                className={`gap-1 sm:gap-2 px-2 sm:px-3 ${
                   isTracking 
                     ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100' 
                     : isPaused 
@@ -86,12 +86,12 @@ export function TopBar() {
                 }`}
               >
                 {isTracking ? (
-                  <Pause className="h-4 w-4" />
+                  <Pause className="h-3 w-3 sm:h-4 sm:w-4" />
                 ) : (
-                  <Play className="h-4 w-4" />
+                  <Play className="h-3 w-3 sm:h-4 sm:w-4" />
                 )}
-                <Clock className="h-4 w-4" />
-                <span className="font-mono text-sm min-w-[60px]">
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
+                <span className="font-mono text-xs sm:text-sm min-w-[50px] sm:min-w-[60px]">
                   {formatTime(elapsedTime)}
                 </span>
               </Button>
@@ -101,9 +101,9 @@ export function TopBar() {
           {/* Language Toggle */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Globe className="h-4 w-4" />
-                {i18n.language.toUpperCase()}
+              <Button variant="outline" size="sm" className="gap-1 sm:gap-2 px-2 sm:px-3">
+                <Globe className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">{i18n.language.toUpperCase()}</span>
                 <ChevronDown className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
@@ -122,12 +122,12 @@ export function TopBar() {
             variant="outline"
             size="sm"
             onClick={toggleTheme}
-            className="gap-2"
+            className="gap-1 sm:gap-2 px-2 sm:px-3"
           >
             {theme === 'light' ? (
-              <Moon className="h-4 w-4" />
+              <Moon className="h-3 w-3 sm:h-4 sm:w-4" />
             ) : (
-              <Sun className="h-4 w-4" />
+              <Sun className="h-3 w-3 sm:h-4 sm:w-4" />
             )}
           </Button>
 
@@ -135,15 +135,15 @@ export function TopBar() {
           {user && userProfile && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-3 h-10">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
+                <Button variant="outline" className="gap-2 sm:gap-3 h-9 sm:h-10 px-2 sm:px-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="flex items-center gap-1 sm:gap-2">
                       <div className={`w-2 h-2 rounded-full ${getStatusColor(userProfile.status)}`}></div>
                       <div className="flex flex-col text-left">
-                        <span className="text-sm font-medium">
-                          {userProfile.first_name} {userProfile.last_name}
+                        <span className="text-xs sm:text-sm font-medium truncate max-w-[80px] sm:max-w-none">
+                          {userProfile.first_name} <span className="hidden sm:inline">{userProfile.last_name}</span>
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground hidden sm:block truncate">
                           {userProfile.department}
                         </span>
                       </div>

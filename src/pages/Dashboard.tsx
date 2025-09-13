@@ -111,17 +111,17 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-subtle">
       <motion.div
-        className="container mx-auto px-6 py-8"
+        className="container mx-auto px-2 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         {/* Welcome Header */}
-        <motion.div variants={itemVariants} className="mb-8">
-          <div className="flex items-center justify-between">
+        <motion.div variants={itemVariants} className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-4 mb-2">
-                <h1 className="text-3xl font-bold text-foreground">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
                   Hello, {displayName}!
                 </h1>
                 <div className="flex items-center gap-2">
@@ -159,7 +159,7 @@ export default function Dashboard() {
                   </DropdownMenu>
                 </div>
               </div>
-              <p className="text-lg text-muted-foreground">
+              <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
                 {t('dashboard')} - {new Date().toLocaleDateString('en-US', { 
                   weekday: 'long', 
                   year: 'numeric', 
@@ -168,9 +168,9 @@ export default function Dashboard() {
                 })}
               </p>
             </div>
-            <div className="hidden md:block">
-              <div className="h-16 w-16 bg-gradient-primary flex items-center justify-center">
-                <BarChart3 className="h-8 w-8 text-primary-foreground" />
+            <div className="hidden sm:block">
+              <div className="h-12 w-12 sm:h-16 sm:w-16 bg-gradient-primary flex items-center justify-center">
+                <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
               </div>
             </div>
           </div>
@@ -179,7 +179,7 @@ export default function Dashboard() {
         {/* Stats Grid */}
         <motion.div 
           variants={itemVariants}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8"
         >
           {stats.map((stat, index) => (
             <Card key={index} className="border-border bg-card hover:shadow-md transition-shadow">
@@ -206,9 +206,9 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Quick Actions */}
-        <motion.div variants={itemVariants} className="mb-8">
-          <h2 className="text-xl font-semibold text-foreground mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <motion.div variants={itemVariants} className="mb-6 sm:mb-8">
+          <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-3 sm:mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
              {quickActions.map((action, index) => (
                <motion.div
                  key={index}
