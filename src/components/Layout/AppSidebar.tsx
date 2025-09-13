@@ -95,11 +95,6 @@ export function AppSidebar() {
               isCollapsed ? 'h-8 w-auto' : 'h-12 w-auto'
             }`}
           />
-          {!isCollapsed && (
-            <p className="text-xs text-muted-foreground text-center mt-2 font-medium">
-              Professional Time Tracking
-            </p>
-          )}
         </div>
         
         {/* Navigation Groups */}

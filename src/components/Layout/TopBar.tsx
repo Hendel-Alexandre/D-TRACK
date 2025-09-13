@@ -74,7 +74,6 @@ export function TopBar() {
             />
             <div>
               <h2 className="text-sm font-semibold text-foreground">DataTrack</h2>
-              <p className="text-xs text-muted-foreground">Professional Time Tracking</p>
             </div>
           </div>
         </div>
