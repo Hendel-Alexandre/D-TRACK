@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Search, Plus, Send, Users, MessageCircle, User } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
+import { useSearchParams } from 'react-router-dom'
 
 interface User {
   id: string
@@ -48,6 +49,7 @@ interface Message {
 
 export default function Messages() {
   const { user } = useAuth()
+  const [searchParams] = useSearchParams()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -76,6 +78,14 @@ export default function Messages() {
       setupRealtimeSubscriptions()
     }
   }, [user])
+
+  // Handle URL parameter for starting a conversation with a specific user
+  useEffect(() => {
+    const targetUserId = searchParams.get('user')
+    if (targetUserId && user && conversations.length > 0) {
+      handleStartConversationWithUser(targetUserId)
+    }
+  }, [searchParams, user, conversations])
 
   const fetchUsers = async () => {
     try {
@@ -345,13 +355,22 @@ export default function Messages() {
     e.preventDefault()
     if (!newMessage.trim() || !selectedConversation || !user) return
 
+    // Sanitize input to prevent XSS and limit message length
+    const sanitizedMessage = newMessage.trim()
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/javascript:/gi, '')
+      .replace(/on\w+\s*=/gi, '')
+      .slice(0, 1000) // Limit to 1000 characters
+
+    if (!sanitizedMessage) return
+
     try {
       const { error } = await supabase
         .from('messages')
         .insert({
           conversation_id: selectedConversation.id,
           sender_id: user.id,
-          message: newMessage.trim()
+          message: sanitizedMessage
         })
 
       if (error) throw error
@@ -418,6 +437,77 @@ export default function Messages() {
   const selectConversation = (conversation: Conversation) => {
     setSelectedConversation(conversation)
     fetchMessages(conversation.id)
+  }
+
+  const handleStartConversationWithUser = async (targetUserId: string) => {
+    if (!user) return
+
+    try {
+      // Check if a direct conversation already exists between current user and target user
+      const existingConversation = conversations.find(conv => {
+        if (conv.is_group) return false
+        const memberIds = conv.members?.map(m => m.id) || []
+        return memberIds.includes(user.id) && memberIds.includes(targetUserId) && memberIds.length === 2
+      })
+
+      if (existingConversation) {
+        // Open existing conversation
+        selectConversation(existingConversation)
+        return
+      }
+
+      // Create new direct conversation
+      const { data: conversationData, error: convError } = await supabase
+        .from('conversations')
+        .insert({
+          name: null, // Direct conversations don't need names
+          is_group: false,
+          created_by: user.id
+        })
+        .select()
+        .single()
+
+      if (convError) throw convError
+
+      // Add both users as members
+      const { error: membersError } = await supabase
+        .from('conversation_members')
+        .insert([
+          {
+            conversation_id: conversationData.id,
+            user_id: user.id
+          },
+          {
+            conversation_id: conversationData.id,
+            user_id: targetUserId
+          }
+        ])
+
+      if (membersError) throw membersError
+
+      // Refresh conversations and select the new one
+      await fetchConversations()
+      
+      // Find and select the newly created conversation
+      setTimeout(() => {
+        const newConversation = conversations.find(conv => conv.id === conversationData.id)
+        if (newConversation) {
+          selectConversation(newConversation)
+        }
+      }, 500) // Small delay to allow conversations to update
+
+      toast({
+        title: 'Success',
+        description: 'Conversation started successfully'
+      })
+
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive'
+      })
+    }
   }
 
   const formatRole = (role: string) => {

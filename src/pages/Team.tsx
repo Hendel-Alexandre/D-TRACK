@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/hooks/use-toast'
+import { useNavigate } from 'react-router-dom'
 
 interface TeamMember {
   id: string
@@ -22,6 +23,7 @@ interface TeamMember {
 
 export default function Team() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -86,6 +88,11 @@ export default function Team() {
 
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+  }
+
+  const handleMessageUser = (memberId: string) => {
+    // Navigate to Messages page with the target user ID
+    navigate(`/messages?user=${memberId}`)
   }
 
   if (loading) {
@@ -212,7 +219,11 @@ export default function Team() {
                     Joined {new Date(member.created_at).toLocaleDateString()}
                   </div>
                   <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleMessageUser(member.id)}
+                    >
                       <Mail className="h-3 w-3 mr-1" />
                       Message
                     </Button>
