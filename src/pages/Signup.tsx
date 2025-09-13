@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from '@/hooks/use-toast'
+import { PasswordStrength, validatePassword } from '@/components/ui/password-strength'
 
 const departments = [
   { value: 'Marketing', label: 'marketing' },
@@ -35,6 +36,18 @@ export default function Signup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+
+    // Validate password strength
+    const passwordValidation = validatePassword(password)
+    if (!passwordValidation.isValid) {
+      toast({
+        title: "Weak Password",
+        description: passwordValidation.message,
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
 
     try {
       const { error } = await signUp(email, password, firstName, lastName, department)
@@ -166,7 +179,7 @@ export default function Signup() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={6}
+                    minLength={8}
                     className="bg-input border-border text-foreground pr-10"
                   />
                   <Button
@@ -183,6 +196,7 @@ export default function Signup() {
                     )}
                   </Button>
                 </div>
+                <PasswordStrength password={password} />
               </div>
 
 
