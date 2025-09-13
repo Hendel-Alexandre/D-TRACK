@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Clock, Bell, Edit2, Trash2, Calendar as CalendarIcon } from 'lucide-react'
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addDays } from 'date-fns'
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths } from 'date-fns'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -43,6 +43,7 @@ export default function Calendar() {
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<CalendarTask | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; date: Date } | null>(null)
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
@@ -409,7 +410,7 @@ export default function Calendar() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentDate(addDays(startOfMonth(currentDate), -1))}
+                  onClick={() => setCurrentDate(addMonths(currentDate, -1))}
                 >
                   Previous
                 </Button>
@@ -423,7 +424,7 @@ export default function Calendar() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentDate(addDays(endOfMonth(currentDate), 1))}
+                  onClick={() => setCurrentDate(addMonths(currentDate, 1))}
                 >
                   Next
                 </Button>
@@ -456,9 +457,12 @@ export default function Calendar() {
                       `}
                       onClick={() => {
                         setSelectedDate(day)
-                        if (dayTasks.length === 0) {
-                          openTaskDialog(undefined, day)
-                        }
+                        setContextMenu(null)
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault()
+                        setContextMenu({ x: e.clientX, y: e.clientY, date: day })
+                        setSelectedDate(day)
                       }}
                     >
                       <div className="text-sm font-medium mb-1">
@@ -594,6 +598,46 @@ export default function Calendar() {
           </Card>
         </div>
       </div>
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <>
+          <div 
+            className="fixed inset-0 z-40" 
+            onClick={() => setContextMenu(null)}
+          />
+          <div
+            className="fixed z-50 bg-popover border rounded-md shadow-md py-1 min-w-[120px]"
+            style={{ left: contextMenu.x, top: contextMenu.y }}
+          >
+            <button
+              className="w-full px-3 py-2 text-sm text-left hover:bg-accent transition-colors"
+              onClick={() => {
+                openTaskDialog(undefined, contextMenu.date)
+                setContextMenu(null)
+              }}
+            >
+              Add Task
+            </button>
+            {getTasksForDate(contextMenu.date).length > 0 && (
+              <button
+                className="w-full px-3 py-2 text-sm text-left hover:bg-accent transition-colors"
+                onClick={() => {
+                  const tasks = getTasksForDate(contextMenu.date)
+                  if (tasks.length === 1) {
+                    openTaskDialog(tasks[0])
+                  } else {
+                    setSelectedDate(contextMenu.date)
+                  }
+                  setContextMenu(null)
+                }}
+              >
+                {getTasksForDate(contextMenu.date).length === 1 ? 'Modify Task' : 'View Tasks'}
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }
