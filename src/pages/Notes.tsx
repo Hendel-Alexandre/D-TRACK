@@ -128,7 +128,30 @@ export default function Notes() {
           description: 'Note created and added to calendar'
         })
       } else if (sendTo === 'colleague' && selectedUser) {
-        // Start a conversation and send the note
+        // Get sender info
+        const { data: senderData, error: senderError } = await supabase
+          .from('users')
+          .select('first_name, last_name')
+          .eq('id', user.id)
+          .single()
+
+        if (senderError) throw senderError
+
+        // Create notification for the recipient
+        const { error: notificationError } = await supabase
+          .from('note_notifications')
+          .insert({
+            recipient_id: selectedUser,
+            sender_id: user.id,
+            note_id: '', // We'll use empty string since we don't have note ID yet
+            note_title: newNote.title,
+            note_content: newNote.content,
+            sender_name: `${senderData.first_name} ${senderData.last_name}`
+          })
+
+        if (notificationError) throw notificationError
+
+        // Also send as message for backup
         const { data: conversation, error: convError } = await supabase
           .rpc('start_direct_conversation', { recipient_id: selectedUser })
 

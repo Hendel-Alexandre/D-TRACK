@@ -3,8 +3,12 @@ import { SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from './AppSidebar'
 import { TopBar } from './TopBar'
 import { HelpChat } from '@/components/HelpChat/HelpChat'
+import NoteNotificationPopup from '@/components/notifications/NoteNotificationPopup'
+import { useNoteNotifications } from '@/hooks/useNoteNotifications'
 
 export function MainLayout() {
+  const { notification, isPopupOpen, closePopup, onNotificationHandled } = useNoteNotifications()
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-subtle">
@@ -18,6 +22,13 @@ export function MainLayout() {
           </main>
         </div>
         <HelpChat />
+        
+        <NoteNotificationPopup
+          notification={notification}
+          open={isPopupOpen}
+          onClose={closePopup}
+          onHandled={onNotificationHandled}
+        />
       </div>
     </SidebarProvider>
   )

@@ -317,6 +317,45 @@ export type Database = {
           },
         ]
       }
+      note_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          note_content: string | null
+          note_id: string
+          note_title: string
+          recipient_id: string
+          sender_id: string
+          sender_name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note_content?: string | null
+          note_id: string
+          note_title: string
+          recipient_id: string
+          sender_id: string
+          sender_name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note_content?: string | null
+          note_id?: string
+          note_title?: string
+          recipient_id?: string
+          sender_id?: string
+          sender_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           content: string | null
