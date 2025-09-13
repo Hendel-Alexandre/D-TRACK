@@ -252,8 +252,12 @@ export default function Notes() {
     setIsDialogOpen(true)
   }
 
-  const handleDialogClose = () => {
-    resetForm()
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      resetForm()
+    } else {
+      setIsDialogOpen(true)
+    }
   }
 
   useEffect(() => {
@@ -282,7 +286,7 @@ export default function Notes() {
           <p className="text-muted-foreground">Capture your thoughts and ideas</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+        <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
           <DialogTrigger asChild>
             <Button className="bg-gradient-primary hover:opacity-90" onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
@@ -442,7 +446,7 @@ export default function Notes() {
               )}
 
               <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={handleDialogClose}>
+                <Button type="button" variant="outline" onClick={() => handleDialogOpenChange(false)}>
                   Cancel
                 </Button>
                 <Button type="submit">
