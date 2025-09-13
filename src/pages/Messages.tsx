@@ -209,6 +209,15 @@ export default function Messages() {
         role: rolesData?.find(r => r.user_id === u.id)?.role || 'team_member'
       })) || []
 
+      // Process conversations with member data
+      const conversationMemberMap = new Map()
+      conversationData?.forEach(item => {
+        conversationMemberMap.set(item.conversation_id, {
+          last_read_at: item.last_read_at,
+          conversation: item.conversations
+        })
+      })
+
       // Process conversations
       const processedConversations = conversationData?.map(item => {
         const conversation = item.conversations
@@ -487,18 +496,22 @@ export default function Messages() {
     // Mark conversation as read
     if (user && conversation.unread_count && conversation.unread_count > 0) {
       try {
-        await supabase
+        const { error } = await supabase
           .from('conversation_members')
           .update({ last_read_at: new Date().toISOString() })
           .eq('conversation_id', conversation.id)
           .eq('user_id', user.id)
 
-        // Update local state
-        setConversations(prev => prev.map(conv => 
-          conv.id === conversation.id 
-            ? { ...conv, unread_count: 0, last_read_at: new Date().toISOString() }
-            : conv
-        ))
+        if (error) {
+          console.error('Error marking conversation as read:', error)
+        } else {
+          // Update local state
+          setConversations(prev => prev.map(conv => 
+            conv.id === conversation.id 
+              ? { ...conv, unread_count: 0, last_read_at: new Date().toISOString() }
+              : conv
+          ))
+        }
       } catch (error) {
         console.error('Error marking conversation as read:', error)
       }
