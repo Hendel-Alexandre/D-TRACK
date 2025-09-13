@@ -502,12 +502,36 @@ export default function Reports() {
                 </LineChart>
               ) : (
                 <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={120} paddingAngle={5} dataKey="value" className="hover:scale-105 transition-transform duration-200">
+                  <Pie 
+                    data={pieData} 
+                    cx="50%" 
+                    cy="50%" 
+                    innerRadius={60} 
+                    outerRadius={120} 
+                    paddingAngle={2} 
+                    dataKey="value"
+                    isAnimationActive={false}
+                    animationBegin={0}
+                    animationDuration={150}
+                  >
                     {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.color}
+                        style={{
+                          filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))',
+                          transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                          cursor: 'pointer'
+                        }}
+                        className="hover:brightness-110 hover:scale-[1.02] origin-center"
+                      />
                     ))}
                   </Pie>
-                  <ChartTooltip content={<ChartTooltipContent className="bg-background border border-border shadow-lg" />} />
+                  <ChartTooltip 
+                    content={<ChartTooltipContent className="bg-background/95 backdrop-blur-sm border border-border shadow-xl" />}
+                    animationDuration={100}
+                    isAnimationActive={true}
+                  />
                   <ChartLegend content={<ChartLegendContent />} />
                   {!hasData && (
                     <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-muted-foreground text-sm">
