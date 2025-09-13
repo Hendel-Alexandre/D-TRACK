@@ -20,6 +20,8 @@ interface User {
   first_name: string
   last_name: string
   email: string
+  department?: string
+  status?: string
   role?: string
 }
 
@@ -83,7 +85,9 @@ export default function Messages() {
           id, 
           first_name, 
           last_name, 
-          email
+          email,
+          department,
+          status
         `)
         .neq('id', user?.id)
 
@@ -173,7 +177,7 @@ export default function Messages() {
       const userIds = membersData?.map(m => m.user_id) || []
       const { data: usersData, error: usersError } = await supabase
         .from('users')
-        .select('id, first_name, last_name, email')
+        .select('id, first_name, last_name, email, department, status')
         .in('id', userIds)
 
       if (usersError) throw usersError
@@ -246,7 +250,7 @@ export default function Messages() {
       const senderIds = [...new Set(data?.map(m => m.sender_id) || [])]
       const { data: sendersData, error: sendersError } = await supabase
         .from('users')
-        .select('id, first_name, last_name, email')
+        .select('id, first_name, last_name, email, department, status')
         .in('id', senderIds)
 
       if (sendersError) throw sendersError
@@ -295,7 +299,7 @@ export default function Messages() {
           // Fetch sender info
           const { data: senderData } = await supabase
             .from('users')
-            .select('id, first_name, last_name, email')
+            .select('id, first_name, last_name, email, department, status')
             .eq('id', newMessage.sender_id)
             .single()
 
@@ -517,9 +521,11 @@ export default function Messages() {
                           <SelectItem key={user.id} value={user.id}>
                             <div className="flex flex-col">
                               <span>{user.first_name} {user.last_name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {formatRole(user.role || 'team_member')}
-                              </span>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span>{user.department || 'No department'}</span>
+                                <span>•</span>
+                                <span>{user.status || 'Available'}</span>
+                              </div>
                             </div>
                           </SelectItem>
                         ))}
@@ -539,9 +545,11 @@ export default function Messages() {
                             }}>
                               <div className="flex flex-col text-left">
                                 <span>{selectedUser.first_name} {selectedUser.last_name}</span>
-                                <span className="text-xs opacity-70">
-                                  {formatRole(selectedUser.role || 'team_member')}
-                                </span>
+                                <div className="flex items-center gap-1 text-xs opacity-70">
+                                  <span>{selectedUser.department || 'No department'}</span>
+                                  <span>•</span>
+                                  <span>{selectedUser.status || 'Available'}</span>
+                                </div>
                               </div>
                               <span className="ml-2">×</span>
                             </Badge>
