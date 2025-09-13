@@ -223,10 +223,14 @@ export default function Calendar() {
   const calendarDays = eachDayOfInterval({ start: monthStart, end: monthEnd })
 
   // Get tasks for a specific date
+  const formatKey = (d: Date) => format(d, 'yyyy-MM-dd')
+  const toLocalDate = (s: string) => {
+    const [y, m, d] = s.split('-').map(Number)
+    return new Date(y, (m || 1) - 1, d || 1)
+  }
   const getTasksForDate = (date: Date) => {
-    return tasks.filter(task => 
-      task.due_date && isSameDay(new Date(task.due_date), date)
-    )
+    const key = formatKey(date)
+    return tasks.filter(task => task.due_date === key)
   }
 
   const getPriorityColor = (priority: string) => {
@@ -577,21 +581,24 @@ export default function Calendar() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {tasks.filter(task => task.due_date && new Date(task.due_date) >= new Date()).slice(0, 5).map(task => (
-                    <motion.div
-                      key={task.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="p-3 border rounded-lg hover:bg-accent/50 transition-colors"
-                      onClick={() => openTaskDialog(task)}
-                    >
-                      <h4 className="font-medium text-sm mb-1">{task.title}</h4>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Due: {task.due_date ? format(new Date(task.due_date), 'MMM d') : 'No date'}</span>
-                        {task.reminder_enabled && <Bell className="h-3 w-3" />}
-                      </div>
-                    </motion.div>
-                  ))}
+                  {tasks
+                    .filter(task => task.due_date && task.due_date >= format(new Date(), 'yyyy-MM-dd'))
+                    .slice(0, 5)
+                    .map(task => (
+                      <motion.div
+                        key={task.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-3 border rounded-lg hover:bg-accent/50 transition-colors"
+                        onClick={() => openTaskDialog(task)}
+                      >
+                        <h4 className="font-medium text-sm mb-1">{task.title}</h4>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Due: {task.due_date ? format(toLocalDate(task.due_date), 'MMM d') : 'No date'}</span>
+                          {task.reminder_enabled && <Bell className="h-3 w-3" />}
+                        </div>
+                      </motion.div>
+                    ))}
                 </div>
               )}
             </CardContent>

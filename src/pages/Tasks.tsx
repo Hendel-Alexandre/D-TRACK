@@ -196,6 +196,11 @@ export default function Tasks() {
     }
   }
 
+  const toLocalDate = (s: string) => {
+    const [y, m, d] = s.split('-').map(Number)
+    return new Date(y, (m || 1) - 1, d || 1)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -385,7 +390,7 @@ export default function Tasks() {
                   {task.due_date && (
                     <div className="flex items-center text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4 mr-2" />
-                      Due: {new Date(task.due_date).toLocaleDateString()}
+                      Due: {task.due_date ? toLocalDate(task.due_date).toLocaleDateString() : 'No date'}
                     </div>
                   )}
                 </div>
