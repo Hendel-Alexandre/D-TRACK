@@ -18,6 +18,7 @@ import Settings from "./pages/Settings";
 import History from "./pages/History";
 import Messages from "./pages/Messages";
 import Games from "./pages/Games";
+import MirBird from "./pages/MirBird";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -107,6 +108,7 @@ const App = () => (
                 <Route path="team" element={<Team />} />
                 <Route path="messages" element={<Messages />} />
                 <Route path="games" element={<Games />} />
+                <Route path="mirbird" element={<MirBird />} />
                 <Route path="history" element={<History />} />
                 <Route path="settings" element={<Settings />} />
               </Route>

@@ -26,6 +26,8 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 
+const BirdIcon = () => <span className="text-lg">🐦</span>
+
 const navigationItems = [
   { 
     title: 'dashboard', 
@@ -71,6 +73,11 @@ const navigationItems = [
     title: 'games', 
     url: '/games', 
     icon: Gamepad2 
+  },
+  { 
+    title: 'mirbird', 
+    url: '/mirbird', 
+    icon: BirdIcon
   },
   { 
     title: 'history', 
