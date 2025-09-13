@@ -8,7 +8,8 @@ import {
   Settings, 
   Users,
   Activity,
-  MessageCircle
+  MessageCircle,
+  Calendar
 } from 'lucide-react'
 import datatrackLogo from '@/assets/datatrack-logo.png'
 import { NavLink, useLocation } from 'react-router-dom'
@@ -41,6 +42,11 @@ const navigationItems = [
     title: 'tasks', 
     url: '/tasks', 
     icon: CheckSquare 
+  },
+  { 
+    title: 'calendar', 
+    url: '/calendar', 
+    icon: Calendar 
   },
   { 
     title: 'projects', 

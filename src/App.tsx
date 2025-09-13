@@ -10,6 +10,7 @@ import { MainLayout } from "@/components/Layout/MainLayout";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import Tasks from "./pages/Tasks";
+import Calendar from "./pages/Calendar";
 import Timesheets from "./pages/Timesheets";
 import Notes from "./pages/Notes";
 import Reports from "./pages/Reports";
@@ -101,6 +102,7 @@ const App = () => (
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="timesheets" element={<Timesheets />} />
                 <Route path="tasks" element={<Tasks />} />
+                <Route path="calendar" element={<Calendar />} />
                 <Route path="projects" element={<Projects />} />
                 <Route path="notes" element={<Notes />} />
                 <Route path="reports" element={<Reports />} />

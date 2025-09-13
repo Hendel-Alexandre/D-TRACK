@@ -388,6 +388,9 @@ export type Database = {
           id: string
           priority: string
           project_id: string | null
+          reminder_days_before: number | null
+          reminder_enabled: boolean | null
+          reminder_hours_before: number | null
           status: string
           title: string
           updated_at: string
@@ -400,6 +403,9 @@ export type Database = {
           id?: string
           priority?: string
           project_id?: string | null
+          reminder_days_before?: number | null
+          reminder_enabled?: boolean | null
+          reminder_hours_before?: number | null
           status?: string
           title: string
           updated_at?: string
@@ -412,6 +418,9 @@ export type Database = {
           id?: string
           priority?: string
           project_id?: string | null
+          reminder_days_before?: number | null
+          reminder_enabled?: boolean | null
+          reminder_hours_before?: number | null
           status?: string
           title?: string
           updated_at?: string
