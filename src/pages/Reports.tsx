@@ -70,6 +70,8 @@ export default function Reports() {
   const fetchData = async () => {
     if (!user) return
     
+    console.log('Fetching data for user:', user.id)
+    
     try {
       const [timeEntriesResult, projectsResult, notesResult, tasksResult] = await Promise.all([
         supabase
@@ -90,6 +92,19 @@ export default function Reports() {
           .eq('user_id', user.id)
       ])
 
+      console.log('Data fetch results:', {
+        timeEntries: timeEntriesResult.data?.length || 0,
+        projects: projectsResult.data?.length || 0,
+        notes: notesResult.data?.length || 0,
+        tasks: tasksResult.data?.length || 0,
+        errors: {
+          timeEntries: timeEntriesResult.error,
+          projects: projectsResult.error,
+          notes: notesResult.error,
+          tasks: tasksResult.error
+        }
+      })
+
       if (timeEntriesResult.error) throw timeEntriesResult.error
       if (projectsResult.error) throw projectsResult.error
       if (notesResult.error) throw notesResult.error
@@ -100,6 +115,7 @@ export default function Reports() {
       setNotes(notesResult.data || [])
       setTasks(tasksResult.data || [])
     } catch (error: any) {
+      console.error('Data fetch error:', error)
       toast({
         title: 'Error',
         description: error.message,
@@ -252,6 +268,18 @@ export default function Reports() {
 
   const chartData = generateChartData()
   
+  const hasData = totalHours > 0 || filteredNotes.length > 0 || filteredTasks.length > 0 || filteredProjects.length > 0
+
+  console.log('Debug: Report data', {
+    totalHours,
+    filteredNotes: filteredNotes.length,
+    filteredTasks: filteredTasks.length,
+    filteredProjects: filteredProjects.length,
+    chartData,
+    hasData,
+    chartType
+  })
+
   const chartConfig = {
     hours: {
       label: "Hours",
@@ -270,8 +298,6 @@ export default function Reports() {
       color: "hsl(262, 83%, 58%)"
     }
   }
-
-  const hasData = totalHours > 0 || filteredNotes.length > 0 || filteredTasks.length > 0 || filteredProjects.length > 0
 
   const pieData = hasData ? [
     { name: 'Hours', value: totalHours, color: 'hsl(var(--primary))' },
