@@ -161,7 +161,7 @@ export default function Messages() {
           message,
           created_at,
           sender_id,
-          users!messages_sender_id_fkey (
+          users (
             id,
             first_name,
             last_name
@@ -250,36 +250,39 @@ export default function Messages() {
     try {
       const { data, error } = await supabase
         .from('messages')
-        .select('id, conversation_id, sender_id, message, created_at')
+        .select(`
+          id, 
+          conversation_id, 
+          sender_id, 
+          message, 
+          created_at,
+          users (
+            id,
+            first_name,
+            last_name,
+            email,
+            department,
+            status
+          )
+        `)
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true })
 
       if (error) throw error
 
-      // Get sender details with roles
-      const senderIds = [...new Set(data?.map(m => m.sender_id) || [])]
-      const { data: sendersData, error: sendersError } = await supabase
-        .from('users')
-        .select('id, first_name, last_name, email, department, status')
-        .in('id', senderIds)
-
-      if (sendersError) throw sendersError
-
       // Get sender roles
+      const senderIds = [...new Set(data?.map(m => m.sender_id) || [])]
       const { data: rolesData } = await supabase
         .from('user_roles')
         .select('user_id, role')
         .in('user_id', senderIds)
 
-      // Combine senders with roles
-      const sendersWithRoles = sendersData?.map(s => ({
-        ...s,
-        role: rolesData?.find(r => r.user_id === s.id)?.role || 'team_member'
-      })) || []
-
       const processedMessages = data?.map(msg => ({
         ...msg,
-        sender: sendersWithRoles?.find(s => s.id === msg.sender_id)
+        sender: {
+          ...msg.users,
+          role: rolesData?.find(r => r.user_id === msg.sender_id)?.role || 'team_member'
+        }
       })) || []
 
       setMessages(processedMessages)
