@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar as CalendarComponent } from '@/components/ui/calendar'
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, PieChart, Pie, Cell } from 'recharts'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/hooks/use-toast'
@@ -475,120 +475,47 @@ export default function Reports() {
             </p>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <>
-                  {chartType === 'bar' && (
-                    <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis 
-                        dataKey="date" 
-                        className="text-xs fill-muted-foreground"
-                        tick={{ fontSize: 12 }}
-                      />
-                      <YAxis className="text-xs fill-muted-foreground" tick={{ fontSize: 12 }} />
-                      <ChartTooltip content={<ChartTooltipContent className="bg-background border border-border shadow-lg" />} />
-                      <ChartLegend content={<ChartLegendContent />} />
-                      <Bar 
-                        dataKey="hours" 
-                        fill="var(--color-hours)" 
-                        radius={[2, 2, 0, 0]}
-                        className="hover:opacity-80 transition-opacity duration-200"
-                      />
-                      <Bar 
-                        dataKey="notes" 
-                        fill="var(--color-notes)" 
-                        radius={[2, 2, 0, 0]}
-                        className="hover:opacity-80 transition-opacity duration-200"
-                      />
-                      <Bar 
-                        dataKey="tasks" 
-                        fill="var(--color-tasks)" 
-                        radius={[2, 2, 0, 0]}
-                        className="hover:opacity-80 transition-opacity duration-200"
-                      />
-                      <Bar 
-                        dataKey="projects" 
-                        fill="var(--color-projects)" 
-                        radius={[2, 2, 0, 0]}
-                        className="hover:opacity-80 transition-opacity duration-200"
-                      />
-                    </BarChart>
+            <ChartContainer config={chartConfig} className="h-[400px] w-full">
+              {chartType === 'bar' ? (
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="date" className="text-xs fill-muted-foreground" tick={{ fontSize: 12 }} />
+                  <YAxis className="text-xs fill-muted-foreground" tick={{ fontSize: 12 }} />
+                  <ChartTooltip content={<ChartTooltipContent className="bg-background border border-border shadow-lg" />} />
+                  <ChartLegend content={<ChartLegendContent />} />
+                  <Bar dataKey="hours" fill="var(--color-hours)" radius={[2, 2, 0, 0]} className="hover:opacity-80 transition-opacity duration-200" />
+                  <Bar dataKey="notes" fill="var(--color-notes)" radius={[2, 2, 0, 0]} className="hover:opacity-80 transition-opacity duration-200" />
+                  <Bar dataKey="tasks" fill="var(--color-tasks)" radius={[2, 2, 0, 0]} className="hover:opacity-80 transition-opacity duration-200" />
+                  <Bar dataKey="projects" fill="var(--color-projects)" radius={[2, 2, 0, 0]} className="hover:opacity-80 transition-opacity duration-200" />
+                </BarChart>
+              ) : chartType === 'line' ? (
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="date" className="text-xs fill-muted-foreground" tick={{ fontSize: 12 }} />
+                  <YAxis className="text-xs fill-muted-foreground" tick={{ fontSize: 12 }} />
+                  <ChartTooltip content={<ChartTooltipContent className="bg-background border border-border shadow-lg" />} />
+                  <ChartLegend content={<ChartLegendContent />} />
+                  <Line type="monotone" dataKey="hours" stroke="var(--color-hours)" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} className="hover:stroke-opacity-80 transition-all duration-200" />
+                  <Line type="monotone" dataKey="notes" stroke="var(--color-notes)" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} className="hover:stroke-opacity-80 transition-all duration-200" />
+                  <Line type="monotone" dataKey="tasks" stroke="var(--color-tasks)" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} className="hover:stroke-opacity-80 transition-all duration-200" />
+                  <Line type="monotone" dataKey="projects" stroke="var(--color-projects)" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} className="hover:stroke-opacity-80 transition-all duration-200" />
+                </LineChart>
+              ) : (
+                <PieChart>
+                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={120} paddingAngle={5} dataKey="value" className="hover:scale-105 transition-transform duration-200">
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent className="bg-background border border-border shadow-lg" />} />
+                  <ChartLegend content={<ChartLegendContent />} />
+                  {!hasData && (
+                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-muted-foreground text-sm">
+                      No data yet
+                    </text>
                   )}
-                  
-                  {chartType === 'line' && (
-                    <LineChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis 
-                        dataKey="date" 
-                        className="text-xs fill-muted-foreground"
-                        tick={{ fontSize: 12 }}
-                      />
-                      <YAxis className="text-xs fill-muted-foreground" tick={{ fontSize: 12 }} />
-                      <ChartTooltip content={<ChartTooltipContent className="bg-background border border-border shadow-lg" />} />
-                      <ChartLegend content={<ChartLegendContent />} />
-                      <Line 
-                        type="monotone" 
-                        dataKey="hours" 
-                        stroke="var(--color-hours)" 
-                        strokeWidth={3}
-                        dot={{ r: 4, strokeWidth: 2 }}
-                        className="hover:stroke-opacity-80 transition-all duration-200"
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="notes" 
-                        stroke="var(--color-notes)" 
-                        strokeWidth={3}
-                        dot={{ r: 4, strokeWidth: 2 }}
-                        className="hover:stroke-opacity-80 transition-all duration-200"
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="tasks" 
-                        stroke="var(--color-tasks)" 
-                        strokeWidth={3}
-                        dot={{ r: 4, strokeWidth: 2 }}
-                        className="hover:stroke-opacity-80 transition-all duration-200"
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="projects" 
-                        stroke="var(--color-projects)" 
-                        strokeWidth={3}
-                        dot={{ r: 4, strokeWidth: 2 }}
-                        className="hover:stroke-opacity-80 transition-all duration-200"
-                      />
-                    </LineChart>
-                  )}
-                  
-                  {chartType === 'pie' && (
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={120}
-                        paddingAngle={5}
-                        dataKey="value"
-                        className="hover:scale-105 transition-transform duration-200"
-                      >
-                        {pieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <ChartTooltip content={<ChartTooltipContent className="bg-background border border-border shadow-lg" />} />
-                      <ChartLegend content={<ChartLegendContent />} />
-                      {!hasData && (
-                        <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-muted-foreground text-sm">
-                          No data yet
-                        </text>
-                      )}
-                    </PieChart>
-                  )}
-                </>
-              </ResponsiveContainer>
+                </PieChart>
+              )}
             </ChartContainer>
           </CardContent>
         </Card>
