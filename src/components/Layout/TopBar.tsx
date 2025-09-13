@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Moon, Sun, Globe, ChevronDown, LogOut, User, Circle, Clock, Play, Pause } from 'lucide-react'
+import { Moon, Sun, Globe, ChevronDown, LogOut, User, Circle, Clock, Play, Pause, Settings } from 'lucide-react'
 import datatrackLogo from '@/assets/datatrack-logo.png'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 export function TopBar() {
   const { t, i18n } = useTranslation()
@@ -50,141 +51,192 @@ export function TopBar() {
     }
   }
 
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase()
+  }
+
   return (
     <motion.header 
-      className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50"
+      className="h-16 border-b border-border/50 glass-effect sticky top-0 z-50"
       initial={{ y: -64 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <div className="flex h-full items-center justify-between px-4">
-        <div className="flex items-center gap-2 sm:gap-4">
-          <SidebarTrigger className="h-8 w-8" />
-          <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex h-full items-center justify-between px-6">
+        <div className="flex items-center gap-4">
+          <SidebarTrigger className="h-8 w-8 hover:bg-accent/50 rounded-lg transition-colors" />
+          <div className="hidden sm:block h-8 w-px bg-border/50" />
+          <div className="hidden lg:flex items-center gap-3">
             <img 
               src={datatrackLogo} 
               alt="DataTrack" 
-              className="h-24 sm:h-20 md:h-24 w-auto"
+              className="h-8 w-auto"
             />
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">DataTrack</h2>
+              <p className="text-xs text-muted-foreground">Professional Time Tracking</p>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
+        <div className="flex items-center gap-3">
           {/* Time Tracking Timer */}
           {user && (
-            <div className="flex items-center gap-1 sm:gap-2">
+            <motion.div 
+              className="flex items-center"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
               <Button
                 variant="outline"
                 size="sm"
                 onClick={toggleTracking}
-                className={`gap-1 sm:gap-2 px-2 sm:px-3 ${
+                className={`gap-2 px-4 py-2 h-9 rounded-lg font-mono transition-all ${
                   isTracking 
-                    ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100' 
+                    ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100 dark:bg-green-950 dark:border-green-800 dark:text-green-300' 
                     : isPaused 
-                    ? 'bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100'
-                    : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                    ? 'bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-950 dark:border-yellow-800 dark:text-yellow-300'
+                    : 'hover:bg-accent/50'
                 }`}
               >
                 {isTracking ? (
-                  <Pause className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <Pause className="h-4 w-4" />
                 ) : (
-                  <Play className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <Play className="h-4 w-4" />
                 )}
-                <Clock className="h-3 w-3 sm:h-4 sm:w-4 hidden sm:block" />
-                <span className="font-mono text-xs sm:text-sm min-w-[50px] sm:min-w-[60px]">
+                <Clock className="h-4 w-4" />
+                <span className="text-sm min-w-[60px]">
                   {formatTime(elapsedTime)}
                 </span>
               </Button>
-            </div>
+            </motion.div>
           )}
 
           {/* Language Toggle */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1 sm:gap-2 px-2 sm:px-3">
-                <Globe className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">{i18n.language.toUpperCase()}</span>
+              <Button variant="ghost" size="sm" className="gap-2 px-3 py-2 h-9 rounded-lg hover:bg-accent/50">
+                <Globe className="h-4 w-4" />
+                <span className="text-sm font-medium">{i18n.language.toUpperCase()}</span>
                 <ChevronDown className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => changeLanguage('en')}>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onClick={() => changeLanguage('en')} className="cursor-pointer">
                 English
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => changeLanguage('fr')}>
+              <DropdownMenuItem onClick={() => changeLanguage('fr')} className="cursor-pointer">
                 Français
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
           {/* Theme Toggle */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleTheme}
-            className="gap-1 sm:gap-2 px-2 sm:px-3"
-          >
-            {theme === 'light' ? (
-              <Moon className="h-3 w-3 sm:h-4 sm:w-4" />
-            ) : (
-              <Sun className="h-3 w-3 sm:h-4 sm:w-4" />
-            )}
-          </Button>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              className="p-2 h-9 w-9 rounded-lg hover:bg-accent/50"
+            >
+              <AnimatePresence mode="wait">
+                {theme === 'light' ? (
+                  <motion.div
+                    key="moon"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Moon className="h-4 w-4" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="sun"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Sun className="h-4 w-4" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </Button>
+          </motion.div>
 
           {/* User Profile */}
           {user && userProfile && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2 sm:gap-3 h-9 sm:h-10 px-2 sm:px-3">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="flex items-center gap-1 sm:gap-2">
-                      <div className={`w-2 h-2 rounded-full ${getStatusColor(userProfile.status)}`}></div>
-                      <div className="flex flex-col text-left">
-                        <span className="text-xs sm:text-sm font-medium truncate max-w-[80px] sm:max-w-none">
-                          {userProfile.first_name} <span className="hidden sm:inline">{userProfile.last_name}</span>
+                <Button variant="ghost" className="gap-3 h-10 px-3 rounded-lg hover:bg-accent/50">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-gradient-primary text-primary-foreground text-sm font-semibold">
+                        {getInitials(userProfile.first_name, userProfile.last_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="hidden md:flex flex-col text-left">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-foreground">
+                          {userProfile.first_name} {userProfile.last_name}
                         </span>
-                        <span className="text-xs text-muted-foreground hidden sm:block truncate">
-                          {userProfile.department}
-                        </span>
+                        <div className={`w-2 h-2 rounded-full ${getStatusColor(userProfile.status)}`} />
                       </div>
+                      <span className="text-xs text-muted-foreground">
+                        {userProfile.department}
+                      </span>
                     </div>
-                    <ChevronDown className="h-3 w-3" />
+                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
                   </div>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-64">
                 <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {userProfile.first_name} {userProfile.last_name}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold">
+                          {getInitials(userProfile.first_name, userProfile.last_name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          {userProfile.first_name} {userProfile.last_name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 
-                <DropdownMenuLabel className="text-xs text-muted-foreground">
+                <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {t('status')}
                 </DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => handleStatusChange('Available')}>
-                  <Circle className="mr-2 h-3 w-3 fill-status-available text-status-available" />
-                  {t('available')}
+                <DropdownMenuItem onClick={() => handleStatusChange('Available')} className="cursor-pointer">
+                  <Circle className="mr-3 h-3 w-3 fill-status-available text-status-available" />
+                  <span className="text-sm">{t('available')}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleStatusChange('Away')}>
-                  <Circle className="mr-2 h-3 w-3 fill-status-away text-status-away" />
-                  {t('away')}
+                <DropdownMenuItem onClick={() => handleStatusChange('Away')} className="cursor-pointer">
+                  <Circle className="mr-3 h-3 w-3 fill-status-away text-status-away" />
+                  <span className="text-sm">{t('away')}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleStatusChange('Busy')}>
-                  <Circle className="mr-2 h-3 w-3 fill-status-busy text-status-busy" />
-                  {t('busy')}
+                <DropdownMenuItem onClick={() => handleStatusChange('Busy')} className="cursor-pointer">
+                  <Circle className="mr-3 h-3 w-3 fill-status-busy text-status-busy" />
+                  <span className="text-sm">{t('busy')}</span>
                 </DropdownMenuItem>
                 
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  {t('logout')}
+                <DropdownMenuItem className="cursor-pointer">
+                  <Settings className="mr-3 h-4 w-4" />
+                  <span className="text-sm">Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={signOut} className="cursor-pointer text-destructive">
+                  <LogOut className="mr-3 h-4 w-4" />
+                  <span className="text-sm">{t('logout')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

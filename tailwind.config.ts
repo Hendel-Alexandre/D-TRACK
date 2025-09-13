@@ -86,16 +86,32 @@ export default {
         "gradient-primary": "var(--gradient-primary)",
         "gradient-dark": "var(--gradient-dark)",
         "gradient-subtle": "var(--gradient-subtle)",
+        "gradient-card": "var(--gradient-card)",
       },
       boxShadow: {
-        "corporate": "var(--shadow-corporate)",
+        "premium": "var(--shadow-premium)",
         "sm": "var(--shadow-sm)",
         "md": "var(--shadow-md)",
         "lg": "var(--shadow-lg)",
+        "xl": "var(--shadow-xl)",
       },
       transitionProperty: {
         "smooth": "var(--transition-smooth)",
         "fast": "var(--transition-fast)",
+        "spring": "var(--transition-spring)",
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      fontSize: {
+        xs: ['0.75rem', { lineHeight: '1rem' }],
+        sm: ['0.875rem', { lineHeight: '1.25rem' }],
+        base: ['1rem', { lineHeight: '1.5rem' }],
+        lg: ['1.125rem', { lineHeight: '1.75rem' }],
+        xl: ['1.25rem', { lineHeight: '1.75rem' }],
+        '2xl': ['1.5rem', { lineHeight: '2rem' }],
+        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
       },
       borderRadius: {
         lg: "var(--radius)",
