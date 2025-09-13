@@ -197,7 +197,7 @@
 
 @layer components {
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-premium hover:-translate-y-1 hover:bg-gradient-hover;
+    @apply transition-all duration-300 hover:shadow-premium hover:-translate-y-1 hover:bg-card/50;
   }
 
   .card-interactive {

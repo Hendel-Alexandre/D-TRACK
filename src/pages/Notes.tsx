@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Search, FileText, Edit, Trash2 } from 'lucide-react'
+import { Plus, Search, FileText, Edit, Trash2, Calendar, MessageCircle, Clock, User } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Calendar as CalendarPicker } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/hooks/use-toast'
+import { format } from 'date-fns'
+import { cn } from '@/lib/utils'
 
 interface Note {
   id: string
@@ -17,6 +22,13 @@ interface Note {
   content: string | null
   created_at: string
   updated_at: string
+}
+
+interface User {
+  id: string
+  first_name: string
+  last_name: string
+  email: string
 }
 
 export default function Notes() {
@@ -30,6 +42,12 @@ export default function Notes() {
     title: '',
     content: ''
   })
+  const [sendTo, setSendTo] = useState<'none' | 'calendar' | 'colleague'>('none')
+  const [selectedDate, setSelectedDate] = useState<Date>()
+  const [selectedTime, setSelectedTime] = useState('')
+  const [users, setUsers] = useState<User[]>([])
+  const [selectedUser, setSelectedUser] = useState('')
+  const [userSearch, setUserSearch] = useState('')
 
   const fetchNotes = async () => {
     if (!user) return
@@ -54,12 +72,29 @@ export default function Notes() {
     }
   }
 
+  const fetchUsers = async () => {
+    if (!user) return
+    
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, first_name, last_name, email')
+        .neq('id', user.id)
+
+      if (error) throw error
+      setUsers(data || [])
+    } catch (error: any) {
+      console.error('Error fetching users:', error)
+    }
+  }
+
   const createNote = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
 
     try {
-      const { error } = await supabase
+      // Create the note first
+      const { error: noteError } = await supabase
         .from('notes')
         .insert({
           user_id: user.id,
@@ -67,15 +102,62 @@ export default function Notes() {
           content: newNote.content || null
         })
 
-      if (error) throw error
+      if (noteError) throw noteError
 
-      toast({
-        title: 'Success',
-        description: 'Note created successfully'
-      })
+      // Handle calendar or colleague actions
+      if (sendTo === 'calendar' && selectedDate) {
+        const dueDate = format(selectedDate, 'yyyy-MM-dd')
+        const taskTitle = `Note: ${newNote.title}`
+        const taskDescription = newNote.content
+        
+        const { error: taskError } = await supabase
+          .from('tasks')
+          .insert({
+            user_id: user.id,
+            title: taskTitle,
+            description: taskDescription,
+            due_date: dueDate,
+            status: 'Todo',
+            priority: 'Medium'
+          })
 
-      setNewNote({ title: '', content: '' })
-      setIsDialogOpen(false)
+        if (taskError) throw taskError
+        
+        toast({
+          title: 'Success',
+          description: 'Note created and added to calendar'
+        })
+      } else if (sendTo === 'colleague' && selectedUser) {
+        // Start a conversation and send the note
+        const { data: conversation, error: convError } = await supabase
+          .rpc('start_direct_conversation', { recipient_id: selectedUser })
+
+        if (convError) throw convError
+
+        const messageContent = `Shared Note: "${newNote.title}"\n\n${newNote.content}`
+        
+        const { error: messageError } = await supabase
+          .from('messages')
+          .insert({
+            conversation_id: conversation,
+            sender_id: user.id,
+            message: messageContent
+          })
+
+        if (messageError) throw messageError
+        
+        toast({
+          title: 'Success',
+          description: 'Note created and sent to colleague'
+        })
+      } else {
+        toast({
+          title: 'Success',
+          description: 'Note created successfully'
+        })
+      }
+
+      resetForm()
       fetchNotes()
     } catch (error: any) {
       toast({
@@ -154,20 +236,29 @@ export default function Notes() {
     setIsDialogOpen(true)
   }
 
-  const openCreateDialog = () => {
-    setEditingNote(null)
+  const resetForm = () => {
     setNewNote({ title: '', content: '' })
+    setSendTo('none')
+    setSelectedDate(undefined)
+    setSelectedTime('')
+    setSelectedUser('')
+    setUserSearch('')
+    setIsDialogOpen(false)
+    setEditingNote(null)
+  }
+
+  const openCreateDialog = () => {
+    resetForm()
     setIsDialogOpen(true)
   }
 
   const handleDialogClose = () => {
-    setIsDialogOpen(false)
-    setEditingNote(null)
-    setNewNote({ title: '', content: '' })
+    resetForm()
   }
 
   useEffect(() => {
     fetchNotes()
+    fetchUsers()
   }, [user])
 
   const filteredNotes = notes.filter(note =>
@@ -221,10 +312,134 @@ export default function Notes() {
                   placeholder="Write your note content here..."
                   value={newNote.content}
                   onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
-                  rows={10}
+                  rows={6}
                   className="resize-none"
                 />
               </div>
+
+              {!editingNote && (
+                <div className="space-y-4 p-4 bg-card/50 rounded-lg border">
+                  <div className="flex items-center space-x-2">
+                    <Label className="text-sm font-medium">Send note to:</Label>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      type="button"
+                      variant={sendTo === 'none' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSendTo('none')}
+                      className="justify-start"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Just Save
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={sendTo === 'calendar' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSendTo('calendar')}
+                      className="justify-start"
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Calendar
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={sendTo === 'colleague' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSendTo('colleague')}
+                      className="justify-start"
+                    >
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Colleague
+                    </Button>
+                  </div>
+
+                  {sendTo === 'calendar' && (
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label>Select Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !selectedDate && "text-muted-foreground"
+                              )}
+                            >
+                              <Calendar className="mr-2 h-4 w-4" />
+                              {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarPicker
+                              mode="single"
+                              selected={selectedDate}
+                              onSelect={setSelectedDate}
+                              initialFocus
+                              className="pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="time">Time (optional)</Label>
+                        <Input
+                          id="time"
+                          type="time"
+                          value={selectedTime}
+                          onChange={(e) => setSelectedTime(e.target.value)}
+                          placeholder="Select time"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {sendTo === 'colleague' && (
+                    <div className="space-y-2">
+                      <Label>Select Colleague</Label>
+                      <div className="space-y-2">
+                        <Input
+                          placeholder="Search colleagues..."
+                          value={userSearch}
+                          onChange={(e) => setUserSearch(e.target.value)}
+                        />
+                        <div className="max-h-32 overflow-y-auto space-y-1">
+                          {users
+                            .filter(user => 
+                              `${user.first_name} ${user.last_name}`.toLowerCase().includes(userSearch.toLowerCase()) ||
+                              user.email.toLowerCase().includes(userSearch.toLowerCase())
+                            )
+                            .slice(0, 5)
+                            .map(user => (
+                              <Button
+                                key={user.id}
+                                type="button"
+                                variant={selectedUser === user.id ? 'default' : 'ghost'}
+                                size="sm"
+                                className="w-full justify-start text-left"
+                                onClick={() => {
+                                  setSelectedUser(user.id)
+                                  setUserSearch(`${user.first_name} ${user.last_name}`)
+                                }}
+                              >
+                                <User className="h-4 w-4 mr-2" />
+                                <div className="flex flex-col items-start">
+                                  <span className="font-medium">{user.first_name} {user.last_name}</span>
+                                  <span className="text-xs text-muted-foreground">{user.email}</span>
+                                </div>
+                              </Button>
+                            ))
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={handleDialogClose}>
