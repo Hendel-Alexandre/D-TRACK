@@ -62,7 +62,7 @@ export default function Reports() {
   const [notes, setNotes] = useState<Note[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
-  const [reportPeriod, setReportPeriod] = useState('week')
+  const [reportPeriod, setReportPeriod] = useState('month')
   const [customDate, setCustomDate] = useState<Date | undefined>(undefined)
   const [datePickerOpen, setDatePickerOpen] = useState(false)
   const [chartType, setChartType] = useState<'bar' | 'line' | 'pie'>('bar')
@@ -193,7 +193,7 @@ export default function Reports() {
   const filteredNotes = getFilteredNotes()
   const filteredTasks = getFilteredTasks()
   const filteredProjects = projects.filter(project => 
-    filteredEntries.some(entry => entry.project_id === project.id)
+    timeEntries.some(entry => entry.project_id === project.id)
   )
 
   const totalHours = filteredEntries.reduce((sum, entry) => sum + entry.hours, 0)
@@ -234,22 +234,23 @@ export default function Reports() {
     const { startDate, endDate } = getDateRange()
     const data: ChartData[] = []
     
+    // Generate data points for each day in the range
     for (let d = new Date(startDate); d <= endDate; d = addDays(d, 1)) {
       const dateStr = format(d, 'yyyy-MM-dd')
-      const dayHours = filteredEntries
+      const dayHours = timeEntries
         .filter(entry => entry.date === dateStr)
         .reduce((sum, entry) => sum + entry.hours, 0)
       
-      const dayNotes = filteredNotes
+      const dayNotes = notes
         .filter(note => format(new Date(note.created_at), 'yyyy-MM-dd') === dateStr)
         .length
       
-      const dayTasks = filteredTasks
+      const dayTasks = tasks
         .filter(task => format(new Date(task.created_at), 'yyyy-MM-dd') === dateStr)
         .length
       
       const dayProjects = new Set(
-        filteredEntries
+        timeEntries
           .filter(entry => entry.date === dateStr && entry.project_id)
           .map(entry => entry.project_id)
       ).size
@@ -300,10 +301,10 @@ export default function Reports() {
   }
 
   const pieData = hasData ? [
-    { name: 'Hours', value: totalHours, color: 'hsl(var(--primary))' },
-    { name: 'Notes', value: filteredNotes.length, color: 'hsl(142, 76%, 36%)' },
-    { name: 'Tasks', value: filteredTasks.length, color: 'hsl(346, 87%, 43%)' },
-    { name: 'Projects', value: filteredProjects.length, color: 'hsl(262, 83%, 58%)' }
+    { name: 'Hours', value: Math.max(totalHours, 0.1), color: 'hsl(var(--primary))' },
+    { name: 'Notes', value: Math.max(filteredNotes.length, 0.1), color: 'hsl(142, 76%, 36%)' },
+    { name: 'Tasks', value: Math.max(filteredTasks.length, 0.1), color: 'hsl(346, 87%, 43%)' },
+    { name: 'Projects', value: Math.max(filteredProjects.length, 0.1), color: 'hsl(262, 83%, 58%)' }
   ] : [
     { name: 'Hours', value: 25, color: 'hsl(var(--primary))' },
     { name: 'Notes', value: 25, color: 'hsl(142, 76%, 36%)' },
