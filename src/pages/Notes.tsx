@@ -110,6 +110,12 @@ export default function Notes() {
         const taskTitle = `Note: ${newNote.title}`
         const taskDescription = newNote.content
         
+        console.log('Creating task with date:', {
+          selectedDate,
+          dueDate,
+          rawDate: selectedDate.toISOString()
+        })
+        
         const { error: taskError } = await supabase
           .from('tasks')
           .insert({

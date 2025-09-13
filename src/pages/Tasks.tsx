@@ -95,6 +95,12 @@ export default function Tasks() {
     e.preventDefault()
     if (!user) return
 
+    console.log('Creating task with due_date:', {
+      due_date: newTask.due_date,
+      rawValue: newTask.due_date,
+      dateObject: newTask.due_date ? new Date(newTask.due_date) : null
+    })
+
     try {
       const { error } = await supabase
         .from('tasks')
