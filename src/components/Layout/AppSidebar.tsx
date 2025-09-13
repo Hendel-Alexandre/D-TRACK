@@ -8,8 +8,7 @@ import {
   Settings, 
   Users,
   Activity,
-  MessageCircle,
-  Gamepad2
+  MessageCircle
 } from 'lucide-react'
 import datatrackLogo from '@/assets/datatrack-logo.png'
 import { NavLink, useLocation } from 'react-router-dom'
@@ -26,7 +25,6 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 
-const BirdIcon = () => <span className="text-lg">🐦</span>
 
 const navigationItems = [
   { 
@@ -68,16 +66,6 @@ const navigationItems = [
     title: 'messages', 
     url: '/messages', 
     icon: MessageCircle 
-  },
-  { 
-    title: 'games', 
-    url: '/games', 
-    icon: Gamepad2 
-  },
-  { 
-    title: 'mirbird', 
-    url: '/mirbird', 
-    icon: BirdIcon
   },
   { 
     title: 'history', 
