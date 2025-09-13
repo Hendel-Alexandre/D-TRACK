@@ -64,7 +64,7 @@ export default function Login() {
             <div className="flex items-center justify-center mb-6">
               <img 
                 src={datatrackLogo} 
-                alt="DataTrack" 
+                alt="D-Track" 
                 className="h-48 w-auto"
               />
             </div>

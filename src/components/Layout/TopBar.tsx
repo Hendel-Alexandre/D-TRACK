@@ -69,11 +69,11 @@ export function TopBar() {
           <div className="hidden lg:flex items-center gap-3">
             <img 
               src={datatrackLogo} 
-              alt="DataTrack" 
+              alt="D-Track" 
               className="h-8 w-auto"
             />
             <div>
-              <h2 className="text-sm font-semibold text-foreground">DataTrack</h2>
+              <h2 className="text-sm font-semibold text-foreground">D-Track</h2>
             </div>
           </div>
         </div>

@@ -89,7 +89,7 @@ export default function Signup() {
             <div className="flex items-center justify-center mb-6">
               <img 
                 src={datatrackLogo} 
-                alt="DataTrack" 
+                alt="D-Track" 
                 className="h-12 w-auto"
               />
             </div>
@@ -97,7 +97,7 @@ export default function Signup() {
               Create Account
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              Join DataTrack Platform
+              Join D-Track Platform
             </CardDescription>
           </CardHeader>
           <CardContent>
