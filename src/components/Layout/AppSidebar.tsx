@@ -8,7 +8,8 @@ import {
   Settings, 
   Users,
   Activity,
-  MessageCircle
+  MessageCircle,
+  Gamepad2
 } from 'lucide-react'
 import datatrackLogo from '@/assets/datatrack-logo.png'
 import { NavLink, useLocation } from 'react-router-dom'
@@ -66,6 +67,11 @@ const navigationItems = [
     title: 'messages', 
     url: '/messages', 
     icon: MessageCircle 
+  },
+  { 
+    title: 'games', 
+    url: '/games', 
+    icon: Gamepad2 
   },
   { 
     title: 'history', 

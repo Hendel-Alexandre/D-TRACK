@@ -17,6 +17,7 @@ import Team from "./pages/Team";
 import Settings from "./pages/Settings";
 import History from "./pages/History";
 import Messages from "./pages/Messages";
+import Games from "./pages/Games";
 
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -106,6 +107,7 @@ const App = () => (
                 <Route path="reports" element={<Reports />} />
                 <Route path="team" element={<Team />} />
                 <Route path="messages" element={<Messages />} />
+                <Route path="games" element={<Games />} />
                 
                 <Route path="history" element={<History />} />
                 <Route path="settings" element={<Settings />} />
