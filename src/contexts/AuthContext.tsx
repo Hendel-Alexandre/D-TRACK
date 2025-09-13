@@ -21,30 +21,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Set up auth state listener FIRST to avoid missing events and deadlocks
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) {
-        // Set status to Available when logging in
-        if (event === 'SIGNED_IN') {
-          await supabase
-            .from('users')
-            .update({ status: 'Available' })
-            .eq('id', session.user.id)
-        }
-        
-        // Defer Supabase calls from inside the callback
+        // Defer status update and profile fetch to avoid blocking the auth callback
         setTimeout(() => {
-          if (session?.user?.id) {
-            fetchUserProfile(session.user.id)
+          const uid = session.user!.id
+          if (event === 'SIGNED_IN') {
+            supabase
+              .from('users')
+              .update({ status: 'Available' })
+              .eq('id', uid)
+              .then(() => {})
           }
+          fetchUserProfile(uid)
         }, 0)
       } else {
-        // Set status to Away when logging out
+        // Defer status update on sign out; never block the callback
         if (event === 'SIGNED_OUT' && user?.id) {
-          await supabase
-            .from('users')
-            .update({ status: 'Away' })
-            .eq('id', user.id)
+          const prevId = user.id
+          setTimeout(() => {
+            supabase
+              .from('users')
+              .update({ status: 'Away' })
+              .eq('id', prevId)
+          }, 0)
         }
         setUserProfile(null)
         setLoading(false)
@@ -52,27 +53,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       if (session?.user) {
-        // Set status to Available for existing session
-        await supabase
-          .from('users')
-          .update({ status: 'Available' })
-          .eq('id', session.user.id)
-        fetchUserProfile(session.user.id)
+        // Defer status update and profile fetch for existing session
+        setTimeout(() => {
+          const uid = session.user!.id
+          supabase
+            .from('users')
+            .update({ status: 'Available' })
+            .eq('id', uid)
+            .then(() => {})
+          fetchUserProfile(uid)
+        }, 0)
       } else {
         setLoading(false)
       }
     })
 
     // Set status to Away when page is closed/refreshed
-    const handleBeforeUnload = async () => {
+    const handleBeforeUnload = () => {
       if (user?.id) {
-        await supabase
-          .from('users')
-          .update({ status: 'Away' })
-          .eq('id', user.id)
+        // Fire-and-forget; cannot await during unload
+        setTimeout(() => {
+          supabase
+            .from('users')
+            .update({ status: 'Away' })
+            .eq('id', user.id as string)
+        }, 0)
       }
     }
 
