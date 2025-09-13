@@ -389,7 +389,28 @@ export default function Messages() {
     if (!user || newChatUsers.length === 0) return
 
     try {
-      // Create conversation
+      if (!isGroup && newChatUsers.length === 1) {
+        // Use the secure function for direct conversations
+        const { data: conversationId, error } = await supabase.rpc('start_direct_conversation', {
+          recipient_id: newChatUsers[0]
+        })
+
+        if (error) throw error
+
+        toast({
+          title: 'Success',
+          description: 'Conversation started successfully'
+        })
+
+        setIsNewChatOpen(false)
+        setNewChatUsers([])
+        setNewChatName('')
+        setIsGroup(false)
+        fetchConversations()
+        return
+      }
+
+      // For group conversations, still use the direct approach since multiple users are involved
       const { data: conversationData, error: convError } = await supabase
         .from('conversations')
         .insert({
@@ -456,41 +477,19 @@ export default function Messages() {
         return
       }
 
-      // Create new direct conversation
-      const { data: conversationData, error: convError } = await supabase
-        .from('conversations')
-        .insert({
-          name: null, // Direct conversations don't need names
-          is_group: false,
-          created_by: user.id
-        })
-        .select()
-        .single()
+      // Use the secure function to create a direct conversation
+      const { data: conversationId, error } = await supabase.rpc('start_direct_conversation', {
+        recipient_id: targetUserId
+      })
 
-      if (convError) throw convError
-
-      // Add both users as members
-      const { error: membersError } = await supabase
-        .from('conversation_members')
-        .insert([
-          {
-            conversation_id: conversationData.id,
-            user_id: user.id
-          },
-          {
-            conversation_id: conversationData.id,
-            user_id: targetUserId
-          }
-        ])
-
-      if (membersError) throw membersError
+      if (error) throw error
 
       // Refresh conversations and select the new one
       await fetchConversations()
       
       // Find and select the newly created conversation
       setTimeout(() => {
-        const newConversation = conversations.find(conv => conv.id === conversationData.id)
+        const newConversation = conversations.find(conv => conv.id === conversationId)
         if (newConversation) {
           selectConversation(newConversation)
         }

@@ -519,6 +519,10 @@ export type Database = {
         Args: { conversation_id: string; user_id: string }
         Returns: boolean
       }
+      start_direct_conversation: {
+        Args: { recipient_id: string }
+        Returns: string
+      }
     }
     Enums: {
       app_role:
