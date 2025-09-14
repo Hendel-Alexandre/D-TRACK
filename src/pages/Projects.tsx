@@ -223,15 +223,15 @@ export default function Projects() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Projects</h1>
-          <p className="text-muted-foreground">Manage your projects and track progress</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Projects</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Manage your projects and track progress</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-primary hover:opacity-90">
+            <Button className="bg-gradient-primary hover:opacity-90 w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               New Project
             </Button>
@@ -261,31 +261,31 @@ export default function Projects() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={newProject.status} onValueChange={(value) => setNewProject({ ...newProject, status: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="On Hold">On Hold</SelectItem>
-                      <SelectItem value="Completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select value={newProject.status} onValueChange={(value) => setNewProject({ ...newProject, status: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="On Hold">On Hold</SelectItem>
+                        <SelectItem value="Completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="start_date">Start Date</Label>
-                  <Input
-                    id="start_date"
-                    type="date"
-                    value={newProject.start_date}
-                    onChange={(e) => setNewProject({ ...newProject, start_date: e.target.value })}
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="start_date">Start Date</Label>
+                    <Input
+                      id="start_date"
+                      type="date"
+                      value={newProject.start_date}
+                      onChange={(e) => setNewProject({ ...newProject, start_date: e.target.value })}
+                    />
+                  </div>
                 </div>
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="end_date">End Date</Label>

@@ -12,10 +12,12 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { toast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
+import { useTranslation } from 'react-i18next'
 
 export default function Settings() {
   const { user, userProfile, signOut, updateUserStatus } = useAuth()
   const { theme, setTheme } = useTheme()
+  const { t } = useTranslation()
   
   const [profileData, setProfileData] = useState({
     first_name: userProfile?.first_name || '',
@@ -104,13 +106,13 @@ export default function Settings() {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">{t('settingsTitle')}</h1>
-        <p className="text-muted-foreground">{t('settingsDescription')}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('settingsTitle')}</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">{t('settingsDescription')}</p>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-4 sm:gap-6">
         {/* Profile Settings */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -118,14 +120,14 @@ export default function Settings() {
         >
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <User className="h-5 w-5 mr-2" />
+              <CardTitle className="flex items-center text-lg sm:text-xl">
+                <User className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Profile Information
               </CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleProfileUpdate} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="first_name">First Name</Label>
                     <Input
@@ -153,7 +155,7 @@ export default function Settings() {
                     disabled
                     className="bg-muted"
                   />
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Email cannot be changed. Contact support if needed.
                   </p>
                 </div>
@@ -188,7 +190,7 @@ export default function Settings() {
                   </Select>
                 </div>
 
-                <Button type="submit" disabled={isLoading}>
+                <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
                   {isLoading ? 'Updating...' : 'Update Profile'}
                 </Button>
               </form>
@@ -210,15 +212,15 @@ export default function Settings() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                 <div>
                   <Label>Theme</Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Choose your preferred theme
                   </p>
                 </div>
                 <Select value={theme} onValueChange={setTheme}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-full sm:w-32">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -246,10 +248,10 @@ export default function Settings() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <Label>Email Notifications</Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Receive notifications via email
                   </p>
                 </div>
@@ -261,10 +263,10 @@ export default function Settings() {
 
               <Separator />
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <Label>Push Notifications</Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Receive push notifications in browser
                   </p>
                 </div>
@@ -276,10 +278,10 @@ export default function Settings() {
 
               <Separator />
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <Label>Desktop Notifications</Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Show desktop notifications
                   </p>
                 </div>
@@ -291,10 +293,10 @@ export default function Settings() {
 
               <Separator />
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <Label>Weekly Reports</Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Receive weekly activity reports
                   </p>
                 </div>

@@ -57,20 +57,20 @@ export function TopBar() {
 
   return (
     <motion.header 
-      className="h-16 border-b border-border/50 glass-effect sticky top-0 z-50"
+      className="h-14 sm:h-16 border-b border-border/50 glass-effect sticky top-0 z-50"
       initial={{ y: -64 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <div className="flex h-full items-center justify-between px-6">
-        <div className="flex items-center gap-4">
+      <div className="flex h-full items-center justify-between px-3 sm:px-4 lg:px-6">
+        <div className="flex items-center gap-2 sm:gap-4">
           <SidebarTrigger className="h-8 w-8 hover:bg-accent/50 rounded-lg transition-colors" />
           <div className="hidden sm:block h-8 w-px bg-border/50" />
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden xl:flex items-center gap-3">
             <img 
               src={datatrackLogo} 
               alt="D-Track" 
-              className="h-20 w-auto"
+              className="h-16 sm:h-20 w-auto"
             />
             <div>
               <h2 className="text-sm font-semibold text-foreground">D-Track</h2>
@@ -78,7 +78,7 @@ export function TopBar() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
           {/* Time Tracking Timer */}
           {user && (
             <motion.div 
@@ -90,7 +90,7 @@ export function TopBar() {
                 variant="outline"
                 size="sm"
                 onClick={toggleTracking}
-                className={`gap-2 px-4 py-2 h-9 rounded-lg font-mono transition-all ${
+                className={`gap-1 sm:gap-2 px-2 sm:px-4 py-2 h-8 sm:h-9 rounded-lg font-mono transition-all text-xs sm:text-sm ${
                   isTracking 
                     ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100 dark:bg-green-950 dark:border-green-800 dark:text-green-300' 
                     : isPaused 
@@ -99,25 +99,25 @@ export function TopBar() {
                 }`}
               >
                 {isTracking ? (
-                  <Pause className="h-4 w-4" />
+                  <Pause className="h-3 w-3 sm:h-4 sm:w-4" />
                 ) : (
-                  <Play className="h-4 w-4" />
+                  <Play className="h-3 w-3 sm:h-4 sm:w-4" />
                 )}
-                <Clock className="h-4 w-4" />
-                <span className="text-sm min-w-[60px]">
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4 hidden xs:block" />
+                <span className="text-xs sm:text-sm min-w-[45px] sm:min-w-[60px]">
                   {formatTime(elapsedTime)}
                 </span>
               </Button>
             </motion.div>
           )}
 
-          {/* Language Toggle */}
+          {/* Language Toggle - Hidden on very small screens */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2 px-3 py-2 h-9 rounded-lg hover:bg-accent/50">
-                <Globe className="h-4 w-4" />
-                <span className="text-sm font-medium">{i18n.language.toUpperCase()}</span>
-                <ChevronDown className="h-3 w-3" />
+              <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 px-2 sm:px-3 py-2 h-8 sm:h-9 rounded-lg hover:bg-accent/50 hidden sm:flex">
+                <Globe className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm font-medium">{i18n.language.toUpperCase()}</span>
+                <ChevronDown className="h-2 w-2 sm:h-3 sm:w-3" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
@@ -136,7 +136,7 @@ export function TopBar() {
               variant="ghost"
               size="sm"
               onClick={toggleTheme}
-              className="p-2 h-9 w-9 rounded-lg hover:bg-accent/50"
+              className="p-2 h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-accent/50"
             >
               <AnimatePresence mode="wait">
                 {theme === 'light' ? (
@@ -147,7 +147,7 @@ export function TopBar() {
                     exit={{ rotate: 90, opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <Moon className="h-4 w-4" />
+                    <Moon className="h-3 w-3 sm:h-4 sm:w-4" />
                   </motion.div>
                 ) : (
                   <motion.div
@@ -157,7 +157,7 @@ export function TopBar() {
                     exit={{ rotate: -90, opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <Sun className="h-4 w-4" />
+                    <Sun className="h-3 w-3 sm:h-4 sm:w-4" />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -168,14 +168,14 @@ export function TopBar() {
           {user && userProfile && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="gap-3 h-10 px-3 rounded-lg hover:bg-accent/50">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-gradient-primary text-primary-foreground text-sm font-semibold">
+                <Button variant="ghost" className="gap-2 sm:gap-3 h-8 sm:h-10 px-2 sm:px-3 rounded-lg hover:bg-accent/50">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
+                      <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs sm:text-sm font-semibold">
                         {getInitials(userProfile.first_name, userProfile.last_name)}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="hidden md:flex flex-col text-left">
+                    <div className="hidden lg:flex flex-col text-left">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-foreground">
                           {userProfile.first_name} {userProfile.last_name}
@@ -186,7 +186,7 @@ export function TopBar() {
                         {userProfile.department}
                       </span>
                     </div>
-                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                    <ChevronDown className="h-2 w-2 sm:h-3 sm:w-3 text-muted-foreground hidden sm:block" />
                   </div>
                 </Button>
               </DropdownMenuTrigger>

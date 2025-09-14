@@ -212,11 +212,11 @@ export default function Tasks() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">{t('tasksTitle')}</h1>
-          <p className="text-muted-foreground">{t('tasksDescription')}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('tasksTitle')}</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">{t('tasksDescription')}</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
