@@ -70,7 +70,7 @@ export function TopBar() {
             <img 
               src={datatrackLogo} 
               alt="D-Track" 
-              className="h-16 sm:h-20 w-auto"
+              className="h-16 sm:h-20 w-auto dark:invert"
             />
             <div>
               <h2 className="text-sm font-semibold text-foreground">D-Track</h2>

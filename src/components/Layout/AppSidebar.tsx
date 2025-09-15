@@ -91,7 +91,7 @@ export function AppSidebar() {
           <img 
             src={datatrackLogo} 
             alt="D-Track" 
-            className={`transition-all duration-300 mx-auto ${
+            className={`transition-all duration-300 mx-auto dark:invert ${
               isCollapsed ? 'h-20 w-auto' : 'h-32 w-auto'
             }`}
           />

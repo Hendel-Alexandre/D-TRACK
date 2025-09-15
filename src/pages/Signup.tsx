@@ -90,7 +90,7 @@ export default function Signup() {
               <img 
                 src={datatrackLogo} 
                 alt="D-Track" 
-                className="h-32 w-auto"
+                className="h-32 w-auto dark:invert"
               />
             </div>
             <CardTitle className="text-2xl font-bold text-foreground">

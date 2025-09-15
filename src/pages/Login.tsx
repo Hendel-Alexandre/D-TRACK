@@ -65,7 +65,7 @@ export default function Login() {
               <img 
                 src={datatrackLogo} 
                 alt="D-Track" 
-                className="h-48 w-auto"
+                className="h-48 w-auto dark:invert"
               />
             </div>
             <CardTitle className="text-2xl font-bold text-foreground">
