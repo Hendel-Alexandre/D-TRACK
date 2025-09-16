@@ -8,44 +8,61 @@
 
 @layer base {
   :root {
-    /* Enhanced Corporate Color Palette */
-    --background: 0 0% 99%;
-    --foreground: 222 20% 8%;
+    /* Modern Professional Color Palette */
+    --background: 0 0% 100%;
+    --foreground: 222 84% 4.9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 20% 8%;
+    --card-foreground: 222 84% 4.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 20% 8%;
+    --popover-foreground: 222 84% 4.9%;
 
-    --primary: 0 72% 51%;
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 0 72% 45%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+    --primary-hover: 221 83% 48%;
 
-    --secondary: 210 20% 95%;
-    --secondary-foreground: 222 20% 8%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
 
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 15% 42%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 20% 94%;
-    --accent-foreground: 222 20% 8%;
+    --accent: 210 40% 94%;
+    --accent-foreground: 222.2 84% 4.9%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 214 20% 90%;
-    --input: 214 20% 94%;
-    --ring: 0 72% 51%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221 83% 53%;
 
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
+    --success: 142.1 76.2% 36.3%;
+    --success-foreground: 355.7 100% 97.3%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 32.1 94.6% 43.7%;
+    --warning-foreground: 210 40% 98%;
 
     --info: 221 83% 53%;
-    --info-foreground: 0 0% 100%;
+    --info-foreground: 210 40% 98%;
+
+    /* Gamification Colors */
+    --achievement-gold: 45 93% 58%;
+    --achievement-silver: 0 0% 63%;
+    --achievement-bronze: 25 75% 47%;
+    --streak-fire: 12 76% 61%;
+    --xp-green: 142 71% 45%;
+    
+    /* Progress Colors */
+    --progress-low: 0 84% 60%;
+    --progress-medium: 38 92% 50%;
+    --progress-high: 142 71% 45%;
+    
+    /* Focus Mode */
+    --focus-bg: 221 39% 11%;
+    --focus-card: 224 71% 4%;
+    --focus-accent: 221 83% 53%;
 
     /* Enhanced Status Colors */
     --status-available: 142 71% 45%;
