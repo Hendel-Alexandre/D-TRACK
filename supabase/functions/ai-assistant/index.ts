@@ -37,6 +37,8 @@ serve(async (req) => {
         return await suggestNextTask(data, supabase);
       case 'analyze_productivity':
         return await analyzeProductivity(data, supabase);
+      case 'darvis_chat':
+        return await handleDarvisChat(data, supabase);
       default:
         throw new Error('Unknown action');
     }
@@ -342,6 +344,133 @@ async function analyzeProductivity(data: any, supabase: any) {
       tasksCompleted: completedTasks,
       totalHours: totalHours.toFixed(1),
       completionRate: tasks.length > 0 ? ((completedTasks / tasks.length) * 100).toFixed(1) : 0
+    }
+  }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+async function handleDarvisChat(data: any, supabase: any) {
+  const { message, userId, conversationHistory = [] } = data;
+  
+  console.log('Darvis chat for user:', userId, 'message:', message);
+  
+  // Build conversation context
+  const context = conversationHistory
+    .slice(-5) // Last 5 messages for context
+    .map((msg: any) => `${msg.sender}: ${msg.text}`)
+    .join('\n');
+  
+  const systemPrompt = `You are Darvis, the AI assistant for D-TRACK (a task and time management app). 
+
+Your capabilities:
+1. Create tasks from natural language (extract title, description, due date, priority, reminders)
+2. Reschedule existing tasks
+3. Summarize user's workload (overdue, today's tasks, upcoming)
+4. Provide productivity insights and motivation
+
+Guidelines:
+- Be friendly, helpful, and concise
+- For task creation, always provide a preview that user must confirm
+- Extract specific details like dates, times, priorities from natural language
+- Use encouraging, professional tone
+- Focus only on D-TRACK functionality - no general questions outside task management
+
+Recent conversation:
+${context}
+
+User message: ${message}
+
+Respond appropriately based on user intent. If creating a task, provide task_preview object.`;
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openAIApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-5-mini-2025-08-07',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: message }
+      ],
+      max_completion_tokens: 1000
+    }),
+  });
+
+  const result = await response.json();
+  let aiResponse = result.choices[0].message.content;
+  let taskPreview = null;
+
+  // Check if this looks like a task creation request
+  const taskKeywords = ['create task', 'add task', 'remind me', 'schedule', 'due', 'tomorrow', 'today', 'next week'];
+  const isTaskRequest = taskKeywords.some(keyword => 
+    message.toLowerCase().includes(keyword)
+  );
+
+  if (isTaskRequest) {
+    // Extract task details using AI
+    const extractPrompt = `Extract task details from: "${message}"
+
+Return JSON format:
+{
+  "title": "task title",
+  "description": "optional description", 
+  "due_date": "YYYY-MM-DD or null",
+  "due_time": "HH:MM or null",
+  "priority": "Low|Medium|High|Urgent",
+  "reminder_minutes": number or null
+}
+
+Rules:
+- If no due date specified, use null
+- Default priority is "Medium"
+- Common time references: "tomorrow" = next day, "next week" = 7 days from now
+- Reminder: "30 min before" = 30, "1 hour before" = 60
+- Current date: ${new Date().toISOString().split('T')[0]}`;
+
+    const extractResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-5-mini-2025-08-07',
+        messages: [
+          { role: 'system', content: extractPrompt },
+          { role: 'user', content: message }
+        ],
+        max_completion_tokens: 500
+      }),
+    });
+
+    const extractResult = await extractResponse.json();
+
+    try {
+      const extracted = JSON.parse(extractResult.choices[0].message.content);
+      taskPreview = {
+        title: extracted.title || 'New Task',
+        description: extracted.description || null,
+        due_date: extracted.due_date,
+        due_time: extracted.due_time,
+        priority: extracted.priority || 'Medium',
+        reminder_minutes: extracted.reminder_minutes
+      };
+
+      aiResponse = `I can create this task for you. Please review the details and confirm:`;
+    } catch (parseError) {
+      console.error('Error parsing task extraction:', parseError);
+    }
+  }
+
+  return new Response(JSON.stringify({
+    success: true,
+    response: {
+      type: isTaskRequest ? 'task_creation' : 'general',
+      message: aiResponse,
+      task_preview: taskPreview
     }
   }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -8,6 +8,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { DashboardCards } from '@/components/Dashboard/DashboardCards'
+import { DarvisAssistant } from '@/components/AI/DarvisAssistant'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -216,36 +218,9 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Stats Grid */}
-        <motion.div 
-          variants={itemVariants}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-        >
-          {stats.map((stat, index) => (
-            <Card key={index} className="card-hover bg-gradient-card border-border/50 relative overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <stat.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <Badge variant="outline" className={`text-xs ${getTrendColor(stat.trend)}`}>
-                    {stat.change}
-                  </Badge>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {stat.title}
-                  </p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {stat.value}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {stat.description}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        {/* Enhanced Dashboard Cards */}
+        <motion.div variants={itemVariants}>
+          <DashboardCards />
         </motion.div>
 
         {/* Quick Actions */}
@@ -362,6 +337,9 @@ export default function Dashboard() {
           </div>
         </motion.div>
       </motion.div>
+      
+      {/* Darvis AI Assistant */}
+      <DarvisAssistant />
     </div>
   )
 }
