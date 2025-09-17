@@ -69,7 +69,7 @@ export default function Login() {
               />
             </div>
             <CardTitle className="text-2xl font-bold text-foreground">
-              Welcome Back
+              Hello
             </CardTitle>
             <CardDescription className="text-muted-foreground">
               Sign in to your account

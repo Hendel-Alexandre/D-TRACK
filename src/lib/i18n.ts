@@ -18,7 +18,7 @@ const resources = {
       history: "History",
       
       // Page Titles and Descriptions
-      dashboardWelcome: "Welcome back, {{name}}!",
+      dashboardWelcome: "Hello, {{name}}!",
       dashboardSubtitle: "Here's what's happening with your time tracking today",
       
       calendarTitle: "Calendar",
@@ -53,7 +53,7 @@ const resources = {
       logout: "Logout",
       signup: "Create Account",
       signupSubtitle: "Join D-Track Platform",
-      welcomeBack: "Welcome Back",
+      welcomeBack: "Hello",
       forgotPassword: "Forgot Password",
       firstName: "First Name",
       lastName: "Last Name", 
