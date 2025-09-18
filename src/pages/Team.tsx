@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/hooks/use-toast'
 import { useNavigate } from 'react-router-dom'
+import { FriendRequestSystem } from '@/components/Teams/FriendRequestSystem'
 
 interface TeamMember {
   id: string
@@ -124,6 +125,11 @@ export default function Team() {
           <UserPlus className="h-4 w-4 mr-2" />
           Invite Member
         </Button>
+      </div>
+
+      {/* Friend Request System */}
+      <div className="mb-6">
+        <FriendRequestSystem />
       </div>
 
       {/* Stats Cards - Compact Grid */}

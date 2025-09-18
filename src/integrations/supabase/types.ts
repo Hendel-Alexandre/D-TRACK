@@ -88,6 +88,33 @@ export type Database = {
           },
         ]
       }
+      friend_requests: {
+        Row: {
+          created_at: string
+          id: string
+          recipient_id: string
+          sender_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recipient_id: string
+          sender_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recipient_id?: string
+          sender_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       game_moves: {
         Row: {
           created_at: string

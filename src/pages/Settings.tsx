@@ -190,6 +190,34 @@ export default function Settings() {
                   </Select>
                 </div>
 
+                {/* Profile Picture Upload */}
+                <div className="space-y-2">
+                  <Label>Profile Picture</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="h-16 w-16 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold text-lg">
+                      {profileData.first_name.charAt(0)}{profileData.last_name.charAt(0)}
+                    </div>
+                    <div className="flex-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          toast({
+                            title: 'Coming Soon',
+                            description: 'Profile picture upload will be available soon!'
+                          })
+                        }}
+                        className="w-full sm:w-auto"
+                      >
+                        Upload Picture
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Max file size: 5MB. Supported formats: JPG, PNG
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
                   {isLoading ? 'Updating...' : 'Update Profile'}
                 </Button>

@@ -10,12 +10,13 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Search, Send, Users, MessageCircle, User, ArrowLeft, Check, CheckCheck, X, Plus } from 'lucide-react'
+import { Search, Send, Users, MessageCircle, User, ArrowLeft, Check, CheckCheck, X, Plus, Paperclip, Download, Eye } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
 import { useSearchParams } from 'react-router-dom'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { StatusIndicator } from '@/components/ui/status-indicator'
+import { FileUploadDialog } from '@/components/FileSharing/FileUploadDialog'
 
 interface User {
   id: string
@@ -48,6 +49,15 @@ interface Message {
   created_at: string
   read_at?: string | null
   sender?: User
+  file_name?: string
+  file_url?: string
+  file_size?: number
+}
+
+interface SharedFile {
+  name: string
+  url: string
+  size: number
 }
 
 export default function Messages() {
@@ -66,6 +76,7 @@ export default function Messages() {
   const [newChatType, setNewChatType] = useState<'direct' | 'group'>('direct')
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [groupName, setGroupName] = useState('')
+  const [showFileUpload, setShowFileUpload] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -934,29 +945,54 @@ export default function Messages() {
                                 </div>
                               )}
                               
-                              <div className={`p-3 rounded-2xl shadow-sm ${
-                                isFromUser 
-                                  ? 'bg-primary text-primary-foreground ml-auto rounded-br-md' 
-                                  : 'bg-background border border-border/50 rounded-bl-md'
-                              }`}>
-                                <p className="text-sm leading-relaxed">{message.message}</p>
-                                <div className="flex items-center justify-end gap-1 mt-2">
-                                  <span className={`text-xs ${
-                                    isFromUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                                  }`}>
-                                    {format(new Date(message.created_at), 'HH:mm')}
-                                  </span>
-                                  {isFromUser && (
-                                    <div className="text-primary-foreground/70">
-                                      {message.read_at ? (
-                                        <CheckCheck className="h-3 w-3" />
-                                      ) : (
-                                        <Check className="h-3 w-3" />
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
+                               <div className={`p-3 rounded-2xl shadow-sm ${
+                                 isFromUser 
+                                   ? 'bg-primary text-primary-foreground ml-auto rounded-br-md' 
+                                   : 'bg-background border border-border/50 rounded-bl-md'
+                               }`}>
+                                 {message.file_name ? (
+                                   <div className="space-y-2">
+                                     <div className="flex items-center gap-2 p-2 bg-muted/20 rounded-lg">
+                                       <Download className="h-4 w-4" />
+                                       <div className="flex-1 min-w-0">
+                                         <p className="text-sm font-medium truncate">{message.file_name}</p>
+                                         <p className="text-xs opacity-70">
+                                           {message.file_size ? `${(message.file_size / (1024 * 1024)).toFixed(1)} MB` : 'File'}
+                                         </p>
+                                       </div>
+                                       <Button
+                                         size="sm"
+                                         variant="ghost"
+                                         className="h-6 w-6 p-0"
+                                         onClick={() => window.open(message.file_url, '_blank')}
+                                       >
+                                         <Eye className="h-3 w-3" />
+                                       </Button>
+                                     </div>
+                                     {message.message && (
+                                       <p className="text-sm leading-relaxed break-words">{message.message}</p>
+                                     )}
+                                   </div>
+                                 ) : (
+                                   <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{message.message}</p>
+                                 )}
+                                 <div className="flex items-center justify-end gap-1 mt-2">
+                                   <span className={`text-xs ${
+                                     isFromUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                                   }`}>
+                                     {format(new Date(message.created_at), 'HH:mm')}
+                                   </span>
+                                   {isFromUser && (
+                                     <div className="text-primary-foreground/70">
+                                       {message.read_at ? (
+                                         <CheckCheck className="h-3 w-3" />
+                                       ) : (
+                                         <Check className="h-3 w-3" />
+                                       )}
+                                     </div>
+                                   )}
+                                 </div>
+                               </div>
                             </div>
                           </motion.div>
                         )
@@ -968,12 +1004,30 @@ export default function Messages() {
                   {/* Message Input */}
                   <div className="flex-shrink-0 p-4 border-t border-border/50 bg-background/50">
                     <form onSubmit={sendMessage} className="flex gap-2">
-                      <Input
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Type your message..."
-                        className="flex-1 bg-background border-border/50 focus:border-primary/50"
-                      />
+                      <div className="flex items-center gap-2 flex-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowFileUpload(true)}
+                          className="h-10 w-10 p-0 shrink-0"
+                        >
+                          <Paperclip className="h-4 w-4" />
+                        </Button>
+                        <div className="flex-1 relative">
+                          <Input
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            placeholder="Type your message..."
+                            className="bg-background border-border/50 focus:border-primary/50 pr-4 resize-none overflow-hidden"
+                            style={{
+                              wordWrap: 'break-word',
+                              overflowWrap: 'break-word',
+                              maxHeight: '120px'
+                            }}
+                          />
+                        </div>
+                      </div>
                       <Button
                         type="submit"
                         disabled={!newMessage.trim()}

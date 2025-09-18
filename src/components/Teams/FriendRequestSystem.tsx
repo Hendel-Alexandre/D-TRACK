@@ -41,20 +41,36 @@ export function FriendRequestSystem() {
     if (!user) return
 
     try {
+      // Simple query for now since types aren't generated yet
       const { data, error } = await supabase
-        .from('friend_requests')
-        .select(`
-          *,
-          sender:users!friend_requests_sender_id_fkey(id, first_name, last_name, email, department)
-        `)
+        .from('friend_requests' as any)
+        .select('*')
         .eq('recipient_id', user.id)
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setFriendRequests(data || [])
+      
+      // Get sender details for each request
+      const requestsWithSenders = await Promise.all(
+        (data || []).map(async (request: any) => {
+          const { data: senderData } = await supabase
+            .from('users')
+            .select('id, first_name, last_name, email, department')
+            .eq('id', request.sender_id)
+            .single()
+          
+          return {
+            ...request,
+            sender: senderData
+          }
+        })
+      )
+      
+      setFriendRequests(requestsWithSenders as FriendRequest[])
     } catch (error: any) {
       console.error('Error fetching friend requests:', error)
+      setFriendRequests([])
     }
   }
 
@@ -109,7 +125,7 @@ export function FriendRequestSystem() {
 
     try {
       const { error } = await supabase
-        .from('friend_requests')
+        .from('friend_requests' as any)
         .insert({
           sender_id: user.id,
           recipient_id: recipientId,
@@ -137,7 +153,7 @@ export function FriendRequestSystem() {
   const respondToFriendRequest = async (requestId: string, status: 'accepted' | 'declined') => {
     try {
       const { error } = await supabase
-        .from('friend_requests')
+        .from('friend_requests' as any)
         .update({ status })
         .eq('id', requestId)
 
