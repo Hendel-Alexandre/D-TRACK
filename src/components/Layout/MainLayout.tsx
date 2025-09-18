@@ -2,9 +2,9 @@ import { Outlet } from 'react-router-dom'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from './AppSidebar'
 import { TopBar } from './TopBar'
-import { HelpChat } from '@/components/HelpChat/HelpChat'
 import NoteNotificationPopup from '@/components/notifications/NoteNotificationPopup'
 import { useNoteNotifications } from '@/hooks/useNoteNotifications'
+import { DarvisAssistant } from '@/components/AI/DarvisAssistant'
 
 export function MainLayout() {
   const { notification, isPopupOpen, closePopup, onNotificationHandled } = useNoteNotifications()
@@ -21,7 +21,7 @@ export function MainLayout() {
             </div>
           </main>
         </div>
-        <HelpChat />
+        <DarvisAssistant />
         
         <NoteNotificationPopup
           notification={notification}

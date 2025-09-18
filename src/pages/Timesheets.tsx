@@ -656,47 +656,28 @@ export default function Timesheets() {
         </div>
       </div>
 
-      {/* Enhanced sessions view */}
-      {sessionsList.length > 0 ? (
+      {/* Time Entries Table */}
+      {filteredEntries.length > 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>Work Sessions</CardTitle>
+            <CardTitle>Time Entries</CardTitle>
           </CardHeader>
           <CardContent className="p-0 sm:p-6">
             {/* Mobile: Card-based layout */}
             <div className="block sm:hidden space-y-3 p-3">
-              {sessionsList.map((session) => (
-                <div key={session.date} className="border rounded-lg p-4 space-y-3">
+              {filteredEntries.map((entry) => (
+                <div key={entry.id} className="border rounded-lg p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="font-medium">
-                        {new Date(session.date).toLocaleDateString('en-US', { 
+                        {new Date(entry.date).toLocaleDateString('en-US', { 
                           weekday: 'short', 
                           month: 'short', 
                           day: 'numeric' 
                         })}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Net: <span className="font-semibold">
-                          {(session.totalHours + session.adjustmentHours - session.breakDuration).toFixed(2)}h
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-2 text-sm">
-                    <div>
-                      <div className="text-muted-foreground">Total</div>
-                      <div className="font-medium">{session.totalHours.toFixed(2)}h</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Break</div>
-                      <div className="font-medium">{session.breakDuration.toFixed(2)}h</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Adjust</div>
-                      <div className={`font-medium ${session.adjustmentHours >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {session.adjustmentHours >= 0 ? '+' : ''}{session.adjustmentHours.toFixed(2)}h
+                        {entry.hours.toFixed(2)} hours
                       </div>
                     </div>
                   </div>
@@ -704,8 +685,21 @@ export default function Timesheets() {
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">Description</div>
                     <div className="text-sm break-words">
-                      {session.entries.map(e => e.description).join(', ')}
+                      {entry.description}
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <div className="text-muted-foreground">Project</div>
+                      <div className="font-medium">{getProjectName(entry.project_id)}</div>
+                    </div>
+                    {getTaskTitle(entry.task_id) && (
+                      <div>
+                        <div className="text-muted-foreground">Task</div>
+                        <div className="font-medium">{getTaskTitle(entry.task_id)}</div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -718,36 +712,28 @@ export default function Timesheets() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Date</TableHead>
-                      <TableHead>Total Hours</TableHead>
-                      <TableHead>Break Duration</TableHead>
-                      <TableHead>Adjustments</TableHead>
-                      <TableHead>Net Hours</TableHead>
                       <TableHead>Description</TableHead>
+                      <TableHead>Hours</TableHead>
+                      <TableHead>Project</TableHead>
+                      <TableHead>Task</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sessionsList.map((session) => (
-                      <TableRow key={session.date}>
+                    {filteredEntries.map((entry) => (
+                      <TableRow key={entry.id}>
                         <TableCell className="font-medium">
-                          {new Date(session.date).toLocaleDateString('en-US', { 
+                          {new Date(entry.date).toLocaleDateString('en-US', { 
                             weekday: 'short', 
                             month: 'short', 
                             day: 'numeric' 
                           })}
                         </TableCell>
-                        <TableCell>{session.totalHours.toFixed(2)}h</TableCell>
-                        <TableCell>{session.breakDuration.toFixed(2)}h</TableCell>
-                        <TableCell>
-                          <span className={session.adjustmentHours >= 0 ? 'text-green-600' : 'text-red-600'}>
-                            {session.adjustmentHours >= 0 ? '+' : ''}{session.adjustmentHours.toFixed(2)}h
-                          </span>
-                        </TableCell>
-                        <TableCell className="font-semibold">
-                          {(session.totalHours + session.adjustmentHours - session.breakDuration).toFixed(2)}h
-                        </TableCell>
                         <TableCell className="max-w-xs truncate">
-                          {session.entries.map(e => e.description).join(', ')}
+                          {entry.description}
                         </TableCell>
+                        <TableCell>{entry.hours.toFixed(2)}h</TableCell>
+                        <TableCell>{getProjectName(entry.project_id)}</TableCell>
+                        <TableCell>{getTaskTitle(entry.task_id) || '-'}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
