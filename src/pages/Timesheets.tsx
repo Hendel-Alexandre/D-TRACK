@@ -656,107 +656,66 @@ export default function Timesheets() {
         </div>
       </div>
 
-      {/* Time Entries Table */}
-      {filteredEntries.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Time Entries</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 sm:p-6">
-            {/* Mobile: Card-based layout */}
-            <div className="block sm:hidden space-y-3 p-3">
-              {filteredEntries.map((entry) => (
-                <div key={entry.id} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-medium">
-                        {new Date(entry.date).toLocaleDateString('en-US', { 
-                          weekday: 'short', 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {entry.hours.toFixed(2)} hours
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">Description</div>
-                    <div className="text-sm break-words">
-                      {entry.description}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <div className="text-muted-foreground">Project</div>
-                      <div className="font-medium">{getProjectName(entry.project_id)}</div>
-                    </div>
-                    {getTaskTitle(entry.task_id) && (
-                      <div>
-                        <div className="text-muted-foreground">Task</div>
-                        <div className="font-medium">{getTaskTitle(entry.task_id)}</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Desktop: Table layout */}
-            <div className="hidden sm:block">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Hours</TableHead>
-                      <TableHead>Project</TableHead>
-                      <TableHead>Task</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredEntries.map((entry) => (
-                      <TableRow key={entry.id}>
-                        <TableCell className="font-medium">
-                          {new Date(entry.date).toLocaleDateString('en-US', { 
-                            weekday: 'short', 
-                            month: 'short', 
-                            day: 'numeric' 
-                          })}
-                        </TableCell>
-                        <TableCell className="max-w-xs truncate">
-                          {entry.description}
-                        </TableCell>
-                        <TableCell>{entry.hours.toFixed(2)}h</TableCell>
-                        <TableCell>{getProjectName(entry.project_id)}</TableCell>
-                        <TableCell>{getTaskTitle(entry.task_id) || '-'}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Hours</p>
+                <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{totalHours.toFixed(1)}h</p>
               </div>
+              <Clock className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             </div>
           </CardContent>
         </Card>
-      ) : (
-        <div className="text-center py-12">
-          <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No time entries found</h3>
-          <p className="text-muted-foreground mb-4">
-            {searchTerm ? 'No entries match your search.' : 'Start logging your time to track your work hours.'}
-          </p>
-          {!searchTerm && (
-            <Button onClick={() => setIsDialogOpen(true)} className="h-11 sm:h-10">
-              <Plus className="h-4 w-4 mr-2" />
-              Log Time
+
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-green-700 dark:text-green-300">Hour Bank</p>
+                <p className="text-2xl font-bold text-green-900 dark:text-green-100">{hourBankBalance.toFixed(1)}h</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-green-600 dark:text-green-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-purple-700 dark:text-purple-300">Entries</p>
+                <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{filteredEntries.length}</p>
+              </div>
+              <Calendar className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Deduct Time Button */}
+      <Card className="border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="font-semibold text-orange-900 dark:text-orange-100">Need to Deduct Time?</h3>
+              <p className="text-sm text-orange-700 dark:text-orange-300">
+                Remove time from your timesheet for breaks, appointments, or corrections.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              className="border-orange-300 text-orange-700 hover:bg-orange-100 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-900"
+              onClick={() => setIsAdjustmentDialogOpen(true)}
+            >
+              <TrendingDown className="h-4 w-4 mr-2" />
+              Deduct Time
             </Button>
-          )}
-        </div>
-      )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Hour adjustments section */}
       {hourAdjustments.length > 0 && (

@@ -136,12 +136,20 @@ export function SmartOnboardingTour({ onComplete, onSkip }: SmartOnboardingTourP
   const handleComplete = () => {
     localStorage.setItem('d-track-onboarding-completed', 'true')
     setIsVisible(false)
+    // Redirect to dashboard after completion
+    setTimeout(() => {
+      window.location.href = '/dashboard'
+    }, 300)
     onComplete()
   }
 
   const handleSkip = () => {
     localStorage.setItem('d-track-onboarding-completed', 'true')
     setIsVisible(false)
+    // Redirect to dashboard after skipping
+    setTimeout(() => {
+      window.location.href = '/dashboard'
+    }, 300)
     onSkip()
   }
 

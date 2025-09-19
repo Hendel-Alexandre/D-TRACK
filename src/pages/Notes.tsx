@@ -514,7 +514,7 @@ export default function Notes() {
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div className="flex items-center space-x-2">
                   <FileText className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-lg font-semibold truncate">
+                  <CardTitle className="text-lg font-semibold truncate max-w-[200px]" title={note.title}>
                     {note.title}
                   </CardTitle>
                 </div>

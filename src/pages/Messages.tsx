@@ -10,13 +10,14 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Search, Send, Users, MessageCircle, User, ArrowLeft, Check, CheckCheck, X, Plus, Paperclip, Download, Eye } from 'lucide-react'
+import { Search, Send, Users, MessageCircle, User, ArrowLeft, Check, CheckCheck, X, Plus, Paperclip, Download, Eye, MoreVertical } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
 import { useSearchParams } from 'react-router-dom'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { StatusIndicator } from '@/components/ui/status-indicator'
 import { FileUploadDialog } from '@/components/FileSharing/FileUploadDialog'
+import { cn } from '@/lib/utils'
 
 interface User {
   id: string
