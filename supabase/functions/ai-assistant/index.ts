@@ -392,12 +392,13 @@ Respond appropriately based on user intent. If creating a task, provide task_pre
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-5-mini-2025-08-07',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: message }
       ],
-      max_completion_tokens: 1000
+      max_tokens: 1000,
+      temperature: 0.7
     }),
   });
 
@@ -439,12 +440,13 @@ Rules:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: extractPrompt },
           { role: 'user', content: message }
         ],
-        max_completion_tokens: 500
+        max_tokens: 500,
+        temperature: 0.3
       }),
     });
 
