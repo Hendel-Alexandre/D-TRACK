@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
 import { toast } from '@/hooks/use-toast'
+import { supabase } from '@/integrations/supabase/client'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface FileUploadDialogProps {
   open: boolean
@@ -16,6 +18,7 @@ export function FileUploadDialog({ open, onOpenChange, onFileUpload }: FileUploa
   const [isUploading, setIsUploading] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { user } = useAuth()
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -35,31 +38,35 @@ export function FileUploadDialog({ open, onOpenChange, onFileUpload }: FileUploa
     setSelectedFile(file)
   }
 
-  const simulateUpload = async () => {
+  const uploadFile = async () => {
     if (!selectedFile) return
 
     setIsUploading(true)
     setUploadProgress(0)
 
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval)
-          return 100
-        }
-        return prev + Math.random() * 20
-      })
-    }, 200)
+    try {
+      // Create unique file path
+      const fileExt = selectedFile.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+      const filePath = `${user?.id}/${fileName}`
 
-    // Simulate upload completion after 3 seconds
-    setTimeout(() => {
-      clearInterval(interval)
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('message-files')
+        .upload(filePath, selectedFile, {
+          cacheControl: '3600',
+          upsert: false
+        })
+
+      if (error) throw error
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('message-files')
+        .getPublicUrl(filePath)
+
       setUploadProgress(100)
-      
-      // Create a mock URL for the uploaded file
-      const mockUrl = URL.createObjectURL(selectedFile)
-      onFileUpload(selectedFile, mockUrl)
+      onFileUpload(selectedFile, urlData.publicUrl)
       
       toast({
         title: 'File uploaded successfully',
@@ -71,7 +78,15 @@ export function FileUploadDialog({ open, onOpenChange, onFileUpload }: FileUploa
       setUploadProgress(0)
       setIsUploading(false)
       onOpenChange(false)
-    }, 3000)
+    } catch (error: any) {
+      console.error('Upload error:', error)
+      toast({
+        title: 'Upload failed',
+        description: error.message || 'Failed to upload file. Please try again.',
+        variant: 'destructive'
+      })
+      setIsUploading(false)
+    }
   }
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
@@ -183,7 +198,7 @@ export function FileUploadDialog({ open, onOpenChange, onFileUpload }: FileUploa
                   Cancel
                 </Button>
                 <Button
-                  onClick={simulateUpload}
+                  onClick={uploadFile}
                   disabled={isUploading}
                   className="bg-gradient-primary hover:opacity-90"
                 >

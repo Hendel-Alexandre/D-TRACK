@@ -42,9 +42,9 @@ serve(async (req) => {
       default:
         throw new Error('Unknown action');
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in AI Assistant function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error?.message || 'Unknown error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -147,9 +147,9 @@ async function generateProgressNudge(data: any, supabase: any) {
   const tasks = tasksResult.data || [];
   const projects = projectsResult.data || [];
   
-  const completedTasks = tasks.filter(t => t.status === 'Completed').length;
+  const completedTasks = tasks.filter((t: any) => t.status === 'Completed').length;
   const totalTasks = tasks.length;
-  const overdueTasks = tasks.filter(t => 
+  const overdueTasks = tasks.filter((t: any) => 
     t.due_date && new Date(t.due_date) < new Date() && t.status !== 'Completed'
   ).length;
   
@@ -230,7 +230,7 @@ async function suggestNextTask(data: any, supabase: any) {
     You are an AI productivity assistant. Based on these pending tasks, suggest which one to work on next and why.
     
     Tasks:
-    ${tasks.map(t => `- ${t.title} (Priority: ${t.priority}, Due: ${t.due_date || 'No due date'})`).join('\n')}
+    ${tasks.map((t: any) => `- ${t.title} (Priority: ${t.priority}, Due: ${t.due_date || 'No due date'})`).join('\n')}
     
     Analyze the tasks and suggest the best next task to work on based on:
     1. Due dates (prioritize overdue and urgent)
@@ -261,7 +261,7 @@ async function suggestNextTask(data: any, supabase: any) {
   const result = await response.json();
   const suggestion = JSON.parse(result.choices[0].message.content);
   
-  const suggestedTask = tasks.find(t => t.id === suggestion.suggestedTaskId);
+  const suggestedTask = tasks.find((t: any) => t.id === suggestion.suggestedTaskId);
   
   return new Response(JSON.stringify({ 
     success: true, 
@@ -297,8 +297,8 @@ async function analyzeProductivity(data: any, supabase: any) {
   const tasks = tasksResult.data || [];
   const timesheets = timesheetsResult.data || [];
   
-  const completedTasks = tasks.filter(t => t.status === 'Completed').length;
-  const totalHours = timesheets.reduce((sum, ts) => sum + parseFloat(ts.hours || 0), 0);
+  const completedTasks = tasks.filter((t: any) => t.status === 'Completed').length;
+  const totalHours = timesheets.reduce((sum: number, ts: any) => sum + parseFloat(ts.hours || 0), 0);
   
   const prompt = `
     Analyze this user's productivity over the last ${timeRange} days and provide insights:
