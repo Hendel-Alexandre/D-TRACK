@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, CheckCircle, Clock, TrendingUp, Users, Calendar, Zap, Shield, BarChart } from "lucide-react";
 import { Link } from "react-router-dom";
+import datatrackLogo from '@/assets/datatrack-logo.png';
 
 const Index = () => {
   const features = [
@@ -50,11 +51,12 @@ const Index = () => {
       {/* Navigation */}
       <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">D</span>
-            </div>
-            <span className="text-xl font-bold">D-Track</span>
+          <div className="flex items-center">
+            <img 
+              src={datatrackLogo} 
+              alt="D-Track" 
+              className="h-12 w-auto dark:invert"
+            />
           </div>
           <div className="hidden md:flex items-center gap-6">
             <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
@@ -339,11 +341,12 @@ const Index = () => {
             </div>
           </div>
           <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 bg-primary rounded flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">D</span>
-              </div>
-              <span className="font-semibold">D-Track</span>
+            <div className="flex items-center">
+              <img 
+                src={datatrackLogo} 
+                alt="D-Track" 
+                className="h-8 w-auto dark:invert"
+              />
             </div>
             <p className="text-sm text-muted-foreground">
               © 2024 D-Track. All rights reserved.
