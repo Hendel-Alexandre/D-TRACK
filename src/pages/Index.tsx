@@ -275,6 +275,150 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section id="pricing" className="container mx-auto px-4 py-20 md:py-32">
+        <div className="max-w-3xl mx-auto text-center mb-16">
+          <Badge variant="outline" className="mb-4">Pricing</Badge>
+          <h2 className="text-3xl md:text-5xl font-bold mb-6">
+            Simple, transparent pricing
+          </h2>
+          <p className="text-xl text-muted-foreground">
+            Choose the plan that's right for your team. All plans include a 7-day free trial.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {/* Free Plan */}
+          <Card className="p-8 space-y-6 border-2">
+            <div>
+              <h3 className="text-2xl font-bold mb-2">Free</h3>
+              <p className="text-muted-foreground">Perfect for individuals</p>
+            </div>
+            <div>
+              <span className="text-4xl font-bold">$0</span>
+              <span className="text-muted-foreground">/month</span>
+            </div>
+            <ul className="space-y-3">
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">Up to 3 projects</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">Basic time tracking</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">Task management</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">1 team member</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">Basic reports</span>
+              </li>
+            </ul>
+            <Link to="/signup" className="block">
+              <Button variant="outline" className="w-full">Get Started</Button>
+            </Link>
+          </Card>
+
+          {/* Pro Plan */}
+          <Card className="p-8 space-y-6 border-primary border-2 relative shadow-lg scale-105">
+            <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Most Popular</Badge>
+            <div>
+              <h3 className="text-2xl font-bold mb-2">Pro</h3>
+              <p className="text-muted-foreground">For growing teams</p>
+            </div>
+            <div>
+              <span className="text-4xl font-bold">$12</span>
+              <span className="text-muted-foreground">/month per user</span>
+            </div>
+            <ul className="space-y-3">
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">Unlimited projects</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">Advanced time tracking</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">AI-powered insights</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">Up to 10 team members</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">Advanced analytics</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">Priority support</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">Custom integrations</span>
+              </li>
+            </ul>
+            <Link to="/signup" className="block">
+              <Button className="w-full">Start Free Trial</Button>
+            </Link>
+          </Card>
+
+          {/* Enterprise Plan */}
+          <Card className="p-8 space-y-6 border-2">
+            <div>
+              <h3 className="text-2xl font-bold mb-2">Enterprise</h3>
+              <p className="text-muted-foreground">For large organizations</p>
+            </div>
+            <div>
+              <span className="text-4xl font-bold">Custom</span>
+            </div>
+            <ul className="space-y-3">
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">Everything in Pro</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">Unlimited team members</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">Dedicated account manager</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">Custom integrations</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">SLA guarantee</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">On-premise option</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm">Advanced security</span>
+              </li>
+            </ul>
+            <Button variant="outline" className="w-full">Contact Sales</Button>
+          </Card>
+        </div>
+
+        <p className="text-center text-sm text-muted-foreground mt-12">
+          All plans include 7-day free trial • No credit card required • Cancel anytime
+        </p>
+      </section>
+
       {/* CTA Section */}
       <section className="container mx-auto px-4 py-20">
         <Card className="relative overflow-hidden">
