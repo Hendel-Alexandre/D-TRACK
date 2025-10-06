@@ -19,6 +19,7 @@ import Settings from "./pages/Settings";
 import History from "./pages/History";
 import Messages from "./pages/Messages";
 
+import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -80,7 +81,10 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Public Routes */}
+              {/* Landing Page - Public */}
+              <Route path="/" element={<Index />} />
+              
+              {/* Auth Routes - Public */}
               <Route path="/login" element={
                 <PublicRoute>
                   <Login />
@@ -92,25 +96,93 @@ const App = () => (
                 </PublicRoute>
               } />
               
-              {/* Protected Routes */}
-              <Route path="/" element={
+              {/* Protected App Routes */}
+              <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <MainLayout />
                 </ProtectedRoute>
               }>
-                <Route index element={<Navigate to="/dashboard" replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="timesheets" element={<Timesheets />} />
-                <Route path="tasks" element={<Tasks />} />
-                <Route path="calendar" element={<Calendar />} />
-                <Route path="projects" element={<Projects />} />
-                <Route path="notes" element={<Notes />} />
-                <Route path="reports" element={<Reports />} />
-                <Route path="team" element={<Team />} />
-                <Route path="messages" element={<Messages />} />
-                
-                <Route path="history" element={<History />} />
-                <Route path="settings" element={<Settings />} />
+                <Route index element={<Dashboard />} />
+              </Route>
+              
+              <Route path="/timesheets" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Timesheets />} />
+              </Route>
+              
+              <Route path="/tasks" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Tasks />} />
+              </Route>
+              
+              <Route path="/calendar" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Calendar />} />
+              </Route>
+              
+              <Route path="/projects" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Projects />} />
+              </Route>
+              
+              <Route path="/notes" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Notes />} />
+              </Route>
+              
+              <Route path="/reports" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Reports />} />
+              </Route>
+              
+              <Route path="/team" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Team />} />
+              </Route>
+              
+              <Route path="/messages" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Messages />} />
+              </Route>
+              
+              <Route path="/history" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<History />} />
+              </Route>
+              
+              <Route path="/settings" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Settings />} />
               </Route>
               
               {/* Catch-all route */}
