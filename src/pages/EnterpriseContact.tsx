@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import SimpleBackground from '@/components/3D/SimpleBackground';
+import Plasma from '@/components/3D/Plasma';
 
 export default function EnterpriseContact() {
   const navigate = useNavigate();
@@ -36,8 +36,17 @@ export default function EnterpriseContact() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* 3D Background */}
-      <SimpleBackground />
+      {/* Plasma Background */}
+      <div style={{ width: '100%', height: '100%', position: 'fixed', top: 0, left: 0 }}>
+        <Plasma 
+          color="#2563eb"
+          speed={0.6}
+          direction="forward"
+          scale={1.1}
+          opacity={0.3}
+          mouseInteractive={true}
+        />
+      </div>
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 py-8">

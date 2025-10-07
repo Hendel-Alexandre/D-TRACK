@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, CheckCircle, Clock, TrendingUp, Users, Calendar, Zap, Shield, BarChart } from "lucide-react";
 import { Link } from "react-router-dom";
 import datatrackLogo from '@/assets/datatrack-logo.png';
-import SimpleBackground from '@/components/3D/SimpleBackground';
+import Plasma from '@/components/3D/Plasma';
 
 const Index = () => {
   const features = [
@@ -48,14 +48,9 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background relative">
-      {/* 3D Background Effect */}
-      <div className="fixed inset-0 opacity-30 pointer-events-none">
-        <SimpleBackground />
-      </div>
-      
+    <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 relative">
+      <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center">
             <img 
@@ -89,8 +84,21 @@ const Index = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 pt-20 pb-16 md:pt-32 md:pb-24">
-        <div className="text-center max-w-4xl mx-auto space-y-8">
+      <section className="relative overflow-hidden">
+        {/* Plasma Background */}
+        <div style={{ width: '100%', height: '600px', position: 'absolute', top: 0, left: 0 }}>
+          <Plasma 
+            color="#2563eb"
+            speed={0.6}
+            direction="forward"
+            scale={1.1}
+            opacity={0.3}
+            mouseInteractive={true}
+          />
+        </div>
+        
+        <div className="container mx-auto px-4 pt-20 pb-16 md:pt-32 md:pb-24 relative z-10">
+          <div className="text-center max-w-4xl mx-auto space-y-8">
           <Badge variant="secondary" className="mb-4">
             <Zap className="h-3 w-3 mr-1" />
             Now with AI-Powered Insights
@@ -141,6 +149,7 @@ const Index = () => {
               className="w-full h-auto"
             />
           </div>
+        </div>
         </div>
       </section>
 
