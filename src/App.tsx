@@ -20,6 +20,7 @@ import History from "./pages/History";
 import Messages from "./pages/Messages";
 
 import Index from "./pages/Index";
+import EnterpriseContact from "./pages/EnterpriseContact";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -83,6 +84,7 @@ const App = () => (
             <Routes>
               {/* Landing Page - Public */}
               <Route path="/" element={<Index />} />
+              <Route path="/enterprise-contact" element={<EnterpriseContact />} />
               
               {/* Auth Routes - Public */}
               <Route path="/login" element={

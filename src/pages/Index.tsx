@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, CheckCircle, Clock, TrendingUp, Users, Calendar, Zap, Shield, BarChart } from "lucide-react";
 import { Link } from "react-router-dom";
 import datatrackLogo from '@/assets/datatrack-logo.png';
+import SimpleBackground from '@/components/3D/SimpleBackground';
 
 const Index = () => {
   const features = [
@@ -47,9 +48,14 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      {/* 3D Background Effect */}
+      <div className="fixed inset-0 opacity-30 pointer-events-none">
+        <SimpleBackground />
+      </div>
+      
       {/* Navigation */}
-      <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+      <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 relative">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center">
             <img 
@@ -410,7 +416,9 @@ const Index = () => {
                 <span className="text-sm">Advanced security</span>
               </li>
             </ul>
-            <Button variant="outline" className="w-full">Contact Sales</Button>
+            <Link to="/enterprise-contact">
+              <Button variant="outline" className="w-full">Contact Sales</Button>
+            </Link>
           </Card>
         </div>
 
