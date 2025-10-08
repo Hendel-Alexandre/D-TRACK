@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import datatrackLogo from '@/assets/datatrack-logo.png';
-import Plasma from '@/components/3D/Plasma';
+import Orb from '@/components/3D/Orb';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 
@@ -74,13 +74,11 @@ const Index = () => {
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <Plasma 
-            color="#2563eb"
-            speed={0.5}
-            direction="forward"
-            scale={1.2}
-            opacity={0.15}
-            mouseInteractive={true}
+          <Orb 
+            hue={0}
+            hoverIntensity={0.2}
+            rotateOnHover={true}
+            forceHoverState={false}
           />
         </div>
         
@@ -452,13 +450,11 @@ const Index = () => {
       >
         <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80" />
         <div className="absolute inset-0 opacity-10">
-          <Plasma 
-            color="#ffffff"
-            speed={0.3}
-            direction="forward"
-            scale={1.5}
-            opacity={1}
-            mouseInteractive={false}
+          <Orb 
+            hue={0}
+            hoverIntensity={0.2}
+            rotateOnHover={true}
+            forceHoverState={false}
           />
         </div>
         
