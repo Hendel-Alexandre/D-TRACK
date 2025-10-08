@@ -1,51 +1,39 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, CheckCircle, Clock, TrendingUp, Users, Calendar, Zap, Shield, BarChart } from "lucide-react";
+import { 
+  ArrowRight, 
+  CheckCircle, 
+  Clock, 
+  TrendingUp, 
+  Users, 
+  Calendar, 
+  Zap, 
+  Shield, 
+  BarChart,
+  Brain,
+  Globe,
+  FileText,
+  MessageSquare,
+  Target,
+  Activity,
+  ChevronDown,
+  X
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import datatrackLogo from '@/assets/datatrack-logo.png';
 import Plasma from '@/components/3D/Plasma';
+import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { AnimatedCounter } from '@/components/ui/animated-counter';
 
 const Index = () => {
-  const features = [
-    {
-      icon: Clock,
-      title: "Time Tracking",
-      description: "Track every minute with precision. Know exactly where your time goes."
-    },
-    {
-      icon: Calendar,
-      title: "Smart Scheduling",
-      description: "Intelligent calendar integration that adapts to your workflow."
-    },
-    {
-      icon: Users,
-      title: "Team Collaboration",
-      description: "Work together seamlessly with real-time updates and messaging."
-    },
-    {
-      icon: BarChart,
-      title: "Detailed Reports",
-      description: "Get insights with comprehensive analytics and visual reports."
-    },
-    {
-      icon: Zap,
-      title: "AI Assistant",
-      description: "Darvis AI helps automate tasks and boost your productivity."
-    },
-    {
-      icon: Shield,
-      title: "Secure & Private",
-      description: "Enterprise-grade security keeps your data safe and compliant."
-    }
-  ];
-
-  const stats = [
-    { value: "10K+", label: "Active Users" },
-    { value: "500K+", label: "Hours Tracked" },
-    { value: "99.9%", label: "Uptime" },
-    { value: "50+", label: "Countries" }
-  ];
+  const hero = useScrollAnimation();
+  const stats = useScrollAnimation();
+  const problem = useScrollAnimation();
+  const solution = useScrollAnimation();
+  const featuresHighlight = useScrollAnimation();
+  const pricing = useScrollAnimation();
+  const finalCta = useScrollAnimation();
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,155 +73,203 @@ const Index = () => {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        {/* Plasma Background */}
-        <div style={{ width: '100%', height: '600px', position: 'absolute', top: 0, left: 0 }}>
+        <div className="absolute inset-0 z-0">
           <Plasma 
             color="#2563eb"
-            speed={0.6}
+            speed={0.5}
             direction="forward"
-            scale={1.1}
-            opacity={0.3}
+            scale={1.2}
+            opacity={0.15}
             mouseInteractive={true}
           />
         </div>
         
-        <div className="container mx-auto px-4 pt-20 pb-16 md:pt-32 md:pb-24 relative z-10">
+        <div 
+          ref={hero.ref}
+          className={`container mx-auto px-4 pt-20 pb-16 md:pt-32 md:pb-24 relative z-10 transition-all duration-1000 ${
+            hero.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+          }`}
+        >
           <div className="text-center max-w-4xl mx-auto space-y-8">
-          <Badge variant="secondary" className="mb-4">
-            <Zap className="h-3 w-3 mr-1" />
-            Now with AI-Powered Insights
-          </Badge>
-          
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
-            Transform chaos into
-            <span className="text-gradient block mt-2">productivity</span>
-          </h1>
-          
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Stop losing time to scattered tools and manual tracking. D-Track brings everything together in one intelligent workspace.
-          </p>
+            <Badge variant="secondary" className="mb-4 animate-fade-in">
+              <Zap className="h-3 w-3 mr-1" />
+              Now with AI-Powered Insights
+            </Badge>
+            
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
+              Boost Productivity with
+              <span className="text-gradient block mt-2">AI-Powered Time Tracking</span>
+            </h1>
+            
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              All-in-one workspace to track time, manage tasks, and collaborate in real-time.
+            </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Link to="/signup">
-              <Button size="lg" className="gap-2 text-base px-8">
-                Start Free Trial <ArrowRight className="h-5 w-5" />
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+              <Link to="/signup">
+                <Button size="lg" className="gap-2 text-base px-8 rounded-full shadow-lg hover:shadow-xl transition-all">
+                  Start Free Trial <ArrowRight className="h-5 w-5" />
+                </Button>
+              </Link>
+              <Button size="lg" variant="outline" className="text-base px-8 rounded-full">
+                Subscribe for Updates
               </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="text-base px-8">
-              Watch Demo
-            </Button>
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              7-day free trial • No credit card required • Cancel anytime
+            </p>
           </div>
 
-          <p className="text-sm text-muted-foreground">
-            7-day free trial • No credit card required • Cancel anytime
-          </p>
-        </div>
-
-        {/* Dashboard Preview */}
-        <div className="mt-16 relative">
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10" />
-          <div className="relative rounded-xl border bg-card shadow-2xl overflow-hidden">
-            <div className="bg-muted/50 border-b px-4 py-3 flex items-center gap-2">
-              <div className="flex gap-1.5">
-                <div className="h-3 w-3 rounded-full bg-red-500" />
-                <div className="h-3 w-3 rounded-full bg-yellow-500" />
-                <div className="h-3 w-3 rounded-full bg-green-500" />
+          {/* Dashboard Preview */}
+          <div className="mt-16 relative">
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10 pointer-events-none" />
+            <div className="relative rounded-2xl border-2 bg-card shadow-2xl overflow-hidden hover:shadow-premium transition-shadow duration-500">
+              <div className="bg-muted/50 border-b px-4 py-3 flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <div className="h-3 w-3 rounded-full bg-red-500" />
+                  <div className="h-3 w-3 rounded-full bg-yellow-500" />
+                  <div className="h-3 w-3 rounded-full bg-green-500" />
+                </div>
+                <div className="flex-1 text-center">
+                  <span className="text-xs text-muted-foreground font-medium">D-Track Dashboard</span>
+                </div>
               </div>
-              <div className="flex-1 text-center">
-                <span className="text-xs text-muted-foreground">D-Track Dashboard</span>
+              <div className="p-8 bg-gradient-to-br from-primary/5 to-purple-500/5">
+                <div className="aspect-video bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-lg flex items-center justify-center">
+                  <Activity className="h-24 w-24 text-primary/40" />
+                </div>
               </div>
             </div>
-            <img 
-              src="/placeholder.svg" 
-              alt="D-Track Dashboard" 
-              className="w-full h-auto"
-            />
           </div>
-        </div>
+
+          {/* Scroll Down Indicator */}
+          <div className="flex justify-center mt-12 animate-bounce">
+            <ChevronDown className="h-8 w-8 text-muted-foreground" />
+          </div>
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className="border-y bg-muted/30 py-12">
+      <section 
+        ref={stats.ref}
+        className={`border-y bg-muted/30 py-16 transition-all duration-1000 delay-200 ${
+          stats.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+        }`}
+      >
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
+            <div className="text-center space-y-2">
+              <div className="text-4xl md:text-5xl font-bold text-primary">
+                <AnimatedCounter end={200} suffix="+" />
               </div>
-            ))}
+              <div className="text-sm text-muted-foreground font-medium">Active Users</div>
+            </div>
+            <div className="text-center space-y-2">
+              <div className="text-4xl md:text-5xl font-bold text-primary">
+                <AnimatedCounter end={500} suffix="K+" />
+              </div>
+              <div className="text-sm text-muted-foreground font-medium">Hours Tracked</div>
+            </div>
+            <div className="text-center space-y-2">
+              <div className="text-4xl md:text-5xl font-bold text-primary">
+                <AnimatedCounter end={99} suffix=".9%" />
+              </div>
+              <div className="text-sm text-muted-foreground font-medium">Uptime</div>
+            </div>
+            <div className="text-center space-y-2">
+              <div className="flex items-center justify-center text-4xl md:text-5xl font-bold text-primary">
+                <Globe className="h-10 w-10 mr-2" />
+              </div>
+              <div className="text-sm text-muted-foreground font-medium">Worldwide Coverage</div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Problem Section */}
-      <section className="container mx-auto px-4 py-20 md:py-32">
-        <div className="max-w-3xl mx-auto text-center mb-16">
+      <section 
+        ref={problem.ref}
+        className="container mx-auto px-4 py-20 md:py-32"
+      >
+        <div className={`max-w-3xl mx-auto text-center mb-16 transition-all duration-1000 ${
+          problem.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+        }`}>
           <Badge variant="outline" className="mb-4">The Problem</Badge>
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Time management shouldn't be <span className="text-destructive">this hard</span>
+            Why Time Management Still Fails
           </h2>
           <p className="text-xl text-muted-foreground">
-            Teams waste countless hours switching between tools, manually tracking time, and struggling to stay organized.
+            Traditional tools create more problems than they solve
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          <Card className="p-6 space-y-3 border-destructive/20">
-            <div className="h-12 w-12 rounded-lg bg-destructive/10 flex items-center justify-center">
-              <Clock className="h-6 w-6 text-destructive" />
-            </div>
-            <h3 className="font-semibold text-lg">Scattered Tools</h3>
-            <p className="text-sm text-muted-foreground">
-              Jumping between multiple apps wastes time and creates confusion across your team.
-            </p>
-          </Card>
-
-          <Card className="p-6 space-y-3 border-destructive/20">
-            <div className="h-12 w-12 rounded-lg bg-destructive/10 flex items-center justify-center">
-              <BarChart className="h-6 w-6 text-destructive" />
-            </div>
-            <h3 className="font-semibold text-lg">No Visibility</h3>
-            <p className="text-sm text-muted-foreground">
-              Without clear insights, you can't identify bottlenecks or optimize workflows effectively.
-            </p>
-          </Card>
-
-          <Card className="p-6 space-y-3 border-destructive/20">
-            <div className="h-12 w-12 rounded-lg bg-destructive/10 flex items-center justify-center">
-              <Users className="h-6 w-6 text-destructive" />
-            </div>
-            <h3 className="font-semibold text-lg">Poor Collaboration</h3>
-            <p className="text-sm text-muted-foreground">
-              Team members work in silos, missing deadlines and duplicating effort.
-            </p>
-          </Card>
+          {[
+            { icon: X, title: 'Scattered Tools', description: 'Switching between apps creates confusion and lost time.' },
+            { icon: BarChart, title: 'No Visibility', description: 'Without insights, it\'s hard to optimize or manage workflows.' },
+            { icon: Users, title: 'Poor Collaboration', description: 'Silos slow down progress and duplicate effort.' }
+          ].map((item, index) => (
+            <Card 
+              key={index}
+              className={`p-8 space-y-4 border-2 border-destructive/20 bg-destructive/5 hover:shadow-lg transition-all duration-500 ${
+                problem.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+              }`}
+              style={{ transitionDelay: `${index * 100}ms` }}
+            >
+              <div className="h-14 w-14 rounded-xl bg-destructive/10 flex items-center justify-center">
+                <item.icon className="h-7 w-7 text-destructive" />
+              </div>
+              <h3 className="font-bold text-xl">{item.title}</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                {item.description}
+              </p>
+            </Card>
+          ))}
         </div>
       </section>
 
       {/* Solution Section */}
-      <section id="solutions" className="bg-muted/30 py-20 md:py-32">
+      <section 
+        ref={solution.ref}
+        id="solutions" 
+        className="bg-muted/30 py-20 md:py-32"
+      >
         <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center mb-16">
+          <div className={`max-w-3xl mx-auto text-center mb-16 transition-all duration-1000 ${
+            solution.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+          }`}>
             <Badge variant="outline" className="mb-4">The Solution</Badge>
             <h2 className="text-3xl md:text-5xl font-bold mb-6">
-              One platform for <span className="text-gradient">complete productivity</span>
+              A Smarter Way to Work
             </h2>
             <p className="text-xl text-muted-foreground">
-              D-Track unifies time tracking, task management, and team collaboration into a single, intelligent workspace.
+              Everything you need in one intelligent platform
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {features.map((feature, index) => (
-              <Card key={index} className="p-6 space-y-4 hover:shadow-lg transition-shadow card-hover">
+            {[
+              { icon: Clock, title: 'Time Tracking', description: 'Automatic time capture with intelligent categorization and insights.' },
+              { icon: Calendar, title: 'Smart Scheduling', description: 'AI-powered calendar that adapts to your workflow patterns.' },
+              { icon: MessageSquare, title: 'Team Collaboration', description: 'Real-time messaging, file sharing, and project coordination.' },
+              { icon: FileText, title: 'Detailed Reports', description: 'Comprehensive analytics with customizable dashboards and exports.' },
+              { icon: Brain, title: 'Darvis AI Assistant', description: 'Intelligent automation that learns from your work patterns.' },
+              { icon: Shield, title: 'Secure & Private', description: 'Enterprise-grade security with full data encryption and compliance.' }
+            ].map((feature, index) => (
+              <Card 
+                key={index}
+                className={`p-6 space-y-4 hover:shadow-lg transition-all duration-500 card-hover ${
+                  solution.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+                }`}
+                style={{ transitionDelay: `${index * 80}ms` }}
+              >
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
                   <feature.icon className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg mb-2">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
                 </div>
               </Card>
             ))}
@@ -241,238 +277,224 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Features Showcase */}
-      <section id="features" className="container mx-auto px-4 py-20 md:py-32">
-        <div className="grid md:grid-cols-2 gap-16 items-center">
-          <div className="space-y-6">
-            <Badge variant="outline">Powerful Features</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold">
-              Everything you need to stay productive
-            </h2>
-            <div className="space-y-4">
-              <div className="flex gap-3">
-                <CheckCircle className="h-6 w-6 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-semibold mb-1">Automatic Time Tracking</h4>
-                  <p className="text-sm text-muted-foreground">
-                    No manual entry needed. D-Track automatically captures time spent on tasks.
-                  </p>
-                </div>
+      {/* Features Highlight */}
+      <section 
+        ref={featuresHighlight.ref}
+        id="features" 
+        className="container mx-auto px-4 py-20 md:py-32"
+      >
+        <div className={`text-center mb-16 transition-all duration-1000 ${
+          featuresHighlight.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+        }`}>
+          <Badge variant="outline" className="mb-4">Powerful Features</Badge>
+          <h2 className="text-3xl md:text-5xl font-bold mb-6">
+            Everything You Need to Stay Productive
+          </h2>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+          {[
+            { 
+              icon: Target, 
+              title: 'Automatic Time Tracking', 
+              description: 'No manual entry needed. D-Track intelligently captures time spent on every task and project, giving you complete visibility into where your hours go.',
+              gradient: 'from-primary/20 to-blue-500/20'
+            },
+            { 
+              icon: Users, 
+              title: 'Real-time Team Collaboration', 
+              description: 'Chat, share files, assign tasks, and coordinate projects seamlessly. Keep everyone aligned with instant updates and notifications.',
+              gradient: 'from-purple-500/20 to-pink-500/20'
+            },
+            { 
+              icon: Brain, 
+              title: 'AI-Powered Insights', 
+              description: 'Darvis AI analyzes your work patterns, identifies bottlenecks, and suggests optimizations to help you work smarter, not harder.',
+              gradient: 'from-green-500/20 to-teal-500/20'
+            },
+            { 
+              icon: BarChart, 
+              title: 'Custom Reports & Dashboards', 
+              description: 'Build beautiful reports with drag-and-drop simplicity. Track KPIs, generate client invoices, and export data in any format.',
+              gradient: 'from-orange-500/20 to-red-500/20'
+            }
+          ].map((feature, index) => (
+            <Card 
+              key={index}
+              className={`p-8 space-y-4 hover:shadow-xl transition-all duration-500 ${
+                featuresHighlight.isVisible ? 'opacity-100 translate-x-0' : `opacity-0 ${index % 2 === 0 ? '-translate-x-10' : 'translate-x-10'}`
+              }`}
+              style={{ transitionDelay: `${index * 150}ms` }}
+            >
+              <div className={`h-16 w-16 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center`}>
+                <feature.icon className="h-8 w-8 text-primary" />
               </div>
-              <div className="flex gap-3">
-                <CheckCircle className="h-6 w-6 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-semibold mb-1">Real-time Collaboration</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Chat, share files, and work together seamlessly with your team.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <CheckCircle className="h-6 w-6 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-semibold mb-1">AI-Powered Insights</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Darvis AI analyzes patterns and suggests optimizations for better productivity.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-500/20 blur-3xl" />
-            <Card className="relative p-8">
-              <div className="aspect-square bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-24 w-24 text-primary" />
-              </div>
+              <h3 className="font-bold text-2xl">{feature.title}</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                {feature.description}
+              </p>
             </Card>
-          </div>
+          ))}
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="container mx-auto px-4 py-20 md:py-32">
-        <div className="max-w-3xl mx-auto text-center mb-16">
+      <section 
+        ref={pricing.ref}
+        id="pricing" 
+        className="container mx-auto px-4 py-20 md:py-32 bg-gradient-subtle"
+      >
+        <div className={`max-w-3xl mx-auto text-center mb-16 transition-all duration-1000 ${
+          pricing.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+        }`}>
           <Badge variant="outline" className="mb-4">Pricing</Badge>
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Simple, transparent pricing
+            Simple, Transparent Pricing
           </h2>
           <p className="text-xl text-muted-foreground">
-            Choose the plan that's right for your team. All plans include a 7-day free trial.
+            Choose the plan that's right for your team
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Free Plan */}
-          <Card className="p-8 space-y-6 border-2">
+          <Card 
+            className={`p-8 space-y-6 border-2 rounded-2xl transition-all duration-700 ${
+              pricing.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
+          >
             <div>
               <h3 className="text-2xl font-bold mb-2">Free</h3>
               <p className="text-muted-foreground">Perfect for individuals</p>
             </div>
             <div>
-              <span className="text-4xl font-bold">$0</span>
+              <span className="text-5xl font-bold">$0</span>
               <span className="text-muted-foreground">/month</span>
             </div>
             <ul className="space-y-3">
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">Up to 3 projects</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">Basic time tracking</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">Task management</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">1 team member</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">Basic reports</span>
-              </li>
+              {['Up to 3 projects', 'Basic time tracking', 'Task management', '1 team member', 'Basic reports'].map((feature, i) => (
+                <li key={i} className="flex gap-2">
+                  <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                  <span className="text-sm">{feature}</span>
+                </li>
+              ))}
             </ul>
             <Link to="/signup" className="block">
-              <Button variant="outline" className="w-full">Get Started</Button>
+              <Button variant="outline" className="w-full rounded-full">Start Free Trial</Button>
             </Link>
           </Card>
 
           {/* Pro Plan */}
-          <Card className="p-8 space-y-6 border-primary border-2 relative shadow-lg scale-105">
+          <Card 
+            className={`p-8 space-y-6 border-2 border-primary relative shadow-xl scale-105 rounded-2xl transition-all duration-700 delay-100 ${
+              pricing.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
+          >
             <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Most Popular</Badge>
             <div>
               <h3 className="text-2xl font-bold mb-2">Pro</h3>
               <p className="text-muted-foreground">For growing teams</p>
             </div>
             <div>
-              <span className="text-4xl font-bold">$12</span>
+              <span className="text-5xl font-bold">$20</span>
               <span className="text-muted-foreground">/month per user</span>
             </div>
             <ul className="space-y-3">
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">Unlimited projects</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">Advanced time tracking</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">AI-powered insights</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">Up to 10 team members</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">Advanced analytics</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">Priority support</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">Custom integrations</span>
-              </li>
+              {['Unlimited projects', 'Advanced time tracking', 'AI-powered insights', 'Up to 10 team members', 'Priority support'].map((feature, i) => (
+                <li key={i} className="flex gap-2">
+                  <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                  <span className="text-sm">{feature}</span>
+                </li>
+              ))}
             </ul>
             <Link to="/signup" className="block">
-              <Button className="w-full">Start Free Trial</Button>
+              <Button className="w-full rounded-full shadow-lg">Start Free Trial</Button>
             </Link>
           </Card>
 
-          {/* Enterprise Plan */}
-          <Card className="p-8 space-y-6 border-2">
+          {/* Premium Plan */}
+          <Card 
+            className={`p-8 space-y-6 border-2 rounded-2xl transition-all duration-700 delay-200 ${
+              pricing.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
+          >
             <div>
-              <h3 className="text-2xl font-bold mb-2">Enterprise</h3>
+              <h3 className="text-2xl font-bold mb-2">Premium</h3>
               <p className="text-muted-foreground">For large organizations</p>
             </div>
             <div>
-              <span className="text-4xl font-bold">Custom</span>
+              <span className="text-5xl font-bold">$50</span>
+              <span className="text-muted-foreground">/month per user</span>
             </div>
             <ul className="space-y-3">
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">Everything in Pro</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">Unlimited team members</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">Dedicated account manager</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">Custom integrations</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">SLA guarantee</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">On-premise option</span>
-              </li>
-              <li className="flex gap-2">
-                <CheckCircle className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm">Advanced security</span>
-              </li>
+              {['Everything in Pro', 'Unlimited team members', 'Dedicated account manager', 'SLA guarantee', 'Enhanced security'].map((feature, i) => (
+                <li key={i} className="flex gap-2">
+                  <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                  <span className="text-sm">{feature}</span>
+                </li>
+              ))}
             </ul>
-            <Link to="/enterprise-contact">
-              <Button variant="outline" className="w-full">Contact Sales</Button>
+            <Link to="/signup" className="block">
+              <Button variant="outline" className="w-full rounded-full">Subscribe Now</Button>
             </Link>
           </Card>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground mt-12">
-          All plans include 7-day free trial • No credit card required • Cancel anytime
+        <p className="text-center text-sm text-muted-foreground mt-8">
+          7-day free trial • No credit card required • Cancel anytime
         </p>
       </section>
 
-      {/* CTA Section */}
-      <section className="container mx-auto px-4 py-20">
-        <Card className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-purple-500/10" />
-          <div className="relative px-8 py-16 md:px-16 md:py-20 text-center">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">
-              Ready to boost your productivity?
+      {/* Final CTA Section */}
+      <section 
+        ref={finalCta.ref}
+        className="relative overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80" />
+        <div className="absolute inset-0 opacity-10">
+          <Plasma 
+            color="#ffffff"
+            speed={0.3}
+            direction="forward"
+            scale={1.5}
+            opacity={1}
+            mouseInteractive={false}
+          />
+        </div>
+        
+        <div className={`container mx-auto px-4 py-20 md:py-32 relative z-10 transition-all duration-1000 ${
+          finalCta.isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+        }`}>
+          <div className="text-center max-w-3xl mx-auto space-y-8">
+            <h2 className="text-3xl md:text-5xl font-bold text-white">
+              Ready to Boost Your Team's Productivity?
             </h2>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join thousands of teams already using D-Track to work smarter, not harder.
+            <p className="text-xl text-white/90">
+              Join 200+ users worldwide already working smarter with D-Track.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Link to="/signup">
-                <Button size="lg" className="gap-2 text-base px-8">
+                <Button size="lg" variant="secondary" className="gap-2 text-base px-8 rounded-full shadow-xl hover:scale-105 transition-transform">
                   Start Free Trial <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="text-base px-8">
-                Schedule Demo
+              <Button size="lg" variant="outline" className="text-base px-8 rounded-full bg-white/10 text-white border-white/30 hover:bg-white/20">
+                Subscribe for Updates
               </Button>
             </div>
-            <p className="text-sm text-muted-foreground mt-6">
-              No credit card required • 7-day free trial • Cancel anytime
-            </p>
           </div>
-        </Card>
+        </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t bg-muted/30 mt-20">
-        <div className="container mx-auto px-4 py-12">
+      <footer className="border-t bg-muted/30 py-12">
+        <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div>
               <h4 className="font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Pricing</a></li>
+                <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
+                <li><a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a></li>
                 <li><a href="#" className="hover:text-foreground transition-colors">Updates</a></li>
               </ul>
             </div>
@@ -487,7 +509,7 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-4">Resources</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition-colors">Documentation</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">Docs</a></li>
                 <li><a href="#" className="hover:text-foreground transition-colors">Help Center</a></li>
                 <li><a href="#" className="hover:text-foreground transition-colors">Community</a></li>
               </ul>
@@ -501,17 +523,8 @@ const Index = () => {
               </ul>
             </div>
           </div>
-          <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center">
-              <img 
-                src={datatrackLogo} 
-                alt="D-Track" 
-                className="h-8 w-auto dark:invert"
-              />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              © 2024 D-Track. All rights reserved.
-            </p>
+          <div className="border-t pt-8 text-center text-sm text-muted-foreground">
+            <p>© 2025 D-Track. All rights reserved.</p>
           </div>
         </div>
       </footer>
