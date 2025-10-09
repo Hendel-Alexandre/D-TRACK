@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Users, Mail, Phone, MapPin, UserPlus, Search, Calendar, MessageCircle } from 'lucide-react'
+import { Users, Phone, MapPin, UserPlus, Search, Calendar, MessageCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,10 +17,10 @@ interface TeamMember {
   id: string
   first_name: string
   last_name: string
-  email: string
   department: string
   status: string
   created_at: string
+  connection_type?: 'friend' | 'conversation' | 'game'
 }
 
 export default function Team() {
@@ -36,17 +36,87 @@ export default function Team() {
     if (!user) return
     
     try {
-      const { data, error } = await supabase
+      // Fetch users with accepted friend connections
+      const { data: friendData, error: friendError } = await supabase
+        .from('friend_requests')
+        .select('sender_id, recipient_id')
+        .eq('status', 'accepted')
+
+      if (friendError) throw friendError
+
+      // Fetch users in shared conversations
+      const { data: conversationData, error: convError } = await supabase
+        .from('conversation_members')
+        .select('conversation_id')
+        .eq('user_id', user.id)
+
+      if (convError) throw convError
+
+      const conversationIds = conversationData?.map(c => c.conversation_id) || []
+      
+      let conversationUserIds: string[] = []
+      if (conversationIds.length > 0) {
+        const { data: convMembers } = await supabase
+          .from('conversation_members')
+          .select('user_id')
+          .in('conversation_id', conversationIds)
+          .neq('user_id', user.id)
+        
+        conversationUserIds = convMembers?.map(m => m.user_id) || []
+      }
+
+      // Fetch users in shared game rooms
+      const { data: gameRoomData, error: gameError } = await supabase
+        .from('game_room_members')
+        .select('room_id')
+        .eq('user_id', user.id)
+
+      if (gameError) throw gameError
+
+      const roomIds = gameRoomData?.map(r => r.room_id) || []
+      
+      let gameUserIds: string[] = []
+      if (roomIds.length > 0) {
+        const { data: gameMembers } = await supabase
+          .from('game_room_members')
+          .select('user_id')
+          .in('room_id', roomIds)
+          .neq('user_id', user.id)
+        
+        gameUserIds = gameMembers?.map(m => m.user_id) || []
+      }
+
+      // Collect all connected user IDs
+      const friendUserIds = friendData?.flatMap(f => 
+        f.sender_id === user.id ? [f.recipient_id] : 
+        f.recipient_id === user.id ? [f.sender_id] : []
+      ) || []
+
+      const allConnectedUserIds = Array.from(new Set([
+        ...friendUserIds,
+        ...conversationUserIds,
+        ...gameUserIds
+      ]))
+
+      // Fetch user details only for connected users
+      if (allConnectedUserIds.length === 0) {
+        setTeamMembers([])
+        return
+      }
+
+      const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('id, first_name, last_name, email, department, status, created_at')
+        .select('id, first_name, last_name, department, status, created_at')
+        .in('id', allConnectedUserIds)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
-      setTeamMembers(data || [])
+      if (userError) throw userError
+      setTeamMembers(userData || [])
     } catch (error: any) {
+      console.error('Error fetching team members:', error)
       toast({
         title: 'Error',
-        description: error.message,
+        description: 'Failed to load team members',
         variant: 'destructive'
       })
     } finally {
@@ -61,7 +131,6 @@ export default function Team() {
   const filteredMembers = teamMembers.filter(member => {
     const matchesSearch = member.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.department.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesDepartment = filterDepartment === 'all' || member.department === filterDepartment
     const matchesStatus = filterStatus === 'all' || member.status === filterStatus
@@ -117,14 +186,9 @@ export default function Team() {
     <div className="mobile-dense compact-spacing">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-4xl font-bold text-gradient mb-2">Team</h1>
-          <p className="text-muted-foreground text-balance">Connect with your team members and collaborate effectively</p>
+          <h1 className="text-4xl font-bold text-gradient mb-2">Connected Team</h1>
+          <p className="text-muted-foreground text-balance">View team members you're connected with</p>
         </div>
-        
-        <Button className="button-premium shrink-0">
-          <UserPlus className="h-4 w-4 mr-2" />
-          Invite Member
-        </Button>
       </div>
 
       {/* Friend Request System */}
@@ -198,7 +262,7 @@ export default function Team() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search team members..."
+            placeholder="Search by name or department..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 input-sleek"
@@ -268,12 +332,7 @@ export default function Team() {
                 </div>
 
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center text-muted-foreground">
-                    <Mail className="h-3 w-3 mr-2 flex-shrink-0" />
-                    <span className="truncate text-xs">{member.email}</span>
-                  </div>
-                  
-                  <div className="flex items-center text-muted-foreground">
+                  <div className="flex items-center text-muted-foreground justify-center">
                     <Calendar className="h-3 w-3 mr-2 flex-shrink-0" />
                     <span className="text-xs">
                       Joined {new Date(member.created_at).toLocaleDateString()}
@@ -299,18 +358,12 @@ export default function Team() {
       {filteredMembers.length === 0 && (
         <div className="text-center py-12">
           <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-          <h3 className="text-xl font-bold mb-2">No team members found</h3>
+          <h3 className="text-xl font-bold mb-2">No connections yet</h3>
           <p className="text-muted-foreground mb-6 text-balance">
             {searchTerm || filterDepartment !== 'all' || filterStatus !== 'all'
               ? 'No members match your current filters. Try adjusting your search.'
-              : 'Start building your team by inviting members to collaborate.'}
+              : 'Send friend requests to connect with team members. Once accepted, they will appear here.'}
           </p>
-          {!searchTerm && filterDepartment === 'all' && filterStatus === 'all' && (
-            <Button className="button-premium">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Invite First Team Member
-            </Button>
-          )}
         </div>
       )}
 
