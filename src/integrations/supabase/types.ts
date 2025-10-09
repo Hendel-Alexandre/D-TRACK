@@ -88,6 +88,36 @@ export type Database = {
           },
         ]
       }
+      enterprise_inquiries: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          status: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+          status?: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          status?: string
+        }
+        Relationships: []
+      }
       friend_requests: {
         Row: {
           created_at: string
@@ -617,12 +647,28 @@ export type Database = {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      has_friend_connection: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
       is_conversation_creator: {
         Args: { conversation_id: string; user_id: string }
         Returns: boolean
       }
       is_conversation_member: {
         Args: { conversation_id: string; user_id: string }
+        Returns: boolean
+      }
+      is_in_same_game_room: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
+      is_room_member: {
+        Args: { room_id_param: string }
+        Returns: boolean
+      }
+      shares_conversation_with: {
+        Args: { target_user_id: string }
         Returns: boolean
       }
       start_direct_conversation: {

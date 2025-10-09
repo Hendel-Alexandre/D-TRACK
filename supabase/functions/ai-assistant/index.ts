@@ -20,25 +20,67 @@ serve(async (req) => {
   }
 
   try {
+    // SECURITY: Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('Missing authorization header');
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not configured');
     }
 
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+    // Create Supabase client with user's auth context
+    const supabase = createClient(
+      supabaseUrl!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Auth error:', authError);
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Use authenticated user's ID
+    const authenticatedUserId = user.id;
+    console.log('Authenticated user:', authenticatedUserId);
+
     const { action, data } = await req.json();
-    console.log('AI Assistant request:', { action, data });
+    console.log('AI Assistant request:', { action });
+
+    // Sanitize input text to prevent injection
+    const sanitizeText = (input: string): string => {
+      if (!input || typeof input !== 'string') return '';
+      return input.trim().slice(0, 10000);
+    };
+
+    // Override userId in data with authenticated user's ID for security
+    const secureData = { ...data, userId: authenticatedUserId };
+    if (data.text) secureData.text = sanitizeText(data.text);
+    if (data.message) secureData.message = sanitizeText(data.message);
 
     switch (action) {
       case 'parse_natural_language':
-        return await parseNaturalLanguage(data, supabase);
+        return await parseNaturalLanguage(secureData, supabase);
       case 'generate_progress_nudge':
-        return await generateProgressNudge(data, supabase);
+        return await generateProgressNudge(secureData, supabase);
       case 'suggest_next_task':
-        return await suggestNextTask(data, supabase);
+        return await suggestNextTask(secureData, supabase);
       case 'analyze_productivity':
-        return await analyzeProductivity(data, supabase);
+        return await analyzeProductivity(secureData, supabase);
       case 'darvis_chat':
-        return await handleDarvisChat(data, supabase);
+        return await handleDarvisChat(secureData, supabase);
       default:
         throw new Error('Unknown action');
     }
@@ -60,7 +102,7 @@ async function parseNaturalLanguage(data: any, supabase: any) {
     You are an AI assistant that converts natural language into structured task data. 
     Parse the following text and extract task information in JSON format.
     
-    Text: "${text}"
+    Text: ${JSON.stringify(text)}
     
     Return a JSON object with these fields (use null if not specified):
     - title: string (required, extracted task title)
@@ -156,10 +198,10 @@ async function generateProgressNudge(data: any, supabase: any) {
   const prompt = `
     You are a motivational AI assistant for a productivity app. Generate an encouraging and actionable message based on this user's data:
     
-    - Total tasks: ${totalTasks}
-    - Completed tasks: ${completedTasks}
-    - Overdue tasks: ${overdueTasks}
-    - Active projects: ${projects.length}
+    - Total tasks: ${JSON.stringify(totalTasks)}
+    - Completed tasks: ${JSON.stringify(completedTasks)}
+    - Overdue tasks: ${JSON.stringify(overdueTasks)}
+    - Active projects: ${JSON.stringify(projects.length)}
     
     Create a short, encouraging message (1-2 sentences) that:
     1. Acknowledges their progress if they're doing well
@@ -230,7 +272,7 @@ async function suggestNextTask(data: any, supabase: any) {
     You are an AI productivity assistant. Based on these pending tasks, suggest which one to work on next and why.
     
     Tasks:
-    ${tasks.map((t: any) => `- ${t.title} (Priority: ${t.priority}, Due: ${t.due_date || 'No due date'})`).join('\n')}
+    ${tasks.map((t: any) => `- ${JSON.stringify(t.title)} (Priority: ${JSON.stringify(t.priority)}, Due: ${JSON.stringify(t.due_date) || 'No due date'})`).join('\n')}
     
     Analyze the tasks and suggest the best next task to work on based on:
     1. Due dates (prioritize overdue and urgent)
@@ -301,13 +343,13 @@ async function analyzeProductivity(data: any, supabase: any) {
   const totalHours = timesheets.reduce((sum: number, ts: any) => sum + parseFloat(ts.hours || 0), 0);
   
   const prompt = `
-    Analyze this user's productivity over the last ${timeRange} days and provide insights:
+    Analyze this user's productivity over the last ${JSON.stringify(timeRange)} days and provide insights:
     
     Data:
-    - Tasks created: ${tasks.length}
-    - Tasks completed: ${completedTasks}
-    - Total hours tracked: ${totalHours.toFixed(1)}
-    - Completion rate: ${tasks.length > 0 ? ((completedTasks / tasks.length) * 100).toFixed(1) : 0}%
+    - Tasks created: ${JSON.stringify(tasks.length)}
+    - Tasks completed: ${JSON.stringify(completedTasks)}
+    - Total hours tracked: ${JSON.stringify(totalHours.toFixed(1))}
+    - Completion rate: ${JSON.stringify(tasks.length > 0 ? ((completedTasks / tasks.length) * 100).toFixed(1) : 0)}%
     
     Provide a JSON response with:
     {
@@ -355,10 +397,10 @@ async function handleDarvisChat(data: any, supabase: any) {
   
   console.log('Darvis chat for user:', userId, 'message:', message);
   
-  // Build conversation context
+  // Build conversation context - sanitize
   const context = conversationHistory
     .slice(-5) // Last 5 messages for context
-    .map((msg: any) => `${msg.sender}: ${msg.text}`)
+    .map((msg: any) => `${JSON.stringify(msg.sender)}: ${JSON.stringify(String(msg.text).slice(0, 500))}`)
     .join('\n');
   
   const systemPrompt = `You are Darvis, the AI assistant for D-TRACK (a task and time management app). 
@@ -381,7 +423,7 @@ Guidelines:
 Recent conversation:
 ${context}
 
-User message: ${message}
+User message: ${JSON.stringify(message)}
 
 Respond appropriately based on user intent. If creating a task, provide task_preview object.`;
 
@@ -414,7 +456,7 @@ Respond appropriately based on user intent. If creating a task, provide task_pre
 
   if (isTaskRequest) {
     // Extract task details using AI
-    const extractPrompt = `Extract task details from: "${message}"
+    const extractPrompt = `Extract task details from: ${JSON.stringify(message)}
 
 Return JSON format:
 {

@@ -9,9 +9,24 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import Plasma from '@/components/3D/Plasma';
+import { supabase } from '@/integrations/supabase/client';
+import { z } from 'zod';
+
+const enterpriseInquirySchema = z.object({
+  companyName: z.string().trim().min(1, 'Company name is required').max(200),
+  contactName: z.string().trim().min(1, 'Your name is required').max(100),
+  email: z.string().trim().email('Invalid email address').max(255),
+  phone: z.string().trim().max(50).optional(),
+  companySize: z.string().min(1, 'Company size is required'),
+  industry: z.string().trim().min(1, 'Industry is required').max(100),
+  timeline: z.string().min(1, 'Timeline is required'),
+  requirements: z.string().trim().min(10, 'Please provide at least 10 characters').max(5000),
+  budget: z.string().optional()
+});
 
 export default function EnterpriseContact() {
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     companyName: '',
     contactName: '',
@@ -24,10 +39,45 @@ export default function EnterpriseContact() {
     budget: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('Thank you! Our team will contact you shortly.');
-    navigate('/');
+    setIsSubmitting(true);
+
+    try {
+      // Validate form data
+      const validatedData = enterpriseInquirySchema.parse(formData);
+
+      // Save to database
+      const { error } = await supabase
+        .from('enterprise_inquiries')
+        .insert({
+          name: validatedData.contactName,
+          email: validatedData.email,
+          company: validatedData.companyName,
+          message: JSON.stringify({
+            phone: validatedData.phone,
+            companySize: validatedData.companySize,
+            industry: validatedData.industry,
+            timeline: validatedData.timeline,
+            requirements: validatedData.requirements,
+            budget: validatedData.budget
+          })
+        });
+
+      if (error) throw error;
+
+      toast.success('Thank you! Our team will contact you shortly.');
+      navigate('/');
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        console.error('Submission error:', error);
+        toast.error('Failed to submit inquiry. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (field: string, value: string) => {
@@ -186,8 +236,8 @@ export default function EnterpriseContact() {
                 />
               </div>
 
-              <Button type="submit" className="w-full" size="lg">
-                Submit Enterprise Inquiry
+              <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+                {isSubmitting ? 'Submitting...' : 'Submit Enterprise Inquiry'}
               </Button>
             </form>
           </CardContent>
