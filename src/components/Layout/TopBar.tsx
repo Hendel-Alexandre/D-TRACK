@@ -1,11 +1,11 @@
-import { useState } from 'react'
-import { Moon, Sun, Globe, ChevronDown, LogOut, User, Circle, Clock, Play, Pause, Settings } from 'lucide-react'
+import { Moon, Sun, Globe, ChevronDown, LogOut, Circle, Clock, Play, Pause, Settings, GraduationCap, Briefcase } from 'lucide-react'
 import datatrackLogo from '@/assets/datatrack-logo.png'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTimeTracking } from '@/contexts/TimeTrackingContext'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useMode } from '@/contexts/ModeContext'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -24,6 +24,7 @@ export function TopBar() {
   const { theme, toggleTheme } = useTheme()
   const { user, userProfile, signOut, updateUserStatus } = useAuth()
   const { isTracking, isPaused, elapsedTime, toggleTracking, formatTime } = useTimeTracking()
+  const { mode, toggleMode } = useMode()
   
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng)
@@ -76,6 +77,30 @@ export function TopBar() {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
+          {/* Mode Switcher */}
+          {user && (
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleMode}
+                className="gap-2 px-3 sm:px-4 py-2 h-8 sm:h-9 rounded-lg font-medium transition-all"
+              >
+                {mode === 'student' ? (
+                  <>
+                    <GraduationCap className="h-4 w-4" />
+                    <span className="hidden sm:inline">Student</span>
+                  </>
+                ) : (
+                  <>
+                    <Briefcase className="h-4 w-4" />
+                    <span className="hidden sm:inline">Work</span>
+                  </>
+                )}
+              </Button>
+            </motion.div>
+          )}
+
           {/* Time Tracking Timer */}
           {user && (
             <motion.div 

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { TimeTrackingProvider } from "@/contexts/TimeTrackingContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ModeProvider } from "@/contexts/ModeContext";
 import { MainLayout } from "@/components/Layout/MainLayout";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
@@ -18,6 +19,7 @@ import Team from "./pages/Team";
 import Settings from "./pages/Settings";
 import History from "./pages/History";
 import Messages from "./pages/Messages";
+import OCRCallReport from "./pages/OCRCallReport";
 
 import Index from "./pages/Index";
 import EnterpriseContact from "./pages/EnterpriseContact";
@@ -75,13 +77,14 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <AuthProvider>
-        <TimeTrackingProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
+      <ModeProvider>
+        <AuthProvider>
+          <TimeTrackingProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
               {/* Landing Page - Public */}
               <Route path="/" element={<Index />} />
               <Route path="/enterprise-contact" element={<EnterpriseContact />} />
@@ -187,13 +190,22 @@ const App = () => (
                 <Route index element={<Settings />} />
               </Route>
               
+              <Route path="/ocr-call-report" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<OCRCallReport />} />
+              </Route>
+              
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
-      </TimeTrackingProvider>
-      </AuthProvider>
+        </TimeTrackingProvider>
+        </AuthProvider>
+      </ModeProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

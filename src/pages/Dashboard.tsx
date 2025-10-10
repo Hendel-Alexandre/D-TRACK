@@ -1,23 +1,22 @@
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Clock, CheckSquare, FileText, BarChart3, Users, FolderOpen, Circle, ChevronDown, TrendingUp, Calendar as CalendarIcon, Plus, ArrowRight, Zap } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Circle, ChevronDown, Zap, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { DashboardCards } from '@/components/Dashboard/DashboardCards'
 import { DarvisAssistant } from '@/components/AI/DarvisAssistant'
+import { useMode } from '@/contexts/ModeContext'
+import { StudentDashboard } from '@/components/Dashboard/StudentDashboard'
+import { WorkDashboard } from '@/components/Dashboard/WorkDashboard'
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.05
-    }
+    transition: { staggerChildren: 0.05 }
   }
 }
 
@@ -26,87 +25,14 @@ const itemVariants = {
   visible: {
     y: 0,
     opacity: 1,
-    transition: {
-      type: "spring" as const,
-      stiffness: 400,
-      damping: 25
-    }
+    transition: { type: "spring" as const, stiffness: 400, damping: 25 }
   }
 }
-
-const quickActions = [
-  {
-    title: 'Start Timer',
-    description: 'Begin time tracking',
-    icon: Clock,
-    href: '/timesheets',
-    color: 'bg-gradient-primary',
-    gradient: true
-  },
-  {
-    title: 'View Tasks',
-    description: 'Check pending tasks',
-    icon: CheckSquare,
-    href: '/tasks',
-    color: 'bg-gradient-dark',
-    gradient: true
-  },
-  {
-    title: 'Quick Note',
-    description: 'Add a quick note',
-    icon: FileText,
-    href: '/notes',
-    color: 'bg-blue-500',
-    gradient: false
-  },
-  {
-    title: 'View Calendar',
-    description: 'Check your schedule',
-    icon: CalendarIcon,
-    href: '/calendar',
-    color: 'bg-green-500',
-    gradient: false
-  }
-]
-
-const stats = [
-  {
-    title: 'Today\'s Hours',
-    value: '0:00',
-    icon: Clock,
-    change: '+0%',
-    trend: 'neutral',
-    description: 'vs yesterday'
-  },
-  {
-    title: 'Open Tasks',
-    value: '0',
-    icon: CheckSquare,
-    change: '0 pending',
-    trend: 'positive',
-    description: 'tasks remaining'
-  },
-  {
-    title: 'Active Projects',
-    value: '0',
-    icon: FolderOpen,
-    change: '0 in progress',
-    trend: 'neutral',
-    description: 'projects ongoing'
-  },
-  {
-    title: 'Productivity',
-    value: '100%',
-    icon: TrendingUp,
-    change: 'Excellent',
-    trend: 'positive',
-    description: 'efficiency rating'
-  }
-]
 
 export default function Dashboard() {
   const { t } = useTranslation()
   const { userProfile, user, updateUserStatus } = useAuth()
+  const { mode } = useMode()
   const navigate = useNavigate()
 
   const getStatusColor = (status: string) => {
@@ -218,123 +144,9 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Enhanced Dashboard Cards */}
+        {/* Mode-Specific Dashboard */}
         <motion.div variants={itemVariants}>
-          <DashboardCards />
-        </motion.div>
-
-        {/* Quick Actions */}
-        <motion.div variants={itemVariants}>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-foreground">{t('Quick Actions')}</h2>
-            <Button variant="ghost" onClick={() => navigate('/timesheets')} className="gap-2 text-muted-foreground hover:text-foreground">
-              {t('view')} {t('allStatus')}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-             {quickActions.map((action, index) => (
-               <motion.div
-                 key={index}
-                 whileHover={{ scale: 1.02, y: -2 }}
-                 whileTap={{ scale: 0.98 }}
-                 onClick={() => navigate(action.href)}
-               >
-                 <Card className="card-hover cursor-pointer group border-border/50 bg-gradient-card relative overflow-hidden">
-                   <CardContent className="p-6 text-center space-y-4">
-                     <div className={`mx-auto w-16 h-16 ${action.color} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg`}>
-                       <action.icon className="h-8 w-8 text-white" />
-                     </div>
-                     <div className="space-y-2">
-                       <h3 className="font-semibold text-foreground">
-                         {action.title}
-                       </h3>
-                       <p className="text-sm text-muted-foreground">
-                         {action.description}
-                       </p>
-                     </div>
-                     <Button 
-                       variant="ghost" 
-                       size="sm"
-                       className="w-full group-hover:bg-primary/10 group-hover:text-primary transition-colors"
-                       onClick={(e) => {
-                         e.stopPropagation()
-                         navigate(action.href)
-                       }}
-                     >
-                       Get Started
-                       <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                     </Button>
-                   </CardContent>
-                 </Card>
-               </motion.div>
-             ))}
-           </div>
-        </motion.div>
-
-        {/* Recent Activity & Insights */}
-        <motion.div variants={itemVariants}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recent Activity */}
-            <Card className="border-border/50 bg-gradient-card">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-xl text-foreground">Recent Activity</CardTitle>
-                    <CardDescription>Your latest time entries and updates</CardDescription>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => navigate('/history')}>
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <div className="mx-auto w-16 h-16 bg-muted/50 rounded-2xl flex items-center justify-center mb-4">
-                    <Clock className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <p className="text-muted-foreground mb-2">No recent activity</p>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Start logging your time to see activity here
-                  </p>
-                  <Button onClick={() => navigate('/timesheets')} className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Time Entry
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Insights */}
-            <Card className="border-border/50 bg-gradient-card">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-xl text-foreground">Productivity Insights</CardTitle>
-                    <CardDescription>Track your performance trends</CardDescription>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => navigate('/reports')}>
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <div className="mx-auto w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mb-4">
-                    <BarChart3 className="h-8 w-8 text-white" />
-                  </div>
-                  <p className="text-muted-foreground mb-2">Generate your first report</p>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Track time to unlock detailed analytics
-                  </p>
-                  <Button variant="outline" onClick={() => navigate('/reports')} className="gap-2">
-                    <BarChart3 className="h-4 w-4" />
-                    View Reports
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {mode === 'student' ? <StudentDashboard /> : <WorkDashboard />}
         </motion.div>
       </motion.div>
       

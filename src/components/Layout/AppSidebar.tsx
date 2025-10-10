@@ -9,11 +9,16 @@ import {
   Users,
   Activity,
   MessageCircle,
-  Calendar
+  Calendar,
+  BookOpen,
+  Timer,
+  Upload,
+  ScanText
 } from 'lucide-react'
 import datatrackLogo from '@/assets/datatrack-logo.png'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useMode } from '@/contexts/ModeContext'
 import {
   Sidebar,
   SidebarContent,
@@ -26,8 +31,42 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 
-// Organized navigation with groups
-const navigationGroups = [
+// Student Mode Navigation
+const studentNavigation = [
+  {
+    label: 'overview',
+    items: [
+      { title: 'dashboard', url: '/dashboard', icon: Home },
+    ]
+  },
+  {
+    label: 'study',
+    items: [
+      { title: 'tasks', url: '/tasks', icon: CheckSquare },
+      { title: 'calendar', url: '/calendar', icon: Calendar },
+      { title: 'notes', url: '/notes', icon: FileText },
+      { title: 'Class Schedule', url: '/calendar', icon: BookOpen },
+      { title: 'Pomodoro Timer', url: '/timesheets', icon: Timer },
+      { title: 'Group Projects', url: '/projects', icon: Users },
+    ]
+  },
+  {
+    label: 'collaboration',
+    items: [
+      { title: 'messages', url: '/messages', icon: MessageCircle },
+      { title: 'Upload Files', url: '/notes', icon: Upload },
+    ]
+  },
+  {
+    label: 'system',
+    items: [
+      { title: 'settings', url: '/settings', icon: Settings },
+    ]
+  }
+];
+
+// Work Mode Navigation
+const workNavigation = [
   {
     label: 'overview',
     items: [
@@ -39,9 +78,10 @@ const navigationGroups = [
     items: [
       { title: 'timesheets', url: '/timesheets', icon: Clock },
       { title: 'tasks', url: '/tasks', icon: CheckSquare },
-      { title: 'calendar', url: '/calendar', icon: Calendar },
       { title: 'projects', url: '/projects', icon: FolderOpen },
+      { title: 'calendar', url: '/calendar', icon: Calendar },
       { title: 'notes', url: '/notes', icon: FileText },
+      { title: 'OCR Call Report', url: '/ocr-call-report', icon: ScanText },
     ]
   },
   {
@@ -64,12 +104,15 @@ const navigationGroups = [
       { title: 'settings', url: '/settings', icon: Settings },
     ]
   }
-]
+];
 
 export function AppSidebar() {
   const { state } = useSidebar()
   const location = useLocation()
   const { t } = useTranslation()
+  const { mode } = useMode()
+  
+  const navigationGroups = mode === 'student' ? studentNavigation : workNavigation;
   
   const currentPath = location.pathname
   const isActive = (path: string) => currentPath === path
