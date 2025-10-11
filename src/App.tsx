@@ -20,6 +20,10 @@ import Settings from "./pages/Settings";
 import History from "./pages/History";
 import Messages from "./pages/Messages";
 import OCRCallReport from "./pages/OCRCallReport";
+import StudentClasses from "./pages/StudentClasses";
+import StudentAssignments from "./pages/StudentAssignments";
+import StudentFiles from "./pages/StudentFiles";
+import WorkFiles from "./pages/WorkFiles";
 
 import Index from "./pages/Index";
 import EnterpriseContact from "./pages/EnterpriseContact";
@@ -196,6 +200,38 @@ const App = () => (
                 </ProtectedRoute>
               }>
                 <Route index element={<OCRCallReport />} />
+              </Route>
+
+              <Route path="/student/classes" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<StudentClasses />} />
+              </Route>
+
+              <Route path="/student/assignments" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<StudentAssignments />} />
+              </Route>
+
+              <Route path="/student/files" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<StudentFiles />} />
+              </Route>
+
+              <Route path="/work/files" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<WorkFiles />} />
               </Route>
               
               {/* Catch-all route */}
