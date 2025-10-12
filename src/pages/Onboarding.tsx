@@ -73,7 +73,7 @@ export default function Onboarding() {
     try {
       // Create or update profiles based on selection
       if (selectedMode === 'student' || selectedMode === 'both') {
-        await supabase
+        const { error: studentError } = await supabase
           .from('student_profiles' as any)
           .insert({
             user_id: user.id,
@@ -81,10 +81,12 @@ export default function Onboarding() {
             major,
             year,
           });
+        
+        if (studentError) throw studentError;
       }
 
       if (selectedMode === 'professional' || selectedMode === 'both') {
-        await supabase
+        const { error: workError } = await supabase
           .from('work_profiles' as any)
           .insert({
             user_id: user.id,
@@ -92,11 +94,13 @@ export default function Onboarding() {
             job_title: jobTitle,
             department,
           });
+        
+        if (workError) throw workError;
       }
 
       // Update user_mode_settings
       const activeMode = selectedMode === 'both' ? 'work' : selectedMode;
-      await supabase
+      const { error: settingsError } = await supabase
         .from('user_mode_settings' as any)
         .upsert({
           user_id: user.id,
@@ -107,8 +111,10 @@ export default function Onboarding() {
           plan_type: 'trial',
         });
 
+      if (settingsError) throw settingsError;
+
       // Save onboarding profile
-      await supabase
+      const { error: profileError } = await supabase
         .from('onboarding_profiles' as any)
         .insert({
           user_id: user.id,
@@ -116,16 +122,15 @@ export default function Onboarding() {
           selected_plan: selectedPlan,
         });
 
+      if (profileError) throw profileError;
+
       toast.success('Welcome aboard! Your 30-day trial has started 🎉');
       
-      // Redirect to appropriate dashboard
-      if (selectedMode === 'student') {
-        navigate('/dashboard');
-      } else if (selectedMode === 'professional') {
-        navigate('/dashboard');
-      } else {
-        navigate('/dashboard');
-      }
+      // Small delay to ensure database sync before redirect
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Redirect to dashboard
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       console.error('Error completing onboarding:', error);
       toast.error('Failed to complete onboarding. Please try again.');
