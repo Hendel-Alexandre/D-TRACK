@@ -440,6 +440,33 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_profiles: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          selected_mode: string
+          selected_plan: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          selected_mode: string
+          selected_plan: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          selected_mode?: string
+          selected_plan?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       projects: {
         Row: {
           created_at: string
@@ -475,6 +502,330 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      student_assignments: {
+        Row: {
+          class_id: string | null
+          created_at: string | null
+          description: string | null
+          due_date: string
+          id: string
+          reminder_enabled: boolean | null
+          reminder_hours_before: number | null
+          status: Database["public"]["Enums"]["assignment_status"]
+          title: string
+          type: Database["public"]["Enums"]["assignment_type"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          class_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date: string
+          id?: string
+          reminder_enabled?: boolean | null
+          reminder_hours_before?: number | null
+          status?: Database["public"]["Enums"]["assignment_status"]
+          title: string
+          type?: Database["public"]["Enums"]["assignment_type"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          class_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string
+          id?: string
+          reminder_enabled?: boolean | null
+          reminder_hours_before?: number | null
+          status?: Database["public"]["Enums"]["assignment_status"]
+          title?: string
+          type?: Database["public"]["Enums"]["assignment_type"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_assignments_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "student_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_classes: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          day_of_week: number
+          end_time: string
+          id: string
+          instructor: string | null
+          location: string | null
+          name: string
+          start_time: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          day_of_week: number
+          end_time: string
+          id?: string
+          instructor?: string | null
+          location?: string | null
+          name: string
+          start_time: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          instructor?: string | null
+          location?: string | null
+          name?: string
+          start_time?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      student_conversation_members: {
+        Row: {
+          added_at: string | null
+          conversation_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string | null
+          conversation_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string | null
+          conversation_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_conversation_members_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "student_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_conversations: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          id: string
+          is_group: boolean | null
+          name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          id?: string
+          is_group?: boolean | null
+          name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          is_group?: boolean | null
+          name?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      student_files: {
+        Row: {
+          assignment_id: string | null
+          class_id: string | null
+          created_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          tags: string[] | null
+          user_id: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          class_id?: string | null
+          created_at?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          tags?: string[] | null
+          user_id: string
+        }
+        Update: {
+          assignment_id?: string | null
+          class_id?: string | null
+          created_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          tags?: string[] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_files_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "student_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_files_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "student_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_messages: {
+        Row: {
+          conversation_id: string
+          created_at: string | null
+          id: string
+          message: string
+          sender_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          message: string
+          sender_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string | null
+          id?: string
+          message?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "student_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          major: string | null
+          school_name: string | null
+          updated_at: string | null
+          user_id: string
+          year: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          major?: string | null
+          school_name?: string | null
+          updated_at?: string | null
+          user_id: string
+          year?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          major?: string | null
+          school_name?: string | null
+          updated_at?: string | null
+          user_id?: string
+          year?: string | null
+        }
+        Relationships: []
+      }
+      student_tasks: {
+        Row: {
+          assignment_id: string | null
+          class_id: string | null
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          class_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          assignment_id?: string | null
+          class_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_tasks_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "student_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_tasks_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "student_classes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tasks: {
         Row: {
@@ -583,6 +934,48 @@ export type Database = {
           },
         ]
       }
+      user_mode_settings: {
+        Row: {
+          active_mode: Database["public"]["Enums"]["app_mode"]
+          created_at: string | null
+          id: string
+          onboarding_completed: boolean | null
+          plan_type: string | null
+          student_mode_enabled: boolean | null
+          trial_end_date: string | null
+          trial_start_date: string | null
+          updated_at: string | null
+          user_id: string
+          work_mode_enabled: boolean | null
+        }
+        Insert: {
+          active_mode?: Database["public"]["Enums"]["app_mode"]
+          created_at?: string | null
+          id?: string
+          onboarding_completed?: boolean | null
+          plan_type?: string | null
+          student_mode_enabled?: boolean | null
+          trial_end_date?: string | null
+          trial_start_date?: string | null
+          updated_at?: string | null
+          user_id: string
+          work_mode_enabled?: boolean | null
+        }
+        Update: {
+          active_mode?: Database["public"]["Enums"]["app_mode"]
+          created_at?: string | null
+          id?: string
+          onboarding_completed?: boolean | null
+          plan_type?: string | null
+          student_mode_enabled?: boolean | null
+          trial_end_date?: string | null
+          trial_start_date?: string | null
+          updated_at?: string | null
+          user_id?: string
+          work_mode_enabled?: boolean | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -634,6 +1027,80 @@ export type Database = {
         }
         Relationships: []
       }
+      work_files: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          project_id: string | null
+          tags: string[] | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          project_id?: string | null
+          tags?: string[] | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          project_id?: string | null
+          tags?: string[] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_profiles: {
+        Row: {
+          company_name: string | null
+          created_at: string | null
+          department: string | null
+          id: string
+          job_title: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string | null
+          department?: string | null
+          id?: string
+          job_title?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string | null
+          department?: string | null
+          id?: string
+          job_title?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -681,12 +1148,15 @@ export type Database = {
       }
     }
     Enums: {
+      app_mode: "student" | "work"
       app_role:
         | "admin"
         | "project_manager"
         | "developer"
         | "designer"
         | "team_member"
+      assignment_status: "pending" | "in_progress" | "completed" | "cancelled"
+      assignment_type: "assignment" | "exam" | "project" | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -814,6 +1284,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_mode: ["student", "work"],
       app_role: [
         "admin",
         "project_manager",
@@ -821,6 +1292,8 @@ export const Constants = {
         "designer",
         "team_member",
       ],
+      assignment_status: ["pending", "in_progress", "completed", "cancelled"],
+      assignment_type: ["assignment", "exam", "project", "other"],
     },
   },
 } as const

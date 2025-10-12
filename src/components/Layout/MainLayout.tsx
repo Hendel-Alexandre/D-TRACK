@@ -6,33 +6,36 @@ import NoteNotificationPopup from '@/components/notifications/NoteNotificationPo
 import { useNoteNotifications } from '@/hooks/useNoteNotifications'
 import { DarvisAssistant } from '@/components/AI/DarvisAssistant'
 import { OnboardingProvider } from '@/components/Onboarding/OnboardingProvider'
+import { OnboardingRedirect } from '@/components/Dashboard/OnboardingRedirect'
 
 export function MainLayout() {
   const { notification, isPopupOpen, closePopup, onNotificationHandled } = useNoteNotifications()
 
   return (
     <OnboardingProvider>
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-gradient-subtle">
-          <AppSidebar />
-          <div className="flex-1 flex flex-col min-w-0">
-            <TopBar />
-            <main className="flex-1 overflow-auto bg-gradient-subtle">
-              <div className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-3 sm:py-4 lg:py-6 max-w-full sm:max-w-7xl">
-                <Outlet />
-              </div>
-            </main>
-          </div>
-          <DarvisAssistant />
+      <OnboardingRedirect>
+        <SidebarProvider>
+          <div className="min-h-screen flex w-full bg-gradient-subtle">
+            <AppSidebar />
+            <div className="flex-1 flex flex-col min-w-0">
+              <TopBar />
+              <main className="flex-1 overflow-auto bg-gradient-subtle">
+                <div className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-3 sm:py-4 lg:py-6 max-w-full sm:max-w-7xl">
+                  <Outlet />
+                </div>
+              </main>
+            </div>
+            <DarvisAssistant />
         
-        <NoteNotificationPopup
-          notification={notification}
-          open={isPopupOpen}
-          onClose={closePopup}
-          onHandled={onNotificationHandled}
-        />
-      </div>
-    </SidebarProvider>
+          <NoteNotificationPopup
+            notification={notification}
+            open={isPopupOpen}
+            onClose={closePopup}
+            onHandled={onNotificationHandled}
+          />
+        </div>
+      </SidebarProvider>
+      </OnboardingRedirect>
     </OnboardingProvider>
   )
 }

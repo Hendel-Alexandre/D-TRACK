@@ -11,6 +11,7 @@ import { DarvisAssistant } from '@/components/AI/DarvisAssistant'
 import { useMode } from '@/contexts/ModeContext'
 import { StudentDashboard } from '@/components/Dashboard/StudentDashboard'
 import { WorkDashboard } from '@/components/Dashboard/WorkDashboard'
+import { TrialBanner } from '@/components/Dashboard/TrialBanner'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -142,6 +143,11 @@ export default function Dashboard() {
               </Button>
             </div>
           </div>
+        </motion.div>
+
+        {/* Trial Banner */}
+        <motion.div variants={itemVariants}>
+          <TrialBanner />
         </motion.div>
 
         {/* Mode-Specific Dashboard */}

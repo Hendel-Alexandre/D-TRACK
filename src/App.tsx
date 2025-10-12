@@ -25,6 +25,8 @@ import Index from "./pages/Index";
 import EnterpriseContact from "./pages/EnterpriseContact";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Onboarding from "./pages/Onboarding";
+import PlanManagement from "./pages/PlanManagement";
 import NotFound from "./pages/NotFound";
 import StudentClasses from "./pages/StudentClasses";
 import StudentAssignments from "./pages/StudentAssignments";
@@ -103,6 +105,13 @@ const App = () => (
                 <PublicRoute>
                   <Signup />
                 </PublicRoute>
+              } />
+              
+              {/* Onboarding - Protected */}
+              <Route path="/onboarding" element={
+                <ProtectedRoute>
+                  <Onboarding />
+                </ProtectedRoute>
               } />
               
               {/* Protected App Routes */}
@@ -192,6 +201,14 @@ const App = () => (
                 </ProtectedRoute>
               }>
                 <Route index element={<Settings />} />
+              </Route>
+              
+              <Route path="/plans" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<PlanManagement />} />
               </Route>
               
               <Route path="/ocr-call-report" element={

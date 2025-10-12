@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { User, Bell, Shield, Palette, Globe, LogOut } from 'lucide-react'
+import { User, Bell, Shield, Palette, Globe, LogOut, Crown } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,11 +13,15 @@ import { useTheme } from '@/contexts/ThemeContext'
 import { toast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
+import { useTrialStatus } from '@/hooks/useOnboarding'
 
 export default function Settings() {
   const { user, userProfile, signOut, updateUserStatus } = useAuth()
   const { theme, setTheme } = useTheme()
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { trialDaysRemaining, isTrialActive, planType } = useTrialStatus()
   
   const [profileData, setProfileData] = useState({
     first_name: userProfile?.first_name || '',
@@ -257,6 +261,43 @@ export default function Settings() {
                     <SelectItem value="system">System</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Plan Management */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Crown className="h-5 w-5 mr-2" />
+                Subscription & Plan
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <Label>Current Plan</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {planType === 'trial' ? (
+                      <>
+                        {isTrialActive
+                          ? `Free Trial (${trialDaysRemaining} days remaining)`
+                          : 'Trial Expired'}
+                      </>
+                    ) : (
+                      planType.charAt(0).toUpperCase() + planType.slice(1) + ' Plan'
+                    )}
+                  </p>
+                </div>
+                <Button onClick={() => navigate('/plans')} variant="outline">
+                  {planType === 'trial' ? 'Upgrade Plan' : 'Manage Plan'}
+                </Button>
               </div>
             </CardContent>
           </Card>
