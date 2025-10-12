@@ -75,11 +75,13 @@ export default function Onboarding() {
       if (selectedMode === 'student' || selectedMode === 'both') {
         const { error: studentError } = await supabase
           .from('student_profiles' as any)
-          .insert({
+          .upsert({
             user_id: user.id,
             school_name: schoolName,
             major,
             year,
+          }, {
+            onConflict: 'user_id'
           });
         
         if (studentError) throw studentError;
@@ -88,11 +90,13 @@ export default function Onboarding() {
       if (selectedMode === 'professional' || selectedMode === 'both') {
         const { error: workError } = await supabase
           .from('work_profiles' as any)
-          .insert({
+          .upsert({
             user_id: user.id,
             company_name: companyName,
             job_title: jobTitle,
             department,
+          }, {
+            onConflict: 'user_id'
           });
         
         if (workError) throw workError;
@@ -116,10 +120,12 @@ export default function Onboarding() {
       // Save onboarding profile
       const { error: profileError } = await supabase
         .from('onboarding_profiles' as any)
-        .insert({
+        .upsert({
           user_id: user.id,
           selected_mode: selectedMode,
           selected_plan: selectedPlan,
+        }, {
+          onConflict: 'user_id'
         });
 
       if (profileError) throw profileError;
