@@ -119,18 +119,25 @@ export default function Onboarding() {
 
       if (settingsError) throw settingsError;
 
-      // Save onboarding profile
-      const { error: profileError } = await supabase
+      // Save onboarding profile only if not already present (avoid UPDATE on table without updated_at)
+      const { data: existingOnboarding, error: fetchOnboardingError } = await supabase
         .from('onboarding_profiles' as any)
-        .upsert({
-          user_id: user.id,
-          selected_mode: selectedMode,
-          selected_plan: selectedPlan,
-        }, {
-          onConflict: 'user_id'
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (profileError) throw profileError;
+      if (fetchOnboardingError) throw fetchOnboardingError;
+
+      if (!existingOnboarding) {
+        const { error: profileError } = await supabase
+          .from('onboarding_profiles' as any)
+          .insert({
+            user_id: user.id,
+            selected_mode: selectedMode,
+            selected_plan: selectedPlan,
+          });
+        if (profileError) throw profileError;
+      }
 
       toast.success('Welcome aboard! Your 30-day trial has started 🎉');
       
