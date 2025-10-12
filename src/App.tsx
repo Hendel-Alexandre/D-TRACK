@@ -81,8 +81,8 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <ModeProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <ModeProvider>
           <TimeTrackingProvider>
           <TooltipProvider>
             <Toaster />
@@ -240,8 +240,8 @@ const App = () => (
           </BrowserRouter>
         </TooltipProvider>
         </TimeTrackingProvider>
-        </AuthProvider>
-      </ModeProvider>
+        </ModeProvider>
+      </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
