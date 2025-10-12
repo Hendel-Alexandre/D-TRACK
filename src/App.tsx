@@ -26,6 +26,10 @@ import EnterpriseContact from "./pages/EnterpriseContact";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
+import StudentClasses from "./pages/StudentClasses";
+import StudentAssignments from "./pages/StudentAssignments";
+import StudentFiles from "./pages/StudentFiles";
+import WorkFiles from "./pages/WorkFiles";
 import "./lib/i18n";
 
 const queryClient = new QueryClient();
@@ -196,6 +200,38 @@ const App = () => (
                 </ProtectedRoute>
               }>
                 <Route index element={<OCRCallReport />} />
+              </Route>
+              
+              <Route path="/student-classes" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<StudentClasses />} />
+              </Route>
+              
+              <Route path="/student-assignments" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<StudentAssignments />} />
+              </Route>
+              
+              <Route path="/student-files" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<StudentFiles />} />
+              </Route>
+              
+              <Route path="/work-files" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<WorkFiles />} />
               </Route>
               
               {/* Catch-all route */}

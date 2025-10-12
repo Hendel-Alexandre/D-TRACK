@@ -42,19 +42,17 @@ const studentNavigation = [
   {
     label: 'study',
     items: [
-      { title: 'tasks', url: '/tasks', icon: CheckSquare },
+      { title: 'Class Schedule', url: '/student-classes', icon: BookOpen },
+      { title: 'Assignments & Exams', url: '/student-assignments', icon: CheckSquare },
       { title: 'calendar', url: '/calendar', icon: Calendar },
+      { title: 'Files', url: '/student-files', icon: Upload },
       { title: 'notes', url: '/notes', icon: FileText },
-      { title: 'Class Schedule', url: '/calendar', icon: BookOpen },
-      { title: 'Pomodoro Timer', url: '/timesheets', icon: Timer },
-      { title: 'Group Projects', url: '/projects', icon: Users },
     ]
   },
   {
     label: 'collaboration',
     items: [
       { title: 'messages', url: '/messages', icon: MessageCircle },
-      { title: 'Upload Files', url: '/notes', icon: Upload },
     ]
   },
   {
@@ -80,6 +78,7 @@ const workNavigation = [
       { title: 'tasks', url: '/tasks', icon: CheckSquare },
       { title: 'projects', url: '/projects', icon: FolderOpen },
       { title: 'calendar', url: '/calendar', icon: Calendar },
+      { title: 'Files', url: '/work-files', icon: Upload },
       { title: 'notes', url: '/notes', icon: FileText },
       { title: 'OCR Call Report', url: '/ocr-call-report', icon: ScanText },
     ]
