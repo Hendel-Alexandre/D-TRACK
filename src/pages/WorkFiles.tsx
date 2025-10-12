@@ -33,7 +33,7 @@ export default function WorkFiles() {
     if (!user) return;
 
     const { data, error } = await supabase
-      .from('work_files')
+      .from('work_files' as any)
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
@@ -42,7 +42,7 @@ export default function WorkFiles() {
       console.error('Error fetching files:', error);
       toast.error('Failed to load files');
     } else {
-      setFiles(data || []);
+      setFiles((data as any) || []);
     }
     setLoading(false);
   };
@@ -64,13 +64,13 @@ export default function WorkFiles() {
 
       if (uploadError) throw uploadError;
 
-      const { error: dbError } = await supabase.from('work_files').insert({
+      const { error: dbError } = await supabase.from('work_files' as any).insert({
         user_id: user.id,
         file_name: file.name,
         file_path: filePath,
         file_type: file.type,
         file_size: file.size,
-      });
+      } as any);
 
       if (dbError) throw dbError;
 
@@ -96,7 +96,7 @@ export default function WorkFiles() {
     }
 
     const { error: dbError } = await supabase
-      .from('work_files')
+      .from('work_files' as any)
       .delete()
       .eq('id', file.id);
 

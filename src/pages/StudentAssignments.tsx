@@ -65,7 +65,7 @@ export default function StudentAssignments() {
     if (!user) return;
 
     const { data, error } = await supabase
-      .from('student_assignments')
+      .from('student_assignments' as any)
       .select('*')
       .eq('user_id', user.id)
       .order('due_date', { ascending: true });
@@ -74,7 +74,7 @@ export default function StudentAssignments() {
       console.error('Error fetching assignments:', error);
       toast.error('Failed to load assignments');
     } else {
-      setAssignments(data || []);
+      setAssignments((data as any) || []);
     }
     setLoading(false);
   };
@@ -83,10 +83,10 @@ export default function StudentAssignments() {
     e.preventDefault();
     if (!user) return;
 
-    const { error } = await supabase.from('student_assignments').insert({
+    const { error } = await supabase.from('student_assignments' as any).insert({
       user_id: user.id,
       ...formData,
-    });
+    } as any);
 
     if (error) {
       toast.error('Failed to add assignment');
@@ -109,8 +109,8 @@ export default function StudentAssignments() {
 
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase
-      .from('student_assignments')
-      .update({ status })
+      .from('student_assignments' as any)
+      .update({ status } as any)
       .eq('id', id);
 
     if (error) {

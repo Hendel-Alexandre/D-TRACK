@@ -47,22 +47,22 @@ export function ProfileSetupDialog({
 
     try {
       if (mode === 'student') {
-        const { error } = await supabase.from('student_profiles').insert({
+        const { error } = await supabase.from('student_profiles' as any).insert({
           user_id: user.id,
           school_name: formData.school_name,
           major: formData.major,
           year: formData.year,
-        });
+        } as any);
 
         if (error) throw error;
         toast.success('Student profile created!');
       } else {
-        const { error } = await supabase.from('work_profiles').insert({
+        const { error } = await supabase.from('work_profiles' as any).insert({
           user_id: user.id,
           company_name: formData.company_name,
           job_title: formData.job_title,
           department: formData.department,
-        });
+        } as any);
 
         if (error) throw error;
         toast.success('Work profile created!');

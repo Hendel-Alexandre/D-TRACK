@@ -33,7 +33,7 @@ export function useModeSettings() {
 
     try {
       const { data, error } = await supabase
-        .from('user_mode_settings')
+        .from('user_mode_settings' as any)
         .select('*')
         .eq('user_id', user.id)
         .single();
@@ -45,9 +45,9 @@ export function useModeSettings() {
 
       if (data) {
         setSettings({
-          active_mode: data.active_mode as AppMode,
-          student_mode_enabled: data.student_mode_enabled,
-          work_mode_enabled: data.work_mode_enabled,
+          active_mode: (data as any).active_mode as AppMode,
+          student_mode_enabled: (data as any).student_mode_enabled,
+          work_mode_enabled: (data as any).work_mode_enabled,
         });
       } else {
         // Create default settings
@@ -64,13 +64,13 @@ export function useModeSettings() {
     if (!user) return;
 
     const { data, error } = await supabase
-      .from('user_mode_settings')
+      .from('user_mode_settings' as any)
       .insert({
         user_id: user.id,
         active_mode: 'work',
         student_mode_enabled: false,
         work_mode_enabled: true,
-      })
+      } as any)
       .select()
       .single();
 
@@ -81,9 +81,9 @@ export function useModeSettings() {
 
     if (data) {
       setSettings({
-        active_mode: data.active_mode as AppMode,
-        student_mode_enabled: data.student_mode_enabled,
-        work_mode_enabled: data.work_mode_enabled,
+        active_mode: (data as any).active_mode as AppMode,
+        student_mode_enabled: (data as any).student_mode_enabled,
+        work_mode_enabled: (data as any).work_mode_enabled,
       });
     }
   };
@@ -94,12 +94,12 @@ export function useModeSettings() {
     const updatedSettings = { ...settings, ...newSettings };
     
     const { error } = await supabase
-      .from('user_mode_settings')
+      .from('user_mode_settings' as any)
       .update({
         active_mode: updatedSettings.active_mode,
         student_mode_enabled: updatedSettings.student_mode_enabled,
         work_mode_enabled: updatedSettings.work_mode_enabled,
-      })
+      } as any)
       .eq('user_id', user.id);
 
     if (error) {

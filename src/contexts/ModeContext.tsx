@@ -26,7 +26,7 @@ export function ModeProvider({ children }: { children: ReactNode }) {
 
     const table = mode === 'student' ? 'student_profiles' : 'work_profiles';
     const { data, error } = await supabase
-      .from(table)
+      .from(table as any)
       .select('id')
       .eq('user_id', user.id)
       .single();

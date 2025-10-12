@@ -62,7 +62,7 @@ export default function StudentClasses() {
     if (!user) return;
 
     const { data, error } = await supabase
-      .from('student_classes')
+      .from('student_classes' as any)
       .select('*')
       .eq('user_id', user.id)
       .order('day_of_week', { ascending: true })
@@ -72,7 +72,7 @@ export default function StudentClasses() {
       console.error('Error fetching classes:', error);
       toast.error('Failed to load classes');
     } else {
-      setClasses(data || []);
+      setClasses((data as any) || []);
     }
     setLoading(false);
   };
@@ -81,7 +81,7 @@ export default function StudentClasses() {
     e.preventDefault();
     if (!user) return;
 
-    const { error } = await supabase.from('student_classes').insert({
+    const { error } = await supabase.from('student_classes' as any).insert({
       user_id: user.id,
       name: formData.name,
       instructor: formData.instructor || null,
@@ -90,7 +90,7 @@ export default function StudentClasses() {
       start_time: formData.start_time,
       end_time: formData.end_time,
       color: formData.color,
-    });
+    } as any);
 
     if (error) {
       toast.error('Failed to add class');
@@ -113,7 +113,7 @@ export default function StudentClasses() {
 
   const deleteClass = async (id: string) => {
     const { error } = await supabase
-      .from('student_classes')
+      .from('student_classes' as any)
       .delete()
       .eq('id', id);
 
