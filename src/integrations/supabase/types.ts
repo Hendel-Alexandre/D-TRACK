@@ -48,6 +48,13 @@ export type Database = {
             foreignKeyName: "conversation_members_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "user_search"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -79,6 +86,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "conversations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_search"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conversations_created_by_fkey"
             columns: ["created_by"]
@@ -363,6 +377,13 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "user_search"
             referencedColumns: ["id"]
           },
           {
@@ -1103,7 +1124,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_search: {
+        Row: {
+          department: string | null
+          first_name: string | null
+          id: string | null
+          last_name: string | null
+          status: string | null
+        }
+        Insert: {
+          department?: string | null
+          first_name?: string | null
+          id?: string | null
+          last_name?: string | null
+          status?: string | null
+        }
+        Update: {
+          department?: string | null
+          first_name?: string | null
+          id?: string | null
+          last_name?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_user_hour_bank_balance: {
