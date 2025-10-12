@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
+import { z } from 'zod'
 import datatrackLogo from '@/assets/datatrack-logo.png'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +13,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from '@/hooks/use-toast'
 import { PasswordStrength, validatePassword } from '@/components/ui/password-strength'
+
+// Input validation schema for security
+const signupSchema = z.object({
+  firstName: z.string()
+    .trim()
+    .min(1, 'First name is required')
+    .max(50, 'First name must be less than 50 characters')
+    .regex(/^[a-zA-Z\s\-']+$/, 'First name can only contain letters, spaces, hyphens, and apostrophes'),
+  lastName: z.string()
+    .trim()
+    .min(1, 'Last name is required')
+    .max(50, 'Last name must be less than 50 characters')
+    .regex(/^[a-zA-Z\s\-']+$/, 'Last name can only contain letters, spaces, hyphens, and apostrophes'),
+  email: z.string()
+    .trim()
+    .email('Invalid email address')
+    .max(255, 'Email must be less than 255 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password must be less than 128 characters'),
+  department: z.enum(['Marketing', 'IT', 'Support', 'Finance', 'HR'], {
+    errorMap: () => ({ message: 'Please select a valid department' })
+  })
+})
 
 const departments = [
   { value: 'Marketing', label: 'marketing' },
@@ -37,6 +62,26 @@ export default function Signup() {
     e.preventDefault()
     setIsLoading(true)
 
+    // Validate all inputs with Zod schema
+    const validationResult = signupSchema.safeParse({
+      firstName,
+      lastName,
+      email,
+      password,
+      department
+    })
+
+    if (!validationResult.success) {
+      const firstError = validationResult.error.issues[0]
+      toast({
+        title: "Invalid Input",
+        description: firstError.message,
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
+
     // Validate password strength
     const passwordValidation = validatePassword(password)
     if (!passwordValidation.isValid) {
@@ -50,12 +95,21 @@ export default function Signup() {
     }
 
     try {
-      const { error } = await signUp(email, password, firstName, lastName, department)
+      // Use validated and trimmed data
+      const validated = validationResult.data
+      const { error } = await signUp(
+        validated.email, 
+        validated.password, 
+        validated.firstName, 
+        validated.lastName, 
+        validated.department
+      )
       
       if (error) {
+        // Generic error message to prevent account enumeration
         toast({
           title: "Error",
-          description: error.message || "Failed to create account",
+          description: "Unable to create account. Please try again or contact support.",
           variant: "destructive",
         })
       } else {

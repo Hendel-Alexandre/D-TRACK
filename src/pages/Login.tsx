@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
+import { z } from 'zod'
 import datatrackLogo from '@/assets/datatrack-logo.png'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,6 +11,17 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from '@/hooks/use-toast'
+
+// Input validation schema for security
+const loginSchema = z.object({
+  email: z.string()
+    .trim()
+    .email('Invalid email address')
+    .max(255, 'Email must be less than 255 characters'),
+  password: z.string()
+    .min(1, 'Password is required')
+    .max(128, 'Password must be less than 128 characters')
+})
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -24,13 +36,34 @@ export default function Login() {
     e.preventDefault()
     setIsLoading(true)
 
+    // Validate all inputs with Zod schema
+    const validationResult = loginSchema.safeParse({
+      email,
+      password
+    })
+
+    if (!validationResult.success) {
+      const firstError = validationResult.error.issues[0]
+      toast({
+        title: "Invalid Input",
+        description: firstError.message,
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
+
     try {
-      const { error } = await signIn(email, password)
+      // Use validated and trimmed data
+      const validated = validationResult.data
+      const { error } = await signIn(validated.email, validated.password)
       
       if (error) {
+        // Generic error message to prevent account enumeration
+        // Never reveal whether email exists or password is wrong
         toast({
           title: "Error",
-          description: error.message || "Failed to sign in",
+          description: "Invalid email or password",
           variant: "destructive",
         })
       } else {
