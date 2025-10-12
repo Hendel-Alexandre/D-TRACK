@@ -113,6 +113,8 @@ export default function Onboarding() {
           work_mode_enabled: selectedMode === 'professional' || selectedMode === 'both',
           onboarding_completed: true,
           plan_type: 'trial',
+        }, {
+          onConflict: 'user_id'
         });
 
       if (settingsError) throw settingsError;
