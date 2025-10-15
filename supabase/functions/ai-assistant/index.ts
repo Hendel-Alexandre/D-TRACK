@@ -481,6 +481,50 @@ User message: ${JSON.stringify(message)}`;
     }
   ];
 
+  // Build the parts for the message
+  const messageParts: any[] = [{ text: systemPrompt + '\n\n' + message }];
+  
+  // Add files as inline data if present
+  if (files && Array.isArray(files) && files.length > 0) {
+    for (const file of files) {
+      if (file.type && file.data) {
+        // Extract base64 data (remove data URL prefix if present)
+        let base64Data = file.data;
+        if (base64Data.includes(',')) {
+          base64Data = base64Data.split(',')[1];
+        }
+        
+        // Determine MIME type
+        let mimeType = file.type;
+        if (file.type.startsWith('image/')) {
+          // Add image inline data
+          messageParts.push({
+            inlineData: {
+              mimeType: mimeType,
+              data: base64Data
+            }
+          });
+        } else if (file.type === 'application/pdf') {
+          // PDF support
+          messageParts.push({
+            inlineData: {
+              mimeType: 'application/pdf',
+              data: base64Data
+            }
+          });
+        } else {
+          // Try to send other file types
+          messageParts.push({
+            inlineData: {
+              mimeType: mimeType,
+              data: base64Data
+            }
+          });
+        }
+      }
+    }
+  }
+
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${googleApiKey}`, {
     method: 'POST',
     headers: {
@@ -488,14 +532,14 @@ User message: ${JSON.stringify(message)}`;
     },
     body: JSON.stringify({
       contents: [
-        { role: 'user', parts: [{ text: systemPrompt + '\n\n' + message }] }
+        { role: 'user', parts: messageParts }
       ],
       tools: [{
         functionDeclarations: tools
       }],
       generationConfig: {
         temperature: 0.9,
-        maxOutputTokens: 1000,
+        maxOutputTokens: 2000,
       }
     }),
   });

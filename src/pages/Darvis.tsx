@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Send, Menu, Plus, Sparkles, FileUp, X } from 'lucide-react';
+import { Loader2, Send, Menu, Plus, Sparkles, FileUp, X, Image as ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useNavigate } from 'react-router-dom';
@@ -15,7 +15,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   images?: string[];
-  files?: { name: string; content: string }[];
+  files?: { name: string; type: string; data: string }[];
   created_at: string;
 }
 
@@ -36,6 +36,7 @@ export default function Darvis() {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<{ name: string; type: string; data: string }[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -128,30 +129,23 @@ export default function Darvis() {
     }
 
     try {
-      const isTextFile = file.type.startsWith('text/') || 
-                        file.name.endsWith('.txt') || 
-                        file.name.endsWith('.md') ||
-                        file.name.endsWith('.json') ||
-                        file.name.endsWith('.csv') ||
-                        file.name.endsWith('.xml');
-
-      if (isTextFile) {
-        // Handle text files
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          const content = event.target?.result as string;
-          await sendMessage(`[File uploaded: ${file.name}]\n\nPlease analyze this file:\n${content.substring(0, 10000)}`);
-        };
-        reader.readAsText(file);
-      } else {
-        // Handle binary files (images, PDFs, etc.)
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          const base64Content = event.target?.result as string;
-          await sendMessage(`[File uploaded: ${file.name} (${file.type})]\n\nPlease analyze this ${file.type.includes('image') ? 'image' : 'file'}.`);
-        };
-        reader.readAsDataURL(file);
-      }
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64Data = event.target?.result as string;
+        
+        // Add file to uploaded files state
+        setUploadedFiles(prev => [...prev, {
+          name: file.name,
+          type: file.type,
+          data: base64Data
+        }]);
+        
+        toast({
+          title: 'File uploaded',
+          description: `${file.name} ready to send`,
+        });
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
       console.error('Error reading file:', error);
       toast({
@@ -159,25 +153,39 @@ export default function Darvis() {
         description: 'Failed to read file',
         variant: 'destructive',
       });
+    } finally {
+      // Reset the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
   const sendMessage = async (messageContent?: string) => {
     const content = messageContent || input.trim();
-    if (!content || loading) return;
+    if ((!content && uploadedFiles.length === 0) || loading) return;
+
+    const filesToSend = [...uploadedFiles];
+    setUploadedFiles([]); // Clear uploaded files after sending
 
     setLoading(true);
     setInput('');
 
     try {
-      // Save user message
+      // Save user message with files
+      const userMessageData: any = {
+        user_id: user?.id,
+        role: 'user',
+        content: content || '[Files attached]',
+      };
+
+      if (filesToSend.length > 0) {
+        userMessageData.files = filesToSend;
+      }
+
       const { error: userMsgError } = await supabase
         .from('darvis_chats')
-        .insert({
-          user_id: user?.id,
-          role: 'user',
-          content,
-        });
+        .insert(userMessageData);
 
       if (userMsgError) throw userMsgError;
 
@@ -185,23 +193,27 @@ export default function Darvis() {
       const userMessage: Message = {
         id: crypto.randomUUID(),
         role: 'user',
-        content,
+        content: content || '[Files attached]',
+        files: filesToSend,
         created_at: new Date().toISOString(),
       };
       setMessages(prev => [...prev, userMessage]);
 
       // Check if user wants to generate an image
-      const isImageRequest = content.toLowerCase().includes('generate image') || 
-                            content.toLowerCase().includes('create image') ||
-                            content.toLowerCase().includes('draw') ||
-                            content.toLowerCase().includes('make an image');
+      const isImageRequest = content && (
+        content.toLowerCase().includes('generate image') || 
+        content.toLowerCase().includes('create image') ||
+        content.toLowerCase().includes('draw') ||
+        content.toLowerCase().includes('make an image')
+      );
 
-      // Call Darvis
+      // Call Darvis with files
       const { data, error } = await supabase.functions.invoke('ai-assistant', {
         body: {
           action: isImageRequest ? 'generate_image' : 'darvis_chat',
           data: {
-            message: content,
+            message: content || 'Analyze these files',
+            files: filesToSend,
             userId: user?.id,
           },
         },
@@ -359,6 +371,29 @@ export default function Darvis() {
                           : 'bg-card border'
                       }`}>
                         <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                        {message.files && message.files.length > 0 && (
+                          <div className="mt-3 space-y-2">
+                            {message.files.map((file, i) => {
+                              const isImage = file.type.startsWith('image/');
+                              return (
+                                <div key={i}>
+                                  {isImage ? (
+                                    <img
+                                      src={file.data}
+                                      alt={file.name}
+                                      className="rounded-lg max-w-full max-h-96 object-contain"
+                                    />
+                                  ) : (
+                                    <div className="flex items-center gap-2 p-2 bg-background/50 rounded">
+                                      <FileUp className="h-4 w-4" />
+                                      <span className="text-sm">{file.name}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                         {message.images && message.images.length > 0 && (
                           <div className="mt-3 space-y-2">
                             {message.images.map((img, i) => (
@@ -401,6 +436,26 @@ export default function Darvis() {
         {/* Input */}
         <div className="border-t bg-card/80 backdrop-blur-lg p-4">
           <div className="max-w-3xl mx-auto">
+            {uploadedFiles.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-2">
+                {uploadedFiles.map((file, i) => (
+                  <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full text-sm">
+                    {file.type.startsWith('image/') ? (
+                      <ImageIcon className="h-3 w-3" />
+                    ) : (
+                      <FileUp className="h-3 w-3" />
+                    )}
+                    <span className="truncate max-w-[150px]">{file.name}</span>
+                    <button
+                      onClick={() => setUploadedFiles(prev => prev.filter((_, idx) => idx !== i))}
+                      className="hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="flex gap-2">
               <input
                 ref={fileInputRef}
@@ -430,7 +485,7 @@ export default function Darvis() {
               </div>
               <Button
                 onClick={() => sendMessage()}
-                disabled={loading || !input.trim()}
+                disabled={loading || (!input.trim() && uploadedFiles.length === 0)}
                 size="icon"
                 className="flex-shrink-0 bg-gradient-to-r from-primary via-purple-500 to-pink-500"
               >
