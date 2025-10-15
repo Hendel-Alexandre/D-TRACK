@@ -1020,6 +1020,7 @@ export type Database = {
       }
       users: {
         Row: {
+          avatar_url: string | null
           created_at: string
           department: string
           email: string
@@ -1029,6 +1030,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           department: string
           email: string
@@ -1038,6 +1040,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           department?: string
           email?: string
@@ -1187,6 +1190,10 @@ export type Database = {
         Returns: string
       }
       validate_password: {
+        Args: { password: string }
+        Returns: boolean
+      }
+      validate_password_strength: {
         Args: { password: string }
         Returns: boolean
       }

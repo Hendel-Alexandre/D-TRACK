@@ -15,6 +15,9 @@ import { supabase } from '@/integrations/supabase/client'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useTrialStatus } from '@/hooks/useOnboarding'
+import { useProfilePicture } from '@/hooks/useProfilePicture'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useRef } from 'react'
 
 export default function Settings() {
   const { user, userProfile, signOut, updateUserStatus } = useAuth()
@@ -22,6 +25,8 @@ export default function Settings() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { trialDaysRemaining, isTrialActive, planType } = useTrialStatus()
+  const { uploadProfilePicture, deleteProfilePicture, uploading } = useProfilePicture()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [profileData, setProfileData] = useState({
     first_name: userProfile?.first_name || '',
@@ -198,25 +203,54 @@ export default function Settings() {
                 <div className="space-y-2">
                   <Label>Profile Picture</Label>
                   <div className="flex items-center gap-4">
-                    <div className="h-16 w-16 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold text-lg">
-                      {profileData.first_name.charAt(0)}{profileData.last_name.charAt(0)}
-                    </div>
-                    <div className="flex-1">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          toast({
-                            title: 'Coming Soon',
-                            description: 'Profile picture upload will be available soon!'
-                          })
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={userProfile?.avatar_url} />
+                      <AvatarFallback className="bg-gradient-primary text-white font-bold text-lg">
+                        {profileData.first_name.charAt(0)}{profileData.last_name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 space-y-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file && user) {
+                            await uploadProfilePicture(file, user.id);
+                            window.location.reload(); // Refresh to show new image
+                          }
                         }}
-                        className="w-full sm:w-auto"
-                      >
-                        Upload Picture
-                      </Button>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Max file size: 5MB. Supported formats: JPG, PNG
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploading}
+                          className="w-full sm:w-auto"
+                        >
+                          {uploading ? 'Uploading...' : 'Upload Picture'}
+                        </Button>
+                        {userProfile?.avatar_url && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={async () => {
+                              if (user) {
+                                await deleteProfilePicture(user.id);
+                                window.location.reload();
+                              }
+                            }}
+                            disabled={uploading}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Max file size: 5MB. Supported formats: JPG, PNG, WebP
                       </p>
                     </div>
                   </div>
