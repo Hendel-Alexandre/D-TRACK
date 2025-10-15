@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageCircle, X, Send, Loader2, Check, Clock, Plus, Calendar } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, Check, Clock, Plus, Calendar, Mic, Square } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -32,6 +32,9 @@ export function DarvisAssistant() {
   const [input, setInput] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [taskPreview, setTaskPreview] = useState<TaskPreview | null>(null)
+  const [isRecording, setIsRecording] = useState(false)
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { user } = useAuth()
   const { toast } = useToast()
@@ -194,6 +197,92 @@ export function DarvisAssistant() {
     setMessages(prev => [...prev, cancelMessage])
   }
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream)
+      const chunks: Blob[] = []
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data)
+        }
+      }
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' })
+        await transcribeAudio(audioBlob)
+        stream.getTracks().forEach(track => track.stop())
+      }
+
+      recorder.start()
+      setMediaRecorder(recorder)
+      setIsRecording(true)
+      setAudioChunks(chunks)
+
+      toast({
+        title: 'Recording...',
+        description: 'Speak your message now'
+      })
+    } catch (error) {
+      console.error('Error starting recording:', error)
+      toast({
+        title: 'Error',
+        description: 'Could not access microphone. Please check permissions.',
+        variant: 'destructive'
+      })
+    }
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop()
+      setIsRecording(false)
+      setMediaRecorder(null)
+    }
+  }
+
+  const transcribeAudio = async (audioBlob: Blob) => {
+    setIsProcessing(true)
+    
+    try {
+      // Convert blob to base64
+      const reader = new FileReader()
+      reader.readAsDataURL(audioBlob)
+      
+      reader.onloadend = async () => {
+        const base64Audio = reader.result?.toString().split(',')[1]
+        
+        if (!base64Audio) {
+          throw new Error('Failed to convert audio to base64')
+        }
+
+        const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+          body: { audio: base64Audio }
+        })
+
+        if (error) throw error
+
+        if (data?.text) {
+          setInput(data.text)
+          toast({
+            title: 'Transcription Complete',
+            description: 'Your message has been transcribed. Press Send to submit.'
+          })
+        }
+      }
+    } catch (error: any) {
+      console.error('Transcription error:', error)
+      toast({
+        title: 'Transcription Error',
+        description: 'Failed to transcribe audio. Please try again.',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
   return (
     <>
       {/* Floating Chat Button */}
@@ -339,14 +428,28 @@ export function DarvisAssistant() {
             {/* Input */}
             <form onSubmit={handleSubmit} className="p-4 border-t">
               <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={isRecording ? "destructive" : "outline"}
+                  onClick={isRecording ? stopRecording : startRecording}
+                  disabled={isProcessing}
+                  className="h-10 w-10 p-0"
+                >
+                  {isRecording ? (
+                    <Square className="h-4 w-4 animate-pulse" />
+                  ) : (
+                    <Mic className="h-4 w-4" />
+                  )}
+                </Button>
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask Darvis anything about your tasks..."
                   className="flex-1"
-                  disabled={isProcessing}
+                  disabled={isProcessing || isRecording}
                 />
-                <Button type="submit" disabled={!input.trim() || isProcessing} size="sm">
+                <Button type="submit" disabled={!input.trim() || isProcessing || isRecording} size="sm">
                   {isProcessing ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
@@ -354,6 +457,11 @@ export function DarvisAssistant() {
                   )}
                 </Button>
               </div>
+              {isRecording && (
+                <p className="text-xs text-center text-muted-foreground mt-2 animate-pulse">
+                  Recording... Click stop when finished
+                </p>
+              )}
             </form>
           </motion.div>
         )}
