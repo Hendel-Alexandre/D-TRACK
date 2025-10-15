@@ -1,17 +1,16 @@
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Circle, ChevronDown, Zap, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { DarvisAssistant } from '@/components/AI/DarvisAssistant'
 import { useMode } from '@/contexts/ModeContext'
 import { StudentDashboard } from '@/components/Dashboard/StudentDashboard'
 import { WorkDashboard } from '@/components/Dashboard/WorkDashboard'
+import { MobileDashboard } from '@/components/Dashboard/MobileDashboard'
 import { TrialBanner } from '@/components/Dashboard/TrialBanner'
+import { useEffect, useState } from 'react'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -32,36 +31,33 @@ const itemVariants = {
 
 export default function Dashboard() {
   const { t } = useTranslation()
-  const { userProfile, user, updateUserStatus } = useAuth()
+  const { userProfile } = useAuth()
   const { mode } = useMode()
   const navigate = useNavigate()
+  const [isMobile, setIsMobile] = useState(false)
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Available': return 'text-green-500'
-      case 'Away': return 'text-yellow-500'  
-      case 'Busy': return 'text-red-500'
-      default: return 'text-gray-500'
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
     }
-  }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
-  const getTrendColor = (trend: string) => {
-    switch (trend) {
-      case 'positive': return 'text-green-600 dark:text-green-400'
-      case 'negative': return 'text-red-600 dark:text-red-400'
-      default: return 'text-muted-foreground'
-    }
-  }
+  const displayName = userProfile?.first_name || ''
 
-  const handleStatusChange = async (status: 'Available' | 'Away' | 'Busy') => {
-    await updateUserStatus(status)
+  // Show mobile dashboard on mobile devices
+  if (isMobile) {
+    return (
+      <>
+        <MobileDashboard />
+        <DarvisAssistant />
+      </>
+    )
   }
-
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase()
-  }
-
-  const displayName = userProfile?.first_name || (user?.user_metadata as any)?.first_name || ''
 
   return (
     <div className="min-h-screen">
@@ -71,7 +67,7 @@ export default function Dashboard() {
         initial="hidden"
         animate="visible"
       >
-        {/* Modern Header */}
+        {/* Desktop Header */}
         <motion.div variants={itemVariants}>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
