@@ -128,12 +128,30 @@ export default function Darvis() {
     }
 
     try {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const content = event.target?.result as string;
-        await sendMessage(`[File uploaded: ${file.name}]\n\nPlease analyze this file:\n${content.substring(0, 10000)}`);
-      };
-      reader.readAsText(file);
+      const isTextFile = file.type.startsWith('text/') || 
+                        file.name.endsWith('.txt') || 
+                        file.name.endsWith('.md') ||
+                        file.name.endsWith('.json') ||
+                        file.name.endsWith('.csv') ||
+                        file.name.endsWith('.xml');
+
+      if (isTextFile) {
+        // Handle text files
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const content = event.target?.result as string;
+          await sendMessage(`[File uploaded: ${file.name}]\n\nPlease analyze this file:\n${content.substring(0, 10000)}`);
+        };
+        reader.readAsText(file);
+      } else {
+        // Handle binary files (images, PDFs, etc.)
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const base64Content = event.target?.result as string;
+          await sendMessage(`[File uploaded: ${file.name} (${file.type})]\n\nPlease analyze this ${file.type.includes('image') ? 'image' : 'file'}.`);
+        };
+        reader.readAsDataURL(file);
+      }
     } catch (error) {
       console.error('Error reading file:', error);
       toast({
@@ -389,7 +407,7 @@ export default function Darvis() {
                 type="file"
                 className="hidden"
                 onChange={handleFileUpload}
-                accept=".txt,.pdf,.doc,.docx,.json,.csv"
+                accept="*/*"
               />
               <Button
                 variant="outline"
