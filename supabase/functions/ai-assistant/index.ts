@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -30,8 +30,8 @@ serve(async (req) => {
       });
     }
 
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    if (!lovableApiKey) {
+      throw new Error('Lovable AI key not configured');
     }
 
     // Create Supabase client with user's auth context
@@ -122,16 +122,15 @@ async function parseNaturalLanguage(data: any, supabase: any) {
     Respond only with valid JSON, no other text.
   `;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
+      'Authorization': `Bearer ${lovableApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'google/gemini-2.5-flash',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
     }),
   });
 
@@ -215,16 +214,15 @@ async function generateProgressNudge(data: any, supabase: any) {
     - "Ready for a fresh start? Let's tackle that overdue task and get back on track."
   `;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
+      'Authorization': `Bearer ${lovableApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'google/gemini-2.5-flash',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
     }),
   });
 
@@ -287,16 +285,15 @@ async function suggestNextTask(data: any, supabase: any) {
     }
   `;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
+      'Authorization': `Bearer ${lovableApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'google/gemini-2.5-flash',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
     }),
   });
 
@@ -362,16 +359,15 @@ async function analyzeProductivity(data: any, supabase: any) {
     Keep it encouraging and actionable.
   `;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
+      'Authorization': `Bearer ${lovableApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'google/gemini-2.5-flash',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.5,
     }),
   });
 
@@ -427,20 +423,19 @@ User message: ${JSON.stringify(message)}
 
 Respond appropriately based on user intent. If creating a task, provide task_preview object.`;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
+      'Authorization': `Bearer ${lovableApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'google/gemini-2.5-flash',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: message }
       ],
-      max_tokens: 1000,
-      temperature: 0.7
+      max_completion_tokens: 1000
     }),
   });
 
@@ -503,20 +498,19 @@ Rules:
 - Reminder: "30 min before" = 30, "1 hour before" = 60
 - Current date: ${new Date().toISOString().split('T')[0]}`;
 
-    const extractResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const extractResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: extractPrompt },
           { role: 'user', content: message }
         ],
-        max_tokens: 500,
-        temperature: 0.3
+        max_completion_tokens: 500
       }),
     });
 
