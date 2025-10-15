@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Send, Menu, Plus, Sparkles, FileUp, Mic } from 'lucide-react';
+import { Loader2, Send, Menu, Plus, Sparkles, FileUp, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   id: string;
@@ -28,6 +29,7 @@ interface Conversation {
 export default function Darvis() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -290,10 +292,15 @@ export default function Darvis() {
                 <p className="text-xs text-muted-foreground">Your intelligent assistant</p>
               </div>
             </div>
-            <Button onClick={startNewChat} variant="outline" size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              New Chat
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={startNewChat} variant="outline" size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                New Chat
+              </Button>
+              <Button onClick={() => navigate('/dashboard')} variant="ghost" size="icon">
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
 
