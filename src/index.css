@@ -76,17 +76,17 @@
     --chart-4: 38 92% 50%;
     --chart-5: 262 83% 58%;
 
-    /* Enhanced Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(221 83% 43%));
-    --gradient-secondary: linear-gradient(135deg, hsl(220 91% 54%), hsl(220 91% 44%));
-    --gradient-subtle: linear-gradient(135deg, hsl(0 0% 100%), hsl(210 20% 98%));
-    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(210 20% 99%) 100%);
-    --gradient-hover: linear-gradient(135deg, hsl(0 0% 99%), hsl(210 20% 96%));
+    /* Solid backgrounds - no gradients */
+    --gradient-primary: hsl(221 83% 53%);
+    --gradient-secondary: hsl(220 91% 54%);
+    --gradient-subtle: hsl(0 0% 100%);
+    --gradient-card: hsl(0 0% 100%);
+    --gradient-hover: hsl(0 0% 99%);
     
-    /* Liquid gradient cards (Apple-style) */
-    --gradient-orange: linear-gradient(135deg, hsl(25 95% 63%) 0%, hsl(35 100% 70%) 100%);
-    --gradient-purple: linear-gradient(135deg, hsl(280 70% 60%) 0%, hsl(290 75% 65%) 100%);
-    --gradient-blue: linear-gradient(135deg, hsl(215 85% 60%) 0%, hsl(225 90% 70%) 100%);
+    /* Solid colors for cards */
+    --gradient-orange: hsl(25 95% 63%);
+    --gradient-purple: hsl(280 70% 60%);
+    --gradient-blue: hsl(215 85% 60%);
 
     /* Refined Corners */
     --radius: 0.75rem;
@@ -164,18 +164,18 @@
     --sidebar-border: 229 25% 20%;
     --sidebar-ring: 249 100% 71%;
 
-    /* Rich purple-blue gradients from color palette */
-    --gradient-primary: linear-gradient(135deg, #977DFF 0%, #0033FF 100%);
-    --gradient-secondary: linear-gradient(135deg, #FFCCF2 0%, #977DFF 50%, #0033FF 100%);
-    --gradient-subtle: linear-gradient(135deg, hsl(229 41% 8%) 0%, hsl(229 35% 11%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(229 35% 11%) 0%, hsl(229 32% 13%) 100%);
-    --gradient-dark: linear-gradient(135deg, #16213e 0%, #0f1624 100%);
-    --gradient-purple: linear-gradient(135deg, #977DFF 0%, #0600AF 100%);
+    /* Solid colors - no gradients */
+    --gradient-primary: hsl(221 83% 53%);
+    --gradient-secondary: hsl(220 91% 54%);
+    --gradient-subtle: hsl(229 41% 8%);
+    --gradient-card: hsl(229 35% 11%);
+    --gradient-dark: hsl(229 41% 6%);
+    --gradient-purple: hsl(280 70% 50%);
     
-    /* Liquid gradient cards (Apple-style) - Dark mode */
-    --gradient-orange: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(35 100% 58%) 100%);
-    --gradient-purple: linear-gradient(135deg, hsl(280 70% 50%) 0%, hsl(290 75% 55%) 100%);
-    --gradient-blue: linear-gradient(135deg, hsl(215 85% 50%) 0%, hsl(225 90% 60%) 100%);
+    /* Solid colors for cards - dark mode */
+    --gradient-orange: hsl(25 95% 53%);
+    --gradient-purple: hsl(280 70% 50%);
+    --gradient-blue: hsl(215 85% 50%);
 
     /* Deep shadows for depth */
     --shadow-sm: 0 2px 8px 0 hsl(229 41% 4% / 0.4);
@@ -220,11 +220,11 @@
   }
 
   .text-gradient {
-    @apply bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent;
+    @apply text-primary;
   }
 
   .text-gradient-secondary {
-    @apply bg-gradient-to-r from-primary via-info to-primary bg-clip-text text-transparent;
+    @apply text-primary;
   }
 }
 
@@ -238,19 +238,19 @@
   }
 
   .card-modern {
-    @apply bg-gradient-card border-border/50 rounded-2xl p-6 shadow-lg backdrop-blur-sm;
+    @apply bg-card border-border/50 rounded-2xl p-6 shadow-lg backdrop-blur-sm;
   }
 
   .card-stat {
-    @apply bg-gradient-card border-border/50 rounded-xl p-5 shadow-md hover:shadow-premium transition-all duration-300;
+    @apply bg-card border-border/50 rounded-xl p-5 shadow-md hover:shadow-premium transition-all duration-300;
   }
 
   .button-premium {
-    @apply bg-gradient-primary hover:shadow-premium transition-all duration-300 hover:scale-105 active:scale-95 rounded-xl;
+    @apply bg-primary text-primary-foreground hover:shadow-premium transition-all duration-300 hover:scale-105 active:scale-95 rounded-xl;
   }
 
   .button-sleek {
-    @apply bg-gradient-secondary text-white hover:shadow-glow transition-all duration-300 hover:scale-105 active:scale-95 rounded-xl;
+    @apply bg-secondary text-secondary-foreground hover:shadow-glow transition-all duration-300 hover:scale-105 active:scale-95 rounded-xl;
   }
 
   .sidebar-item {
@@ -259,11 +259,6 @@
 
   .glass-effect {
     @apply bg-card/30 backdrop-blur-2xl border border-border/30 shadow-lg;
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0.02) 100%
-    );
   }
 
   .liquid-card {
@@ -291,13 +286,7 @@
   }
 
   .gradient-mesh {
-    background: 
-      radial-gradient(at 40% 20%, hsla(221, 83%, 53%, 0.15) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, hsla(250, 70%, 60%, 0.15) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, hsla(280, 70%, 60%, 0.15) 0px, transparent 50%),
-      radial-gradient(at 80% 50%, hsla(340, 75%, 60%, 0.15) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, hsla(221, 83%, 53%, 0.15) 0px, transparent 50%),
-      radial-gradient(at 80% 100%, hsla(250, 70%, 60%, 0.15) 0px, transparent 50%);
+    background: transparent;
   }
 
   .input-sleek {
@@ -305,7 +294,7 @@
   }
 
   .pulse-glow {
-    @apply animate-glow-pulse bg-gradient-primary shadow-glow;
+    @apply animate-glow-pulse bg-primary shadow-glow;
   }
 
   .hover-lift {

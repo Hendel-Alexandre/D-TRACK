@@ -107,13 +107,7 @@ export function ProfessionalDashboard() {
   return (
     <div className="space-y-6">
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total Revenue"
-          value={`$${stats.revenue.toLocaleString()}`}
-          icon={DollarSign}
-          iconColor="text-green-500"
-        />
+      <div className="grid gap-4 md:grid-cols-3">
         <StatCard
           title="Active Projects"
           value={stats.projects}

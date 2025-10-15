@@ -158,7 +158,7 @@ export default function Onboarding() {
   const progressPercentage = selectedMode === 'both' ? (subStep / totalSteps) * 100 : 100;
 
   return (
-    <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4 relative">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
       {/* Top right controls */}
       <div className="absolute top-4 right-4 flex items-center gap-2 z-50">
         <Button
@@ -202,7 +202,7 @@ export default function Onboarding() {
                 >
                   <Sparkles className="h-12 w-12 text-primary mx-auto mb-2" />
                 </motion.div>
-                <h1 className="text-4xl md:text-5xl font-bold text-gradient">Welcome!</h1>
+                <h1 className="text-4xl md:text-5xl font-bold">Welcome!</h1>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                   Let's get to know you a bit. This helps us tailor your dashboard to your goals.
                 </p>
@@ -240,7 +240,7 @@ export default function Onboarding() {
               className="space-y-8"
             >
               <div className="text-center space-y-3">
-                <h2 className="text-3xl font-bold text-gradient">Choose Your Plan</h2>
+                <h2 className="text-3xl font-bold">Choose Your Plan</h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto">
                   All plans include a 30-day free trial with full access. You can upgrade or switch anytime.
                 </p>
@@ -305,7 +305,7 @@ export default function Onboarding() {
               className="space-y-6"
             >
               <div className="text-center space-y-3">
-                <h2 className="text-3xl font-bold text-gradient">Welcome! Let's get to know you a bit.</h2>
+                <h2 className="text-3xl font-bold">Welcome! Let's get to know you a bit.</h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto">
                   This helps us tailor your dashboard to your goals.
                 </p>
@@ -324,7 +324,7 @@ export default function Onboarding() {
 
               {/* Student Information Card */}
               {(selectedMode === 'student' || (selectedMode === 'both' && subStep === 1)) && (
-                <Card className="p-6 md:p-8 space-y-6 bg-gradient-card border-2 hover:shadow-premium transition-all duration-300">
+                <Card className="p-6 md:p-8 space-y-6 bg-card border-2 hover:shadow-premium transition-all duration-300">
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
                       <div className="p-3 rounded-xl bg-primary/10">
@@ -390,7 +390,7 @@ export default function Onboarding() {
 
               {/* Professional Information Card */}
               {(selectedMode === 'professional' || (selectedMode === 'both' && subStep === 2)) && (
-                <Card className="p-6 md:p-8 space-y-6 bg-gradient-card border-2 hover:shadow-premium transition-all duration-300">
+                <Card className="p-6 md:p-8 space-y-6 bg-card border-2 hover:shadow-premium transition-all duration-300">
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
                       <div className="p-3 rounded-xl bg-primary/10">
