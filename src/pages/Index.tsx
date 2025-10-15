@@ -36,9 +36,9 @@ const Index = () => {
   const finalCta = useScrollAnimation();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-dark">
       {/* Navigation */}
-      <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+      <nav className="border-b border-border/50 bg-card/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center">
             <img 
@@ -60,10 +60,10 @@ const Index = () => {
           </div>
           <div className="flex items-center gap-3">
             <Link to="/login">
-              <Button variant="ghost" size="sm">Login</Button>
+              <Button variant="ghost" size="sm" className="hover:bg-secondary/50">Login</Button>
             </Link>
             <Link to="/signup">
-              <Button size="sm" className="gap-2">
+              <Button size="sm" className="gap-2 bg-gradient-primary hover:opacity-90 rounded-xl">
                 Get Started <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -96,7 +96,7 @@ const Index = () => {
             
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
               Boost Productivity with
-              <span className="text-gradient block mt-2">AI-Powered Time Tracking</span>
+              <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent block mt-2">AI-Powered Time Tracking</span>
             </h1>
             
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -105,11 +105,11 @@ const Index = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Link to="/signup">
-                <Button size="lg" className="gap-2 text-base px-8 rounded-full shadow-lg hover:shadow-xl transition-all">
+                <Button size="lg" className="gap-2 text-base px-8 rounded-xl shadow-lg hover:shadow-xl bg-gradient-primary transition-all">
                   Start Free Trial <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="text-base px-8 rounded-full">
+              <Button size="lg" variant="outline" className="text-base px-8 rounded-xl border-border/50 hover:bg-secondary/50">
                 Subscribe for Updates
               </Button>
             </div>
@@ -122,8 +122,8 @@ const Index = () => {
           {/* Dashboard Preview */}
           <div className="mt-16 relative">
             <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10 pointer-events-none" />
-            <div className="relative rounded-2xl border-2 bg-card shadow-2xl overflow-hidden hover:shadow-premium transition-shadow duration-500">
-              <div className="bg-muted/50 border-b px-4 py-3 flex items-center gap-2">
+            <div className="relative rounded-2xl border-2 border-border/50 bg-gradient-card shadow-2xl overflow-hidden hover:shadow-premium transition-shadow duration-500">
+              <div className="bg-secondary/50 border-b border-border/50 px-4 py-3 flex items-center gap-2">
                 <div className="flex gap-1.5">
                   <div className="h-3 w-3 rounded-full bg-red-500" />
                   <div className="h-3 w-3 rounded-full bg-yellow-500" />
@@ -133,9 +133,9 @@ const Index = () => {
                   <span className="text-xs text-muted-foreground font-medium">D-Track Dashboard</span>
                 </div>
               </div>
-              <div className="p-8 bg-gradient-to-br from-primary/5 to-purple-500/5">
-                <div className="aspect-video bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-lg flex items-center justify-center">
-                  <Activity className="h-24 w-24 text-primary/40" />
+              <div className="p-8 bg-gradient-to-br from-purple-600/10 to-pink-500/10">
+                <div className="aspect-video bg-gradient-to-br from-purple-600/20 to-pink-500/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-border/30">
+                  <Activity className="h-24 w-24 text-primary/60" />
                 </div>
               </div>
             </div>
@@ -151,7 +151,7 @@ const Index = () => {
       {/* Stats Section */}
       <section 
         ref={stats.ref}
-        className={`border-y bg-muted/30 py-16 transition-all duration-1000 delay-200 ${
+        className={`border-y border-border/50 bg-secondary/30 py-16 transition-all duration-1000 delay-200 ${
           stats.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
@@ -231,7 +231,7 @@ const Index = () => {
       <section 
         ref={solution.ref}
         id="solutions" 
-        className="bg-muted/30 py-20 md:py-32"
+        className="bg-secondary/20 py-20 md:py-32"
       >
         <div className="container mx-auto px-4">
           <div className={`max-w-3xl mx-auto text-center mb-16 transition-all duration-1000 ${
@@ -257,12 +257,12 @@ const Index = () => {
             ].map((feature, index) => (
               <Card 
                 key={index}
-                className={`p-6 space-y-4 hover:shadow-lg transition-all duration-500 card-hover ${
+                className={`card-modern border-0 space-y-4 hover:shadow-premium transition-all duration-500 ${
                   solution.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
                 }`}
                 style={{ transitionDelay: `${index * 80}ms` }}
               >
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
                   <feature.icon className="h-6 w-6 text-primary" />
                 </div>
                 <div>
@@ -319,12 +319,12 @@ const Index = () => {
           ].map((feature, index) => (
             <Card 
               key={index}
-              className={`p-8 space-y-4 hover:shadow-xl transition-all duration-500 ${
+              className={`card-modern border-0 space-y-4 hover:shadow-premium transition-all duration-500 ${
                 featuresHighlight.isVisible ? 'opacity-100 translate-x-0' : `opacity-0 ${index % 2 === 0 ? '-translate-x-10' : 'translate-x-10'}`
               }`}
               style={{ transitionDelay: `${index * 150}ms` }}
             >
-              <div className={`h-16 w-16 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center`}>
+              <div className={`h-16 w-16 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center backdrop-blur-sm`}>
                 <feature.icon className="h-8 w-8 text-primary" />
               </div>
               <h3 className="font-bold text-2xl">{feature.title}</h3>
@@ -340,7 +340,7 @@ const Index = () => {
       <section 
         ref={pricing.ref}
         id="pricing" 
-        className="container mx-auto px-4 py-20 md:py-32 bg-gradient-subtle"
+        className="container mx-auto px-4 py-20 md:py-32"
       >
         <div className={`max-w-3xl mx-auto text-center mb-16 transition-all duration-1000 ${
           pricing.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
@@ -357,7 +357,7 @@ const Index = () => {
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Free Plan */}
           <Card 
-            className={`p-8 space-y-6 border-2 rounded-2xl transition-all duration-700 ${
+            className={`card-modern p-8 space-y-6 border-0 transition-all duration-700 ${
               pricing.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}
           >
@@ -378,13 +378,13 @@ const Index = () => {
               ))}
             </ul>
             <Link to="/signup" className="block">
-              <Button variant="outline" className="w-full rounded-full">Start Free Trial</Button>
+              <Button variant="outline" className="w-full rounded-xl border-border/50 hover:bg-secondary/50">Start Free Trial</Button>
             </Link>
           </Card>
 
           {/* Pro Plan */}
           <Card 
-            className={`p-8 space-y-6 border-2 border-primary relative shadow-xl scale-105 rounded-2xl transition-all duration-700 delay-100 ${
+            className={`card-modern p-8 space-y-6 border-2 border-primary relative shadow-xl scale-105 transition-all duration-700 delay-100 ${
               pricing.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}
           >
@@ -406,13 +406,13 @@ const Index = () => {
               ))}
             </ul>
             <Link to="/signup" className="block">
-              <Button className="w-full rounded-full shadow-lg">Start Free Trial</Button>
+              <Button className="w-full rounded-xl shadow-lg bg-gradient-primary hover:opacity-90">Start Free Trial</Button>
             </Link>
           </Card>
 
           {/* Premium Plan */}
           <Card 
-            className={`p-8 space-y-6 border-2 rounded-2xl transition-all duration-700 delay-200 ${
+            className={`card-modern p-8 space-y-6 border-0 transition-all duration-700 delay-200 ${
               pricing.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}
           >
@@ -433,7 +433,7 @@ const Index = () => {
               ))}
             </ul>
             <Link to="/signup" className="block">
-              <Button variant="outline" className="w-full rounded-full">Subscribe Now</Button>
+              <Button variant="outline" className="w-full rounded-xl border-border/50 hover:bg-secondary/50">Subscribe Now</Button>
             </Link>
           </Card>
         </div>
@@ -448,8 +448,8 @@ const Index = () => {
         ref={finalCta.ref}
         className="relative overflow-hidden"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80" />
-        <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500" />
+        <div className="absolute inset-0 opacity-20">
           <Orb 
             hue={0}
             hoverIntensity={0.2}
@@ -470,11 +470,11 @@ const Index = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Link to="/signup">
-                <Button size="lg" variant="secondary" className="gap-2 text-base px-8 rounded-full shadow-xl hover:scale-105 transition-transform">
+                <Button size="lg" variant="secondary" className="gap-2 text-base px-8 rounded-xl shadow-xl hover:scale-105 transition-transform">
                   Start Free Trial <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="text-base px-8 rounded-full bg-white/10 text-white border-white/30 hover:bg-white/20">
+              <Button size="lg" variant="outline" className="text-base px-8 rounded-xl bg-white/10 text-white border-white/30 hover:bg-white/20">
                 Subscribe for Updates
               </Button>
             </div>
@@ -483,7 +483,7 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t bg-muted/30 py-12">
+      <footer className="border-t border-border/50 bg-secondary/20 py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div>
