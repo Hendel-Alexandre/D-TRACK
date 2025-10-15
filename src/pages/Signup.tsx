@@ -100,9 +100,22 @@ export default function Signup() {
       )
       
       if (error) {
+        // Provide specific error messages based on error type
+        let errorMessage = "Unable to create account. Please try again."
+        
+        if (error.message?.includes("already registered") || error.message?.includes("User already registered")) {
+          errorMessage = "This email is already registered. Please log in instead or use a different email."
+        } else if (error.message?.includes("email")) {
+          errorMessage = "Invalid email address. Please check and try again."
+        } else if (error.message?.includes("password")) {
+          errorMessage = "Password does not meet requirements. Please try a stronger password."
+        } else if (error.message) {
+          errorMessage = error.message
+        }
+        
         toast({
-          title: "Error",
-          description: "Unable to create account. Please try again or contact support.",
+          title: "Sign Up Failed",
+          description: errorMessage,
           variant: "destructive",
         })
       } else {
@@ -112,10 +125,10 @@ export default function Signup() {
         })
         navigate('/login')
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: error?.message || "An unexpected error occurred",
         variant: "destructive",
       })
     } finally {
