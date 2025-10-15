@@ -66,78 +66,34 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen">
       <motion.div
-        className="space-y-8"
+        className="space-y-6"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {/* Welcome Header */}
+        {/* Modern Header */}
         <motion.div variants={itemVariants}>
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div className="space-y-4">
-              <div>
-                <h1 className="text-4xl font-bold text-gradient mb-2">
-                  {t('dashboardWelcome', { name: displayName })}
-                </h1>
-                <p className="text-lg text-muted-foreground">
-                  {new Date().toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
-                </p>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <Avatar className="h-12 w-12 ring-2 ring-primary/20">
-                  <AvatarFallback className="bg-gradient-primary text-primary-foreground text-lg font-semibold">
-                    {getInitials(userProfile?.first_name || '', userProfile?.last_name || '')}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex items-center gap-3">
-                  <Circle className={`h-3 w-3 fill-current ${getStatusColor(userProfile?.status || 'Available')}`} />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer bg-secondary/50 hover:bg-secondary px-3 py-2 rounded-lg">
-                        <span className="font-medium">{t(userProfile?.status?.toLowerCase() || 'available')}</span>
-                        <ChevronDown className="h-3 w-3" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-40">
-                      <DropdownMenuItem 
-                        onClick={() => handleStatusChange('Available')}
-                        className="flex items-center gap-3 cursor-pointer"
-                      >
-                        <Circle className="h-3 w-3 fill-current text-green-500" />
-                        {t('available')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleStatusChange('Away')}
-                        className="flex items-center gap-3 cursor-pointer"
-                      >
-                        <Circle className="h-3 w-3 fill-current text-yellow-500" />
-                        {t('away')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleStatusChange('Busy')}
-                        className="flex items-center gap-3 cursor-pointer"
-                      >
-                        <Circle className="h-3 w-3 fill-current text-red-500" />
-                        Busy
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-1">
+                {t('dashboardWelcome', { name: displayName })}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {new Date().toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  month: 'long', 
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+              </p>
             </div>
 
             <div className="flex items-center gap-3">
-              <Badge variant="outline" className="text-sm px-3 py-1">
-                <Zap className="h-4 w-4 mr-2" />
-                Pro User
-              </Badge>
-              <Button onClick={() => navigate('/timesheets')} className="button-premium gap-2">
+              <Button 
+                onClick={() => navigate('/timesheets')} 
+                className="button-premium gap-2 h-10"
+                size="sm"
+              >
                 <Plus className="h-4 w-4" />
                 {t('startTracking')}
               </Button>
