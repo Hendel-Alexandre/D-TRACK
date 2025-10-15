@@ -472,12 +472,15 @@ Respond appropriately based on user intent. If creating a task, provide task_pre
   let taskPreview = null;
 
   // Check if this looks like a task creation request
-  const taskKeywords = ['create task', 'add task', 'remind me', 'schedule', 'due', 'tomorrow', 'today', 'next week'];
+  const taskKeywords = ['create task', 'add task', 'remind me', 'schedule', 'due', 'tomorrow', 'today', 'next week', 'create a project', 'add a project', 'new project', 'create a note', 'add a note'];
   const isTaskRequest = taskKeywords.some(keyword => 
     message.toLowerCase().includes(keyword)
   );
 
-  if (isTaskRequest) {
+  // Don't treat simple confirmations as new task requests
+  const isSimpleConfirmation = /^(yes|ok|sure|confirm|proceed|go ahead|do it|create it)$/i.test(message.trim());
+
+  if (isTaskRequest && !isSimpleConfirmation) {
     // Extract task details using AI
     const extractPrompt = `Extract task details from: ${JSON.stringify(message)}
 
