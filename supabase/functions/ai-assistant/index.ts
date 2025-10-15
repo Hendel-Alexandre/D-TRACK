@@ -81,6 +81,8 @@ serve(async (req) => {
         return await analyzeProductivity(secureData, supabase);
       case 'darvis_chat':
         return await handleDarvisChat(secureData, supabase);
+      case 'generate_image':
+        return await generateImage(secureData);
       default:
         throw new Error('Unknown action');
     }
@@ -645,4 +647,68 @@ User message: ${JSON.stringify(message)}`;
   }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
+}
+
+async function generateImage(data: any) {
+  const { message } = data;
+  
+  console.log('Generating image with prompt:', message);
+  
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${googleApiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [
+          { 
+            role: 'user', 
+            parts: [{ text: `Generate a high-quality image based on this description: ${message}. Make it detailed and visually appealing.` }] 
+          }
+        ],
+        modalities: ['image', 'text'],
+        generationConfig: {
+          temperature: 1,
+        }
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error('Failed to generate image');
+    }
+
+    const result = await response.json();
+    console.log('Image generation result:', JSON.stringify(result));
+    
+    // Extract the image from Gemini's response
+    const candidate = result.candidates?.[0];
+    const imagePart = candidate?.content?.parts?.find((part: any) => part.inlineData);
+    
+    if (!imagePart?.inlineData?.data) {
+      throw new Error('No image data in response');
+    }
+
+    const imageData = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
+    
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Image generated successfully!',
+      image: imageData
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  } catch (error: any) {
+    console.error('Error generating image:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      message: 'Failed to generate image. Please try again.',
+      error: error.message
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 }

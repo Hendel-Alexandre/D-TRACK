@@ -102,6 +102,36 @@ export type Database = {
           },
         ]
       }
+      darvis_chats: {
+        Row: {
+          content: string
+          created_at: string | null
+          files: Json | null
+          id: string
+          images: Json | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          files?: Json | null
+          id?: string
+          images?: Json | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          files?: Json | null
+          id?: string
+          images?: Json | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       enterprise_inquiries: {
         Row: {
           company: string | null

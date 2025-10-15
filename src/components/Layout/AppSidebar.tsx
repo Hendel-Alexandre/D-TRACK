@@ -13,7 +13,8 @@ import {
   BookOpen,
   Timer,
   Upload,
-  ScanText
+  ScanText,
+  Sparkles
 } from 'lucide-react'
 import datatrackLogo from '@/assets/datatrack-logo.png'
 import { NavLink, useLocation } from 'react-router-dom'
@@ -37,6 +38,12 @@ const studentNavigation = [
     label: 'overview',
     items: [
       { title: 'dashboard', url: '/dashboard', icon: Home },
+    ]
+  },
+  {
+    label: 'AI Assistant',
+    items: [
+      { title: 'Darvis AI', url: '/darvis', icon: Sparkles },
     ]
   },
   {
@@ -69,6 +76,12 @@ const workNavigation = [
     label: 'overview',
     items: [
       { title: 'dashboard', url: '/dashboard', icon: Home },
+    ]
+  },
+  {
+    label: 'AI Assistant',
+    items: [
+      { title: 'Darvis AI', url: '/darvis', icon: Sparkles },
     ]
   },
   {
