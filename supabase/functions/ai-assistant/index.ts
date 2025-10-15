@@ -386,10 +386,68 @@ async function analyzeProductivity(data: any, supabase: any) {
   });
 }
 
+// File validation constants
+const ALLOWED_MIME_TYPES = [
+  'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
+  'application/pdf',
+  'text/plain', 'text/csv', 'text/markdown',
+  'application/json',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+  'application/msword', // .doc
+];
+
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+const MAX_FILENAME_LENGTH = 255;
+const FILENAME_REGEX = /^[a-zA-Z0-9._\-\s()]+$/;
+
+function validateFile(file: {type: string, data: string, name: string}) {
+  // Validate MIME type
+  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    throw new Error(`File type ${file.type} is not allowed. Supported types: images, PDFs, text files, Word/Excel documents.`);
+  }
+  
+  // Estimate base64 size (base64 encoding is approximately 1.37x original size)
+  // We decode to check actual size
+  const base64Data = file.data.includes(',') ? file.data.split(',')[1] : file.data;
+  const estimatedSize = base64Data.length * 0.75; // Approximate original size
+  
+  if (estimatedSize > MAX_FILE_SIZE) {
+    throw new Error(`File size exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit.`);
+  }
+  
+  // Validate filename
+  if (!file.name || file.name.length > MAX_FILENAME_LENGTH) {
+    throw new Error(`Invalid filename. Must be 1-${MAX_FILENAME_LENGTH} characters.`);
+  }
+  
+  // Check for suspicious characters in filename
+  if (!FILENAME_REGEX.test(file.name)) {
+    throw new Error('Invalid filename. Only alphanumeric characters, spaces, dots, hyphens, underscores, and parentheses are allowed.');
+  }
+  
+  return true;
+}
+
 async function handleDarvisChat(data: any, supabase: any) {
-  const { message, userId, conversationHistory = [] } = data;
+  const { message, userId, conversationHistory = [], files } = data;
   
   console.log('Darvis chat for user:', userId, 'message:', message);
+  
+  // SECURITY: Validate all uploaded files server-side
+  if (files && Array.isArray(files)) {
+    console.log(`Validating ${files.length} uploaded files`);
+    
+    for (const file of files) {
+      try {
+        validateFile(file);
+        console.log(`File validation passed: ${file.name} (${file.type})`);
+      } catch (error: any) {
+        console.error('File validation failed:', error.message);
+        throw new Error(`File validation failed for "${file.name}": ${error.message}`);
+      }
+    }
+  }
   
   // Build conversation context - sanitize
   const context = conversationHistory
@@ -406,8 +464,9 @@ Your capabilities:
 2. Create notes - Use create_note tool when user wants to write/save a note
 3. Create projects - Use create_project tool when user wants to start a new project
 4. Create calendar events - Use create_calendar_event tool for meetings/appointments
-5. Summarize user's workload and provide insights
-6. Support multiple languages: English, Spanish, French, German, Portuguese, Italian
+5. Analyze images, documents, and other files uploaded by users
+6. Summarize user's workload and provide insights
+7. Support multiple languages: English, Spanish, French, German, Portuguese, Italian
 
 Guidelines:
 - Be friendly, helpful, and concise
