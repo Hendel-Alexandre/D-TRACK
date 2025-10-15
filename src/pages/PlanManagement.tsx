@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTrialStatus } from '@/hooks/useOnboarding';
 import { useMode } from '@/contexts/ModeContext';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function PlanManagement() {
   const { user } = useAuth();
@@ -59,10 +60,30 @@ export default function PlanManagement() {
     },
   ];
 
-  const handleUpgrade = (planId: string) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleUpgrade = async (planId: string) => {
     setSelectedPlan(planId);
-    // In a real app, this would integrate with a payment processor
-    toast.success('Redirecting to payment...');
+    setLoading(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: { planId },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      toast.error('Failed to start checkout. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -156,8 +177,11 @@ export default function PlanManagement() {
                   className="w-full"
                   variant={plan.highlighted ? 'default' : 'outline'}
                   size="lg"
+                  disabled={loading && selectedPlan === plan.id}
                 >
-                  {planType === 'trial' ? 'Upgrade Now' : 'Switch Plan'}
+                  {loading && selectedPlan === plan.id 
+                    ? 'Processing...' 
+                    : planType === 'trial' ? 'Upgrade Now' : 'Switch Plan'}
                 </Button>
               </div>
             </Card>

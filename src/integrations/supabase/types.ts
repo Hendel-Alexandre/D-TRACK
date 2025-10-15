@@ -959,10 +959,14 @@ export type Database = {
         Row: {
           active_mode: Database["public"]["Enums"]["app_mode"]
           created_at: string | null
+          current_period_end: string | null
           id: string
           onboarding_completed: boolean | null
           plan_type: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           student_mode_enabled: boolean | null
+          subscription_status: string | null
           trial_end_date: string | null
           trial_start_date: string | null
           updated_at: string | null
@@ -972,10 +976,14 @@ export type Database = {
         Insert: {
           active_mode?: Database["public"]["Enums"]["app_mode"]
           created_at?: string | null
+          current_period_end?: string | null
           id?: string
           onboarding_completed?: boolean | null
           plan_type?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           student_mode_enabled?: boolean | null
+          subscription_status?: string | null
           trial_end_date?: string | null
           trial_start_date?: string | null
           updated_at?: string | null
@@ -985,10 +993,14 @@ export type Database = {
         Update: {
           active_mode?: Database["public"]["Enums"]["app_mode"]
           created_at?: string | null
+          current_period_end?: string | null
           id?: string
           onboarding_completed?: boolean | null
           plan_type?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           student_mode_enabled?: boolean | null
+          subscription_status?: string | null
           trial_end_date?: string | null
           trial_start_date?: string | null
           updated_at?: string | null

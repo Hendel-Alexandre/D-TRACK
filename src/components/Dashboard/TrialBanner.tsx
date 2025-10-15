@@ -46,7 +46,7 @@ export function TrialBanner() {
             </div>
           </div>
           <Button
-            onClick={() => navigate('/settings')}
+            onClick={() => navigate('/plan-management')}
             size="sm"
             className="gap-2"
           >

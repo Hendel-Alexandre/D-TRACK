@@ -18,6 +18,7 @@ import { useTrialStatus } from '@/hooks/useOnboarding'
 import { useProfilePicture } from '@/hooks/useProfilePicture'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useRef } from 'react'
+import { BillingDashboard } from '@/components/Billing/BillingDashboard'
 
 export default function Settings() {
   const { user, userProfile, signOut, updateUserStatus } = useAuth()
@@ -300,41 +301,13 @@ export default function Settings() {
           </Card>
         </motion.div>
 
-        {/* Plan Management */}
+        {/* Billing Dashboard */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
         >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Crown className="h-5 w-5 mr-2" />
-                Subscription & Plan
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <Label>Current Plan</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {planType === 'trial' ? (
-                      <>
-                        {isTrialActive
-                          ? `Free Trial (${trialDaysRemaining} days remaining)`
-                          : 'Trial Expired'}
-                      </>
-                    ) : (
-                      planType.charAt(0).toUpperCase() + planType.slice(1) + ' Plan'
-                    )}
-                  </p>
-                </div>
-                <Button onClick={() => navigate('/plans')} variant="outline">
-                  {planType === 'trial' ? 'Upgrade Plan' : 'Manage Plan'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <BillingDashboard />
         </motion.div>
 
         {/* Notification Settings */}
