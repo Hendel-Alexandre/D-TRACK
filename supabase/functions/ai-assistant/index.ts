@@ -56,6 +56,37 @@ serve(async (req) => {
     const authenticatedUserId = user.id;
     console.log('Authenticated user:', authenticatedUserId);
 
+    // SECURITY: Rate limiting check (100 requests per hour)
+    const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
+    const MAX_REQUESTS_PER_HOUR = 100;
+
+    // Create Supabase client with service role for rate limit check
+    const supabaseAdmin = createClient(
+      supabaseUrl!,
+      supabaseServiceKey!
+    );
+
+    const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW).toISOString();
+    const { count, error: countError } = await supabaseAdmin
+      .from('ai_usage_log')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', authenticatedUserId)
+      .gte('created_at', oneHourAgo);
+
+    if (countError) {
+      console.error('Rate limit check error:', countError);
+    } else if (count && count >= MAX_REQUESTS_PER_HOUR) {
+      console.warn(`Rate limit exceeded for user ${authenticatedUserId}: ${count} requests`);
+      return new Response(JSON.stringify({ 
+        error: 'Rate limit exceeded. You can make up to 100 AI requests per hour. Please try again later.' 
+      }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log(`Rate limit check passed: ${count || 0}/${MAX_REQUESTS_PER_HOUR} requests in last hour`);
+
     const { action, data } = await req.json();
     console.log('AI Assistant request:', { action });
 
@@ -70,19 +101,51 @@ serve(async (req) => {
     if (data.text) secureData.text = sanitizeText(data.text);
     if (data.message) secureData.message = sanitizeText(data.message);
 
+    // Create Supabase admin client for logging
+    const supabaseAdmin = createClient(
+      supabaseUrl!,
+      supabaseServiceKey!
+    );
+
+    // Helper function to log AI usage
+    const logUsage = async (action: string, tokenCount?: number) => {
+      try {
+        await supabaseAdmin.from('ai_usage_log').insert({
+          user_id: authenticatedUserId,
+          action: action,
+          token_count: tokenCount || 0,
+        });
+      } catch (error) {
+        console.error('Failed to log AI usage:', error);
+      }
+    };
+
+    let result;
     switch (action) {
       case 'parse_natural_language':
-        return await parseNaturalLanguage(secureData, supabase);
+        result = await parseNaturalLanguage(secureData, supabase);
+        await logUsage(action);
+        return result;
       case 'generate_progress_nudge':
-        return await generateProgressNudge(secureData, supabase);
+        result = await generateProgressNudge(secureData, supabase);
+        await logUsage(action);
+        return result;
       case 'suggest_next_task':
-        return await suggestNextTask(secureData, supabase);
+        result = await suggestNextTask(secureData, supabase);
+        await logUsage(action);
+        return result;
       case 'analyze_productivity':
-        return await analyzeProductivity(secureData, supabase);
+        result = await analyzeProductivity(secureData, supabase);
+        await logUsage(action);
+        return result;
       case 'darvis_chat':
-        return await handleDarvisChat(secureData, supabase);
+        result = await handleDarvisChat(secureData, supabase);
+        await logUsage(action);
+        return result;
       case 'generate_image':
-        return await generateImage(secureData);
+        result = await generateImage(secureData);
+        await logUsage(action);
+        return result;
       default:
         throw new Error('Unknown action');
     }

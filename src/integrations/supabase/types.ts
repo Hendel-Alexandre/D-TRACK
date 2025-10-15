@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_usage_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          token_count: number | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          token_count?: number | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          token_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_members: {
         Row: {
           added_at: string
