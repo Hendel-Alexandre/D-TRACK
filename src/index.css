@@ -119,35 +119,35 @@
   }
 
   .dark {
-    /* Deep navy/purple background from screenshots */
-    --background: 229 41% 8%;
-    --foreground: 0 0% 98%;
+    /* Professional dark theme with deep navy/blue background */
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
 
-    --card: 229 35% 11%;
-    --card-foreground: 0 0% 98%;
+    --card: 223 47% 8%;
+    --card-foreground: 213 31% 91%;
 
-    --popover: 229 35% 11%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 223 47% 8%;
+    --popover-foreground: 213 31% 91%;
 
-    /* Purple accent colors from gradient palette */
-    --primary: 249 100% 71%;
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 249 100% 66%;
+    /* Vibrant blue accent */
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+    --primary-hover: 221 83% 48%;
 
-    --secondary: 229 28% 16%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 222 47% 11%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 229 28% 16%;
-    --muted-foreground: 0 0% 75%;
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
 
-    --accent: 229 28% 16%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 216 34% 17%;
+    --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 63% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 229 25% 20%;
-    --input: 229 28% 16%;
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
     --ring: 249 100% 71%;
 
     --sidebar-background: 229 35% 11%;

@@ -7,8 +7,8 @@ import { useNavigate } from 'react-router-dom'
 import { DarvisAssistant } from '@/components/AI/DarvisAssistant'
 import { useMode } from '@/contexts/ModeContext'
 import { StudentDashboard } from '@/components/Dashboard/StudentDashboard'
-import { WorkDashboard } from '@/components/Dashboard/WorkDashboard'
-import { MobileDashboard } from '@/components/Dashboard/MobileDashboard'
+import { ProfessionalDashboard } from '@/components/Dashboard/ProfessionalDashboard'
+import { MobileDashboardWrapper } from '@/components/Dashboard/MobileDashboardWrapper'
 import { TrialBanner } from '@/components/Dashboard/TrialBanner'
 import { useEffect, useState } from 'react'
 
@@ -53,7 +53,7 @@ export default function Dashboard() {
   if (isMobile) {
     return (
       <>
-        <MobileDashboard />
+        <MobileDashboardWrapper />
         <DarvisAssistant />
       </>
     )
@@ -104,7 +104,7 @@ export default function Dashboard() {
 
         {/* Mode-Specific Dashboard */}
         <motion.div variants={itemVariants}>
-          {mode === 'student' ? <StudentDashboard /> : <WorkDashboard />}
+          {mode === 'student' ? <StudentDashboard /> : <ProfessionalDashboard />}
         </motion.div>
       </motion.div>
       
