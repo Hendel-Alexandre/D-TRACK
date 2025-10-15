@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { 
   ArrowRight, 
   CheckCircle, 
@@ -39,7 +40,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-dark">
       {/* Navigation */}
-      <nav className="border-b border-border/50 bg-card/50 backdrop-blur-xl sticky top-0 z-50">
+      <nav className="border-b border-border/30 glass-effect sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center">
             <img 
@@ -60,6 +61,7 @@ const Index = () => {
             </a>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <Link to="/login">
               <Button variant="ghost" size="sm" className="hover:bg-secondary/50">Login</Button>
             </Link>
@@ -121,32 +123,18 @@ const Index = () => {
           </div>
 
           {/* Dashboard Preview */}
-          <div className="mt-16 relative">
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10 pointer-events-none" />
-            <div className="relative rounded-2xl border-2 border-border/50 bg-gradient-card shadow-2xl overflow-hidden hover:shadow-premium transition-shadow duration-500">
-              <div className="bg-secondary/50 border-b border-border/50 px-4 py-3 flex items-center gap-2">
-                <div className="flex gap-1.5">
-                  <div className="h-3 w-3 rounded-full bg-red-500" />
-                  <div className="h-3 w-3 rounded-full bg-yellow-500" />
-                  <div className="h-3 w-3 rounded-full bg-green-500" />
-                </div>
-                <div className="flex-1 text-center">
-                  <span className="text-xs text-muted-foreground font-medium">D-Track Dashboard</span>
-                </div>
-              </div>
-              <div className="p-8 bg-gradient-to-br from-purple-600/10 to-pink-500/10">
-                <div className="aspect-video rounded-xl overflow-hidden border border-border/30">
-                  <video
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="w-full h-full object-cover"
-                  >
-                    <source src={demoVideo} type="video/mp4" />
-                  </video>
-                </div>
-              </div>
+          <div className="mt-20 relative">
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10 pointer-events-none h-32 bottom-0" />
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl hover:shadow-glow transition-all duration-500">
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-auto rounded-3xl border border-border/20"
+              >
+                <source src={demoVideo} type="video/mp4" />
+              </video>
             </div>
           </div>
 
