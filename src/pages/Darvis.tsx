@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Send, Trash2, Image as ImageIcon, FileUp, Sparkles } from 'lucide-react';
+import { Loader2, Send, Menu, Plus, Sparkles, FileUp, Mic } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 interface Message {
   id: string;
@@ -18,6 +18,13 @@ interface Message {
   created_at: string;
 }
 
+interface Conversation {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function Darvis() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -25,21 +32,49 @@ export default function Darvis() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) {
-      loadChatHistory();
-      subscribeToMessages();
+      loadConversations();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (currentConversationId) {
+      loadChatHistory(currentConversationId);
+    } else {
+      setMessages([]);
+      setLoadingHistory(false);
+    }
+  }, [currentConversationId]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const loadChatHistory = async () => {
+  const loadConversations = async () => {
+    try {
+      // For now, we'll use a single conversation per user
+      // In a full implementation, you'd create a conversations table
+      setConversations([
+        {
+          id: 'default',
+          title: 'Chat with Darvis',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+      ]);
+      setCurrentConversationId('default');
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+    }
+  };
+
+  const loadChatHistory = async (conversationId: string) => {
     try {
       const { data, error } = await supabase
         .from('darvis_chats')
@@ -49,7 +84,6 @@ export default function Darvis() {
 
       if (error) throw error;
       
-      // Convert the database records to Message type
       const convertedMessages: Message[] = (data || []).map((msg: any) => ({
         id: msg.id,
         role: msg.role as 'user' | 'assistant',
@@ -70,32 +104,6 @@ export default function Darvis() {
     } finally {
       setLoadingHistory(false);
     }
-  };
-
-  const subscribeToMessages = () => {
-    const channel = supabase
-      .channel('darvis-chat-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'darvis_chats',
-          filter: `user_id=eq.${user?.id}`,
-        },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setMessages((prev) => [...prev, payload.new as Message]);
-          } else if (payload.eventType === 'DELETE') {
-            setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   };
 
   const scrollToBottom = () => {
@@ -136,7 +144,7 @@ export default function Darvis() {
 
   const sendMessage = async (messageContent?: string) => {
     const content = messageContent || input.trim();
-    if (!content) return;
+    if (!content || loading) return;
 
     setLoading(true);
     setInput('');
@@ -152,6 +160,15 @@ export default function Darvis() {
         });
 
       if (userMsgError) throw userMsgError;
+
+      // Immediately add user message to UI
+      const userMessage: Message = {
+        id: crypto.randomUUID(),
+        role: 'user',
+        content,
+        created_at: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, userMessage]);
 
       // Check if user wants to generate an image
       const isImageRequest = content.toLowerCase().includes('generate image') || 
@@ -189,6 +206,16 @@ export default function Darvis() {
 
       if (assistantMsgError) throw assistantMsgError;
 
+      // Add assistant message to UI
+      const assistantUIMessage: Message = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: assistantMessage.content,
+        images: assistantMessage.images,
+        created_at: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, assistantUIMessage]);
+
     } catch (error: any) {
       console.error('Error sending message:', error);
       toast({
@@ -201,175 +228,198 @@ export default function Darvis() {
     }
   };
 
-  const clearHistory = async () => {
-    try {
-      const { error } = await supabase
-        .from('darvis_chats')
-        .delete()
-        .eq('user_id', user?.id);
-
-      if (error) throw error;
-
-      setMessages([]);
-      toast({
-        title: 'Success',
-        description: 'Chat history cleared',
-      });
-    } catch (error) {
-      console.error('Error clearing history:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to clear history',
-        variant: 'destructive',
-      });
-    }
+  const startNewChat = () => {
+    setMessages([]);
+    setCurrentConversationId('default');
   };
 
   if (loadingHistory) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-background via-background to-primary/5">
-      {/* Header */}
-      <div className="border-b bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Darvis AI</h1>
-              <p className="text-sm text-muted-foreground">Your intelligent assistant</p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearHistory}
-            className="gap-2"
-          >
-            <Trash2 className="h-4 w-4" />
-            Clear History
-          </Button>
-        </div>
-      </div>
-
-      {/* Messages */}
-      <ScrollArea className="flex-1 px-4" ref={scrollRef}>
-        <div className="container mx-auto py-6 max-w-4xl">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center py-12">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center mb-4">
-                <Sparkles className="h-10 w-10 text-primary-foreground" />
+    <div className="flex h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="border-b bg-card/80 backdrop-blur-lg">
+          <div className="px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="lg:hidden">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-80">
+                  <SheetHeader>
+                    <SheetTitle>Chat History</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6 space-y-2">
+                    <Button
+                      onClick={startNewChat}
+                      className="w-full justify-start gap-2"
+                      variant="outline"
+                    >
+                      <Plus className="h-4 w-4" />
+                      New Chat
+                    </Button>
+                    {conversations.map((conv) => (
+                      <Button
+                        key={conv.id}
+                        onClick={() => setCurrentConversationId(conv.id)}
+                        variant={currentConversationId === conv.id ? "secondary" : "ghost"}
+                        className="w-full justify-start"
+                      >
+                        {conv.title}
+                      </Button>
+                    ))}
+                  </div>
+                </SheetContent>
+              </Sheet>
+              
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary via-purple-500 to-pink-500 flex items-center justify-center">
+                <Sparkles className="h-5 w-5 text-primary-foreground" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">Welcome to Darvis AI</h2>
-              <p className="text-muted-foreground max-w-md">
-                I can help you with tasks, generate images, analyze files, and more. Just ask!
-              </p>
+              <div>
+                <h1 className="text-xl font-bold">Darvis AI</h1>
+                <p className="text-xs text-muted-foreground">Your intelligent assistant</p>
+              </div>
             </div>
-          ) : (
-            <AnimatePresence>
-              {messages.map((message, index) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={`flex gap-3 mb-6 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  {message.role === 'assistant' && (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center flex-shrink-0">
-                      <Sparkles className="h-4 w-4 text-primary-foreground" />
-                    </div>
-                  )}
-                  <Card className={`p-4 max-w-[80%] ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card'}`}>
-                    <p className="whitespace-pre-wrap">{message.content}</p>
-                    {message.images && message.images.length > 0 && (
-                      <div className="mt-4 space-y-2">
-                        {message.images.map((img, i) => (
-                          <img
-                            key={i}
-                            src={img}
-                            alt="Generated"
-                            className="rounded-lg max-w-full"
-                          />
-                        ))}
+            <Button onClick={startNewChat} variant="outline" size="sm" className="gap-2">
+              <Plus className="h-4 w-4" />
+              New Chat
+            </Button>
+          </div>
+        </div>
+
+        {/* Messages */}
+        <ScrollArea className="flex-1 px-4" ref={scrollRef}>
+          <div className="max-w-3xl mx-auto py-6 space-y-6">
+            {messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary via-purple-500 to-pink-500 flex items-center justify-center mb-6 animate-pulse">
+                  <Sparkles className="h-12 w-12 text-primary-foreground" />
+                </div>
+                <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                  Welcome to Darvis AI
+                </h2>
+                <p className="text-muted-foreground max-w-md text-lg">
+                  I can help you with tasks, generate images, analyze files, and more. Just ask!
+                </p>
+              </div>
+            ) : (
+              <AnimatePresence>
+                {messages.map((message, index) => (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className={`flex gap-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {message.role === 'assistant' && (
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary via-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 mt-1">
+                        <Sparkles className="h-4 w-4 text-primary-foreground" />
                       </div>
                     )}
-                  </Card>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          )}
-          {loading && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex gap-3 mb-6"
-            >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                <Sparkles className="h-4 w-4 text-primary-foreground animate-pulse" />
-              </div>
-              <Card className="p-4">
-                <div className="flex gap-2">
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                    <div className={`max-w-[80%] ${message.role === 'user' ? 'order-first' : ''}`}>
+                      <div className={`rounded-2xl px-4 py-3 ${
+                        message.role === 'user' 
+                          ? 'bg-primary text-primary-foreground ml-auto' 
+                          : 'bg-card border'
+                      }`}>
+                        <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                        {message.images && message.images.length > 0 && (
+                          <div className="mt-3 space-y-2">
+                            {message.images.map((img, i) => (
+                              <img
+                                key={i}
+                                src={img}
+                                alt="Generated"
+                                className="rounded-lg max-w-full"
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            )}
+            {loading && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex gap-4"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary via-purple-500 to-pink-500 flex items-center justify-center animate-pulse">
+                  <Sparkles className="h-4 w-4 text-primary-foreground" />
                 </div>
-              </Card>
-            </motion.div>
-          )}
-        </div>
-      </ScrollArea>
-
-      {/* Input */}
-      <div className="border-t bg-card/50 backdrop-blur-sm p-4">
-        <div className="container mx-auto max-w-4xl">
-          <div className="flex gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              onChange={handleFileUpload}
-              accept=".txt,.pdf,.doc,.docx,.json,.csv"
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={loading}
-            >
-              <FileUp className="h-4 w-4" />
-            </Button>
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-              placeholder="Ask Darvis anything... (e.g., 'generate image of a sunset')"
-              disabled={loading}
-              className="flex-1"
-            />
-            <Button
-              onClick={() => sendMessage()}
-              disabled={loading || !input.trim()}
-              className="gap-2"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-              Send
-            </Button>
+                <div className="bg-card border rounded-2xl px-4 py-3">
+                  <div className="flex gap-2">
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </div>
-          <p className="text-xs text-muted-foreground mt-2 text-center">
-            Try: "Create a task", "Generate image of mountains", "Analyze this file"
-          </p>
+        </ScrollArea>
+
+        {/* Input */}
+        <div className="border-t bg-card/80 backdrop-blur-lg p-4">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={handleFileUpload}
+                accept=".txt,.pdf,.doc,.docx,.json,.csv"
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading}
+                className="flex-shrink-0"
+              >
+                <FileUp className="h-4 w-4" />
+              </Button>
+              <div className="flex-1 relative">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                  placeholder="Message Darvis AI..."
+                  disabled={loading}
+                  className="pr-12 bg-background/50 border-muted-foreground/20"
+                />
+              </div>
+              <Button
+                onClick={() => sendMessage()}
+                disabled={loading || !input.trim()}
+                size="icon"
+                className="flex-shrink-0 bg-gradient-to-r from-primary via-purple-500 to-pink-500"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2 text-center">
+              Try: "Create a task", "Generate image of mountains", "Analyze this file"
+            </p>
+          </div>
         </div>
       </div>
     </div>
