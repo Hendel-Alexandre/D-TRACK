@@ -82,7 +82,35 @@ export function DarvisAssistant() {
         }
       })
 
-      if (error) throw error
+      if (error) {
+        const status = (error as any)?.status
+        const friendly = status === 429
+          ? 'Darvis is temporarily rate-limited. Please wait ~30–60 seconds and try again.'
+          : status === 402
+          ? 'AI credits are exhausted. Please try again later.'
+          : (error.message || "I'm having trouble processing that request.")
+
+        setMessages(prev => [...prev, {
+          id: (Date.now() + 1).toString(),
+          text: friendly,
+          sender: 'darvis' as const,
+          timestamp: new Date()
+        }])
+
+        toast({ title: 'Darvis unavailable', description: friendly, variant: 'destructive' })
+        return
+      }
+
+      if (data?.error) {
+        const friendly = data.message || "I'm having trouble processing that request. Please try again later."
+        setMessages(prev => [...prev, {
+          id: (Date.now() + 1).toString(),
+          text: friendly,
+          sender: 'darvis' as const,
+          timestamp: new Date()
+        }])
+        return
+      }
 
       const response: DarvisResponse = data.response
 

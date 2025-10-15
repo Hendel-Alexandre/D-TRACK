@@ -447,7 +447,22 @@ Respond appropriately based on user intent. If creating a task, provide task_pre
   if (!response.ok) {
     const errorText = await response.text();
     console.error('OpenAI API error:', response.status, errorText);
-    throw new Error(`OpenAI API error: ${response.status}`);
+    if (response.status === 429) {
+      return new Response(
+        JSON.stringify({ error: 'RATE_LIMIT', message: 'AI is temporarily rate-limited or quota is exhausted. Please try again shortly.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    if (response.status === 402) {
+      return new Response(
+        JSON.stringify({ error: 'PAYMENT_REQUIRED', message: 'AI credits are exhausted. Please add funds to continue.' }),
+        { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    return new Response(
+      JSON.stringify({ error: 'AI_GATEWAY_ERROR', message: 'Upstream AI error' }),
+      { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 
   const result = await response.json();
