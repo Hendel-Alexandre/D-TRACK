@@ -444,7 +444,20 @@ Respond appropriately based on user intent. If creating a task, provide task_pre
     }),
   });
 
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('OpenAI API error:', response.status, errorText);
+    throw new Error(`OpenAI API error: ${response.status}`);
+  }
+
   const result = await response.json();
+  console.log('OpenAI result:', JSON.stringify(result));
+  
+  if (!result.choices || !result.choices[0] || !result.choices[0].message) {
+    console.error('Unexpected OpenAI response format:', result);
+    throw new Error('Invalid response from OpenAI');
+  }
+  
   let aiResponse = result.choices[0].message.content;
   let taskPreview = null;
 
@@ -492,22 +505,28 @@ Rules:
       }),
     });
 
-    const extractResult = await extractResponse.json();
+    if (!extractResponse.ok) {
+      console.error('Task extraction API error:', extractResponse.status);
+    } else {
+      const extractResult = await extractResponse.json();
+      console.log('Task extraction result:', JSON.stringify(extractResult));
 
-    try {
-      const extracted = JSON.parse(extractResult.choices[0].message.content);
-      taskPreview = {
-        title: extracted.title || 'New Task',
-        description: extracted.description || null,
-        due_date: extracted.due_date,
-        due_time: extracted.due_time,
-        priority: extracted.priority || 'Medium',
-        reminder_minutes: extracted.reminder_minutes
-      };
-
-      aiResponse = `I can create this task for you. Please review the details and confirm:`;
-    } catch (parseError) {
-      console.error('Error parsing task extraction:', parseError);
+      try {
+        if (extractResult.choices && extractResult.choices[0] && extractResult.choices[0].message) {
+          const extracted = JSON.parse(extractResult.choices[0].message.content);
+          taskPreview = {
+            title: extracted.title || 'New Task',
+            description: extracted.description || null,
+            due_date: extracted.due_date,
+            due_time: extracted.due_time,
+            priority: extracted.priority || 'Medium',
+            reminder_minutes: extracted.reminder_minutes
+          };
+          aiResponse = `I can create this task for you. Please review the details and confirm:`;
+        }
+      } catch (parseError) {
+        console.error('Error parsing task extraction:', parseError);
+      }
     }
   }
 

@@ -1,5 +1,8 @@
 project_id = "qhbrkcqopqjjaemifjtt"
 
+[functions.ai-assistant]
+verify_jwt = true
+
 [functions.create-checkout-session]
 verify_jwt = true
 
