@@ -401,27 +401,99 @@ async function handleDarvisChat(data: any, supabase: any) {
   
   const systemPrompt = `You are Darvis, the AI assistant for D-TRACK (a task and time management app). 
 
+You have direct access to create tasks, notes, projects, and calendar events for users. When users request these actions, use the appropriate tool immediately.
+
 Your capabilities:
-1. Create tasks from natural language (extract title, description, due date, priority, reminders)
-2. Reschedule existing tasks
-3. Summarize user's workload (overdue, today's tasks, upcoming)
-4. Provide productivity insights and motivation
-5. Understand multiple languages and respond appropriately
+1. Create tasks - Use create_task tool when user wants to add/create a task
+2. Create notes - Use create_note tool when user wants to write/save a note
+3. Create projects - Use create_project tool when user wants to start a new project
+4. Create calendar events - Use create_calendar_event tool for meetings/appointments
+5. Summarize user's workload and provide insights
+6. Support multiple languages: English, Spanish, French, German, Portuguese, Italian
 
 Guidelines:
 - Be friendly, helpful, and concise
-- For task creation, always provide a preview that user must confirm
-- Extract specific details like dates, times, priorities from natural language
+- When user requests task/note/project/event creation, use tools immediately
+- Extract dates, times, priorities from natural language
+- Confirm after creation with a friendly message
 - Use encouraging, professional tone
-- Focus only on D-TRACK functionality - no general questions outside task management
-- Support multiple languages: English, Spanish, French, German, Portuguese, Italian
 
 Recent conversation:
 ${context}
 
-User message: ${JSON.stringify(message)}
+User message: ${JSON.stringify(message)}`;
 
-Respond appropriately based on user intent. If creating a task, provide task_preview object.`;
+  const tools = [
+    {
+      type: "function",
+      function: {
+        name: "create_task",
+        description: "Create a new task in D-TRACK",
+        parameters: {
+          type: "object",
+          properties: {
+            title: { type: "string", description: "Task title" },
+            description: { type: "string", description: "Task description" },
+            due_date: { type: "string", description: "Due date in YYYY-MM-DD format" },
+            priority: { type: "string", enum: ["Low", "Medium", "High", "Urgent"], description: "Task priority" },
+            reminder_minutes: { type: "number", description: "Reminder before due date in minutes" }
+          },
+          required: ["title"]
+        }
+      }
+    },
+    {
+      type: "function",
+      function: {
+        name: "create_note",
+        description: "Create a new note in D-TRACK",
+        parameters: {
+          type: "object",
+          properties: {
+            title: { type: "string", description: "Note title" },
+            content: { type: "string", description: "Note content" },
+            category: { type: "string", description: "Note category" }
+          },
+          required: ["title", "content"]
+        }
+      }
+    },
+    {
+      type: "function",
+      function: {
+        name: "create_project",
+        description: "Create a new project in D-TRACK",
+        parameters: {
+          type: "object",
+          properties: {
+            name: { type: "string", description: "Project name" },
+            description: { type: "string", description: "Project description" },
+            start_date: { type: "string", description: "Start date in YYYY-MM-DD format" },
+            end_date: { type: "string", description: "End date in YYYY-MM-DD format" }
+          },
+          required: ["name"]
+        }
+      }
+    },
+    {
+      type: "function",
+      function: {
+        name: "create_calendar_event",
+        description: "Create a new calendar event in D-TRACK",
+        parameters: {
+          type: "object",
+          properties: {
+            title: { type: "string", description: "Event title" },
+            description: { type: "string", description: "Event description" },
+            event_date: { type: "string", description: "Event date in YYYY-MM-DD format" },
+            start_time: { type: "string", description: "Start time in HH:MM format" },
+            end_time: { type: "string", description: "End time in HH:MM format" }
+          },
+          required: ["title", "event_date"]
+        }
+      }
+    }
+  ];
 
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
@@ -435,6 +507,7 @@ Respond appropriately based on user intent. If creating a task, provide task_pre
         { role: 'system', content: systemPrompt },
         { role: 'user', content: message }
       ],
+      tools: tools,
       max_completion_tokens: 1000
     }),
   });
@@ -461,83 +534,113 @@ Respond appropriately based on user intent. If creating a task, provide task_pre
   }
 
   const result = await response.json();
-  console.log('OpenAI result:', JSON.stringify(result));
+  console.log('AI result:', JSON.stringify(result));
   
   if (!result.choices || !result.choices[0] || !result.choices[0].message) {
-    console.error('Unexpected OpenAI response format:', result);
-    throw new Error('Invalid response from OpenAI');
+    console.error('Unexpected AI response format:', result);
+    throw new Error('Invalid response from AI');
   }
   
-  let aiResponse = result.choices[0].message.content;
-  let taskPreview = null;
+  const choice = result.choices[0];
+  let aiResponse = choice.message.content || '';
+  let createdItems = [];
 
-  // Check if this looks like a task creation request
-  const taskKeywords = ['create task', 'add task', 'remind me', 'schedule', 'due', 'tomorrow', 'today', 'next week', 'create a project', 'add a project', 'new project', 'create a note', 'add a note'];
-  const isTaskRequest = taskKeywords.some(keyword => 
-    message.toLowerCase().includes(keyword)
-  );
-
-  // Don't treat simple confirmations as new task requests
-  const isSimpleConfirmation = /^(yes|ok|sure|confirm|proceed|go ahead|do it|create it)$/i.test(message.trim());
-
-  if (isTaskRequest && !isSimpleConfirmation) {
-    // Extract task details using AI
-    const extractPrompt = `Extract task details from: ${JSON.stringify(message)}
-
-Return JSON format:
-{
-  "title": "task title",
-  "description": "optional description", 
-  "due_date": "YYYY-MM-DD or null",
-  "due_time": "HH:MM or null",
-  "priority": "Low|Medium|High|Urgent",
-  "reminder_minutes": number or null
-}
-
-Rules:
-- If no due date specified, use null
-- Default priority is "Medium"
-- Common time references: "tomorrow" = next day, "next week" = 7 days from now
-- Reminder: "30 min before" = 30, "1 hour before" = 60
-- Current date: ${new Date().toISOString().split('T')[0]}`;
-
-    const extractResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: extractPrompt },
-          { role: 'user', content: message }
-        ],
-        max_completion_tokens: 500
-      }),
-    });
-
-    if (!extractResponse.ok) {
-      console.error('Task extraction API error:', extractResponse.status);
-    } else {
-      const extractResult = await extractResponse.json();
-      console.log('Task extraction result:', JSON.stringify(extractResult));
-
+  // Handle tool calls
+  if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
+    console.log('Tool calls detected:', choice.message.tool_calls);
+    
+    for (const toolCall of choice.message.tool_calls) {
+      const functionName = toolCall.function.name;
+      const args = JSON.parse(toolCall.function.arguments);
+      
+      console.log(`Executing tool: ${functionName}`, args);
+      
       try {
-        if (extractResult.choices && extractResult.choices[0] && extractResult.choices[0].message) {
-          const extracted = JSON.parse(extractResult.choices[0].message.content);
-          taskPreview = {
-            title: extracted.title || 'New Task',
-            description: extracted.description || null,
-            due_date: extracted.due_date,
-            due_time: extracted.due_time,
-            priority: extracted.priority || 'Medium',
-            reminder_minutes: extracted.reminder_minutes
-          };
-          aiResponse = `I can create this task for you. Please review the details and confirm:`;
+        switch (functionName) {
+          case 'create_task': {
+            const { data: task, error } = await supabase
+              .from('tasks')
+              .insert({
+                user_id: userId,
+                title: args.title,
+                description: args.description || null,
+                due_date: args.due_date || null,
+                priority: args.priority || 'Medium',
+                status: 'Todo',
+                reminder_enabled: !!args.reminder_minutes,
+                reminder_hours_before: args.reminder_minutes ? Math.floor(args.reminder_minutes / 60) : 0,
+                reminder_days_before: 0
+              })
+              .select()
+              .single();
+            
+            if (error) throw error;
+            createdItems.push({ type: 'task', item: task });
+            aiResponse = `✅ Task created: "${args.title}"${args.due_date ? ` (Due: ${args.due_date})` : ''}. What else can I help you with?`;
+            break;
+          }
+          
+          case 'create_note': {
+            const { data: note, error } = await supabase
+              .from('notes')
+              .insert({
+                user_id: userId,
+                title: args.title,
+                content: args.content,
+                category: args.category || 'General'
+              })
+              .select()
+              .single();
+            
+            if (error) throw error;
+            createdItems.push({ type: 'note', item: note });
+            aiResponse = `✅ Note created: "${args.title}". Anything else?`;
+            break;
+          }
+          
+          case 'create_project': {
+            const { data: project, error } = await supabase
+              .from('projects')
+              .insert({
+                user_id: userId,
+                name: args.name,
+                description: args.description || null,
+                start_date: args.start_date || null,
+                end_date: args.end_date || null,
+                status: 'Active'
+              })
+              .select()
+              .single();
+            
+            if (error) throw error;
+            createdItems.push({ type: 'project', item: project });
+            aiResponse = `✅ Project created: "${args.name}". Ready to add tasks to it?`;
+            break;
+          }
+          
+          case 'create_calendar_event': {
+            const { data: event, error } = await supabase
+              .from('calendar_events')
+              .insert({
+                user_id: userId,
+                title: args.title,
+                description: args.description || null,
+                event_date: args.event_date,
+                start_time: args.start_time || null,
+                end_time: args.end_time || null
+              })
+              .select()
+              .single();
+            
+            if (error) throw error;
+            createdItems.push({ type: 'calendar_event', item: event });
+            aiResponse = `✅ Calendar event created: "${args.title}" on ${args.event_date}. What's next?`;
+            break;
+          }
         }
-      } catch (parseError) {
-        console.error('Error parsing task extraction:', parseError);
+      } catch (error: any) {
+        console.error(`Error executing ${functionName}:`, error);
+        aiResponse = `I had trouble creating that ${functionName.replace('create_', '')}. Please try again or check your permissions.`;
       }
     }
   }
@@ -545,9 +648,9 @@ Rules:
   return new Response(JSON.stringify({
     success: true,
     response: {
-      type: isTaskRequest ? 'task_creation' : 'general',
+      type: createdItems.length > 0 ? 'creation_complete' : 'general',
       message: aiResponse,
-      task_preview: taskPreview
+      created_items: createdItems
     }
   }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },

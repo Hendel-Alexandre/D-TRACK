@@ -1,29 +1,19 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageCircle, X, Send, Loader2, Check, Clock, Plus, Calendar, Mic, Square } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, Mic, Square } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
 
-interface TaskPreview {
-  title: string
-  description?: string
-  due_date?: string
-  due_time?: string
-  reminder_minutes?: number
-  priority: 'Low' | 'Medium' | 'High' | 'Urgent'
-  project_id?: string
-}
-
 interface DarvisResponse {
-  type: 'task_creation' | 'reschedule' | 'summary' | 'general'
+  type: 'creation_complete' | 'general'
   message: string
-  task_preview?: TaskPreview
-  tasks_summary?: any[]
+  created_items?: Array<{
+    type: 'task' | 'note' | 'project' | 'calendar_event'
+    item: any
+  }>
 }
 
 export function DarvisAssistant() {
@@ -31,7 +21,6 @@ export function DarvisAssistant() {
   const [messages, setMessages] = useState<Array<{id: string, text: string, sender: 'user' | 'darvis', timestamp: Date}>>([])
   const [input, setInput] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
-  const [taskPreview, setTaskPreview] = useState<TaskPreview | null>(null)
   const [isRecording, setIsRecording] = useState(false)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const [audioChunks, setAudioChunks] = useState<Blob[]>([])
@@ -51,7 +40,7 @@ export function DarvisAssistant() {
     if (isOpen && messages.length === 0) {
       setMessages([{
         id: '1',
-        text: "Hi! I'm Darvis, your AI assistant for D-TRACK. I can help you create tasks, reschedule them, or summarize your workload. Try saying something like 'Create a task to call James tomorrow at 2pm with a 30-minute reminder'",
+        text: "Hi! I'm Darvis, your AI assistant for D-TRACK. I can create tasks, notes, projects, and calendar events for you. Just tell me what you need! Try: 'Create a task to call James tomorrow at 2pm' or 'Add a note about the meeting'",
         sender: 'darvis',
         timestamp: new Date()
       }])
@@ -126,8 +115,14 @@ export function DarvisAssistant() {
 
       setMessages(prev => [...prev, darvisMessage])
 
-      if (response.task_preview) {
-        setTaskPreview(response.task_preview)
+      // Show success toast if items were created
+      if (response.created_items && response.created_items.length > 0) {
+        response.created_items.forEach(item => {
+          toast({
+            title: 'Created Successfully',
+            description: `Your ${item.type.replace('_', ' ')} has been created!`
+          })
+        })
       }
 
     } catch (error: any) {
@@ -144,58 +139,6 @@ export function DarvisAssistant() {
     }
   }
 
-  const confirmTaskCreation = async () => {
-    if (!taskPreview || !user) return
-
-    try {
-      const { error } = await supabase.from('tasks').insert({
-        user_id: user.id,
-        title: taskPreview.title,
-        description: taskPreview.description,
-        due_date: taskPreview.due_date || null,
-        priority: taskPreview.priority,
-        reminder_enabled: !!taskPreview.reminder_minutes,
-        reminder_hours_before: taskPreview.reminder_minutes ? Math.floor(taskPreview.reminder_minutes / 60) : 0,
-        reminder_days_before: 0,
-        project_id: taskPreview.project_id || null
-      })
-
-      if (error) throw error
-
-      toast({
-        title: 'Task Created!',
-        description: `"${taskPreview.title}" has been added to your tasks.`
-      })
-
-      setTaskPreview(null)
-
-      const confirmMessage = {
-        id: Date.now().toString(),
-        text: `Perfect! I've created the task "${taskPreview.title}" for you. You can find it in your tasks list.`,
-        sender: 'darvis' as const,
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, confirmMessage])
-
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create task. Please try again.',
-        variant: 'destructive'
-      })
-    }
-  }
-
-  const cancelTaskCreation = () => {
-    setTaskPreview(null)
-    const cancelMessage = {
-      id: Date.now().toString(),
-      text: "No problem! The task wasn't created. Feel free to ask me to modify it or help with something else.",
-      sender: 'darvis' as const,
-      timestamp: new Date()
-    }
-    setMessages(prev => [...prev, cancelMessage])
-  }
 
   const startRecording = async () => {
     try {
@@ -360,67 +303,6 @@ export function DarvisAssistant() {
                   </div>
                 </motion.div>
               ))}
-
-              {/* Task Preview Card */}
-              <AnimatePresence>
-                {taskPreview && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                  >
-                    <Card className="border-2 border-primary/50 bg-primary/5">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm flex items-center gap-2">
-                          <Plus className="h-4 w-4" />
-                          Task Preview
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div>
-                          <h4 className="font-semibold">{taskPreview.title}</h4>
-                          {taskPreview.description && (
-                            <p className="text-sm text-muted-foreground">{taskPreview.description}</p>
-                          )}
-                        </div>
-
-                        <div className="flex flex-wrap gap-2">
-                          {taskPreview.due_date && (
-                            <Badge variant="outline" className="text-xs">
-                              <Calendar className="h-3 w-3 mr-1" />
-                              {new Date(taskPreview.due_date).toLocaleDateString()}
-                            </Badge>
-                          )}
-                          {taskPreview.reminder_minutes && (
-                            <Badge variant="outline" className="text-xs">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {taskPreview.reminder_minutes}min reminder
-                            </Badge>
-                          )}
-                          <Badge variant="outline" className={`text-xs ${
-                            taskPreview.priority === 'Urgent' ? 'border-red-500 text-red-600' :
-                            taskPreview.priority === 'High' ? 'border-orange-500 text-orange-600' :
-                            taskPreview.priority === 'Medium' ? 'border-blue-500 text-blue-600' :
-                            'border-gray-500 text-gray-600'
-                          }`}>
-                            {taskPreview.priority}
-                          </Badge>
-                        </div>
-
-                        <div className="flex gap-2 pt-2">
-                          <Button size="sm" onClick={confirmTaskCreation} className="flex-1 gap-1">
-                            <Check className="h-3 w-3" />
-                            Create Task
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={cancelTaskCreation}>
-                            Cancel
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
               <div ref={messagesEndRef} />
             </div>
