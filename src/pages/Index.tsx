@@ -75,8 +75,8 @@ const Index = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 z-0">
+      <section className="relative overflow-hidden pb-16 md:pb-24">
+        <div className="absolute inset-0 z-0 top-16">
           <Orb 
             hue={0}
             hoverIntensity={0.2}
@@ -103,7 +103,7 @@ const Index = () => {
             </h1>
             
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              All-in-one workspace to track time, manage tasks, and collaborate in real-time.
+              Transform your workflow with intelligent time management
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
@@ -112,9 +112,6 @@ const Index = () => {
                   Start Free Trial <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="text-base px-8 rounded-xl border-border/50 hover:bg-secondary/50">
-                Subscribe for Updates
-              </Button>
             </div>
 
             <p className="text-sm text-muted-foreground">
@@ -124,18 +121,19 @@ const Index = () => {
 
           {/* Dashboard Preview */}
           <div className="mt-20 relative">
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10 pointer-events-none h-32 bottom-0" />
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl hover:shadow-glow transition-all duration-500">
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="w-full h-auto rounded-3xl border border-border/20"
-              >
-                <source src={demoVideo} type="video/mp4" />
-              </video>
-            </div>
+            <Card className="glass-effect border-border/30 backdrop-blur-xl overflow-hidden shadow-2xl hover:shadow-glow transition-all duration-500 rounded-3xl">
+              <div className="p-2">
+                <video
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-auto rounded-2xl"
+                >
+                  <source src={demoVideo} type="video/mp4" />
+                </video>
+              </div>
+            </Card>
           </div>
 
           {/* Scroll Down Indicator */}
@@ -228,17 +226,17 @@ const Index = () => {
       <section 
         ref={solution.ref}
         id="solutions" 
-        className="bg-secondary/20 py-20 md:py-32"
+        className="bg-secondary/20 py-16 md:py-24"
       >
         <div className="container mx-auto px-4">
-          <div className={`max-w-3xl mx-auto text-center mb-16 transition-all duration-1000 ${
+          <div className={`max-w-3xl mx-auto text-center mb-12 transition-all duration-1000 ${
             solution.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
           }`}>
             <Badge variant="outline" className="mb-4">The Solution</Badge>
             <h2 className="text-3xl md:text-5xl font-bold mb-6">
               A Smarter Way to Work
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-lg text-muted-foreground">
               Everything you need in one intelligent platform
             </p>
           </div>
@@ -263,7 +261,7 @@ const Index = () => {
                   <feature.icon className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">{feature.title}</h3>
+                  <h3 className="font-bold text-lg mb-2">{feature.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
                 </div>
               </Card>
@@ -276,9 +274,9 @@ const Index = () => {
       <section 
         ref={featuresHighlight.ref}
         id="features" 
-        className="container mx-auto px-4 py-20 md:py-32"
+        className="container mx-auto px-4 py-16 md:py-24"
       >
-        <div className={`text-center mb-16 transition-all duration-1000 ${
+        <div className={`text-center mb-12 transition-all duration-1000 ${
           featuresHighlight.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}>
           <Badge variant="outline" className="mb-4">Powerful Features</Badge>
@@ -287,7 +285,7 @@ const Index = () => {
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {[
             { 
               icon: Target, 
@@ -337,21 +335,21 @@ const Index = () => {
       <section 
         ref={pricing.ref}
         id="pricing" 
-        className="container mx-auto px-4 py-20 md:py-32"
+        className="container mx-auto px-4 py-16 md:py-24"
       >
-        <div className={`max-w-3xl mx-auto text-center mb-16 transition-all duration-1000 ${
+        <div className={`max-w-3xl mx-auto text-center mb-12 transition-all duration-1000 ${
           pricing.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}>
           <Badge variant="outline" className="mb-4">Pricing</Badge>
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-lg text-muted-foreground">
             Choose the plan that's right for your team
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {/* Free Plan */}
           <Card 
             className={`card-modern p-8 space-y-6 border-0 transition-all duration-700 ${
