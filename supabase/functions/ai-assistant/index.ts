@@ -619,22 +619,26 @@ User message: ${JSON.stringify(message)}`;
           }
           
           case 'create_calendar_event': {
+            // Calendar events are stored as tasks with due dates
             const { data: event, error } = await supabase
-              .from('calendar_events')
+              .from('tasks')
               .insert({
                 user_id: userId,
                 title: args.title,
                 description: args.description || null,
-                event_date: args.event_date,
-                start_time: args.start_time || null,
-                end_time: args.end_time || null
+                due_date: args.event_date,
+                status: 'Todo',
+                priority: 'Medium',
+                reminder_enabled: true,
+                reminder_hours_before: 1,
+                reminder_days_before: 0
               })
               .select()
               .single();
             
             if (error) throw error;
             createdItems.push({ type: 'calendar_event', item: event });
-            aiResponse = `✅ Calendar event created: "${args.title}" on ${args.event_date}. What's next?`;
+            aiResponse = `✅ Calendar event created: "${args.title}" on ${args.event_date}${args.description ? ` - ${args.description}` : ''}. What's next?`;
             break;
           }
         }

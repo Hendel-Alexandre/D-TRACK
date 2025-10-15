@@ -152,13 +152,13 @@ const Index = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="text-center space-y-2">
               <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                <AnimatedCounter end={200} suffix="+" />
+                <AnimatedCounter end={50} suffix="+" />
               </div>
               <div className="text-sm text-gray-400 font-medium">Active Users</div>
             </div>
             <div className="text-center space-y-2">
               <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                <AnimatedCounter end={500} suffix="K+" />
+                <AnimatedCounter end={2} suffix="K+" />
               </div>
               <div className="text-sm text-gray-400 font-medium">Hours Tracked</div>
             </div>

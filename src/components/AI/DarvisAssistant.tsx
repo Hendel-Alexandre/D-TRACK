@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
+import { useNavigate } from 'react-router-dom'
 
 interface DarvisResponse {
   type: 'creation_complete' | 'general'
@@ -18,7 +19,7 @@ interface DarvisResponse {
 
 export function DarvisAssistant() {
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Array<{id: string, text: string, sender: 'user' | 'darvis', timestamp: Date}>>([])
+  const [messages, setMessages] = useState<Array<{id: string, text: string, sender: 'user' | 'darvis', timestamp: Date, createdItems?: any[]}>>([])
   const [input, setInput] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
@@ -27,6 +28,7 @@ export function DarvisAssistant() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { user } = useAuth()
   const { toast } = useToast()
+  const navigate = useNavigate()
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -110,7 +112,8 @@ export function DarvisAssistant() {
         id: (Date.now() + 1).toString(),
         text: response.message,
         sender: 'darvis' as const,
-        timestamp: new Date()
+        timestamp: new Date(),
+        createdItems: response.created_items
       }
 
       setMessages(prev => [...prev, darvisMessage])
@@ -120,7 +123,7 @@ export function DarvisAssistant() {
         response.created_items.forEach(item => {
           toast({
             title: 'Created Successfully',
-            description: `Your ${item.type.replace('_', ' ')} has been created!`
+            description: `Your ${item.type.replace('_', ' ')} has been created! Click the message to view.`
           })
         })
       }
@@ -293,10 +296,28 @@ export function DarvisAssistant() {
                     className={`max-w-[80%] px-3 py-2 rounded-2xl ${
                       message.sender === 'user'
                         ? 'bg-primary text-primary-foreground'
+                        : message.createdItems && message.createdItems.length > 0
+                        ? 'bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-primary/30 cursor-pointer hover:opacity-80 transition-opacity'
                         : 'bg-muted text-foreground'
                     }`}
+                    onClick={() => {
+                      if (message.createdItems && message.createdItems.length > 0) {
+                        const item = message.createdItems[0];
+                        const routes: Record<string, string> = {
+                          task: '/tasks',
+                          note: '/notes',
+                          project: '/projects',
+                          calendar_event: '/calendar'
+                        };
+                        navigate(routes[item.type] || '/dashboard');
+                        setIsOpen(false);
+                      }
+                    }}
                   >
                     <p className="text-sm">{message.text}</p>
+                    {message.createdItems && message.createdItems.length > 0 && (
+                      <p className="text-xs opacity-70 mt-1">Click to view →</p>
+                    )}
                     <p className="text-xs opacity-70 mt-1">
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
