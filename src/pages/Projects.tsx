@@ -197,6 +197,40 @@ export default function Projects() {
 
   useEffect(() => {
     fetchProjects()
+
+    // Set up realtime subscription for projects
+    const channel = supabase
+      .channel('projects-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'projects',
+          filter: `user_id=eq.${user?.id}`
+        },
+        (payload) => {
+          console.log('Project change received:', payload);
+          if (payload.eventType === 'INSERT') {
+            setProjects(prev => [payload.new as Project, ...prev]);
+            toast({
+              title: 'New Project Added',
+              description: `"${(payload.new as Project).name}" has been created`
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            setProjects(prev => prev.map(project => 
+              project.id === payload.new.id ? payload.new as Project : project
+            ));
+          } else if (payload.eventType === 'DELETE') {
+            setProjects(prev => prev.filter(project => project.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user])
 
   const filteredProjects = projects.filter(project =>

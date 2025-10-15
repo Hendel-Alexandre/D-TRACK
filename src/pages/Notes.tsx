@@ -294,6 +294,40 @@ export default function Notes() {
   useEffect(() => {
     fetchNotes()
     fetchUsers()
+
+    // Set up realtime subscription for notes
+    const channel = supabase
+      .channel('notes-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notes',
+          filter: `user_id=eq.${user?.id}`
+        },
+        (payload) => {
+          console.log('Note change received:', payload);
+          if (payload.eventType === 'INSERT') {
+            setNotes(prev => [payload.new as Note, ...prev]);
+            toast({
+              title: 'New Note Added',
+              description: `"${(payload.new as Note).title}" has been created`
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            setNotes(prev => prev.map(note => 
+              note.id === payload.new.id ? payload.new as Note : note
+            ));
+          } else if (payload.eventType === 'DELETE') {
+            setNotes(prev => prev.filter(note => note.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user])
 
   const filteredNotes = notes.filter(note =>

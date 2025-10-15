@@ -1,29 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { GraduationCap, Briefcase, Zap, Check, Moon, Sun, X, Sparkles } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { motion } from 'framer-motion';
+import { GraduationCap, Briefcase, Zap, Plus, ArrowRight, Sparkles } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
 import { toast } from 'sonner';
 import { SchoolAutocomplete } from '@/components/Onboarding/SchoolAutocomplete';
-import { Progress } from '@/components/ui/progress';
 
 type ModeType = 'student' | 'professional' | 'both' | null;
-type PlanType = 'student' | 'professional' | 'combined' | null;
 
-export default function Onboarding() {
+export default function OnboardingNew() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const [step, setStep] = useState(1);
   const [selectedMode, setSelectedMode] = useState<ModeType>(null);
-  const [selectedPlan, setSelectedPlan] = useState<PlanType>(null);
-  const [subStep, setSubStep] = useState(1); // For "Both" mode
   const [isLoading, setIsLoading] = useState(false);
   
   // Student form data
@@ -36,22 +32,16 @@ export default function Onboarding() {
   const [jobTitle, setJobTitle] = useState('');
   const [department, setDepartment] = useState('');
 
+  const totalSteps = selectedMode === 'both' ? 3 : 2;
+  const progressPercentage = (step / totalSteps) * 100;
+
   const handleModeSelect = (mode: ModeType) => {
     setSelectedMode(mode);
-    // Auto-select matching plan
-    if (mode === 'student') setSelectedPlan('student');
-    else if (mode === 'professional') setSelectedPlan('professional');
-    else if (mode === 'both') setSelectedPlan('combined');
-    
-    setTimeout(() => setStep(2), 300);
-  };
-
-  const handlePlanConfirm = () => {
-    setStep(3);
+    setStep(2);
   };
 
   const handleComplete = async () => {
-    if (!user || !selectedMode || !selectedPlan) return;
+    if (!user || !selectedMode) return;
 
     // Validate required fields
     if (selectedMode === 'student' || selectedMode === 'both') {
@@ -102,31 +92,62 @@ export default function Onboarding() {
         if (workError) throw workError;
       }
 
-      // Update user_mode_settings
-      const activeMode = selectedMode === 'both' ? 'work' : selectedMode;
-      const { error: settingsError } = await supabase
+      // Check if user_mode_settings already exists
+      const { data: existingSettings, error: fetchSettingsError } = await supabase
         .from('user_mode_settings' as any)
-        .upsert({
-          user_id: user.id,
-          active_mode: activeMode,
-          student_mode_enabled: selectedMode === 'student' || selectedMode === 'both',
-          work_mode_enabled: selectedMode === 'professional' || selectedMode === 'both',
-          onboarding_completed: true,
-          plan_type: 'trial',
-        }, {
-          onConflict: 'user_id'
-        });
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (settingsError) throw settingsError;
+      if (fetchSettingsError && fetchSettingsError.code !== 'PGRST116') {
+        throw fetchSettingsError;
+      }
 
-      // Save onboarding profile only if not already present (avoid UPDATE on table without updated_at)
+      // Update user_mode_settings
+      const activeMode = selectedMode === 'both' ? 'work' : selectedMode === 'student' ? 'student' : 'work';
+      
+      if (existingSettings) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('user_mode_settings' as any)
+          .update({
+            active_mode: activeMode,
+            student_mode_enabled: selectedMode === 'student' || selectedMode === 'both',
+            work_mode_enabled: selectedMode === 'professional' || selectedMode === 'both',
+            onboarding_completed: true,
+            plan_type: 'trial',
+          })
+          .eq('user_id', user.id);
+        
+        if (updateError) throw updateError;
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from('user_mode_settings' as any)
+          .insert({
+            user_id: user.id,
+            active_mode: activeMode,
+            student_mode_enabled: selectedMode === 'student' || selectedMode === 'both',
+            work_mode_enabled: selectedMode === 'professional' || selectedMode === 'both',
+            onboarding_completed: true,
+            plan_type: 'trial',
+            trial_start_date: new Date().toISOString(),
+            trial_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          });
+        
+        if (insertError) throw insertError;
+      }
+
+      // Save onboarding profile only if not already present
       const { data: existingOnboarding, error: fetchOnboardingError } = await supabase
         .from('onboarding_profiles' as any)
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (fetchOnboardingError) throw fetchOnboardingError;
+      if (fetchOnboardingError && fetchOnboardingError.code !== 'PGRST116') {
+        throw fetchOnboardingError;
+      }
 
       if (!existingOnboarding) {
         const { error: profileError } = await supabase
@@ -134,7 +155,7 @@ export default function Onboarding() {
           .insert({
             user_id: user.id,
             selected_mode: selectedMode,
-            selected_plan: selectedPlan,
+            selected_plan: selectedMode === 'student' ? 'student' : selectedMode === 'professional' ? 'professional' : 'combined',
           });
         if (profileError) throw profileError;
       }
@@ -154,376 +175,303 @@ export default function Onboarding() {
     }
   };
 
-  const totalSteps = selectedMode === 'both' ? 2 : 1;
-  const progressPercentage = selectedMode === 'both' ? (subStep / totalSteps) * 100 : 100;
-
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
-      {/* Top right controls */}
-      <div className="absolute top-4 right-4 flex items-center gap-2 z-50">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggleTheme}
-          className="h-9 w-9 rounded-lg hover:bg-accent/50"
-        >
-          {theme === 'light' ? (
-            <Moon className="h-4 w-4" />
-          ) : (
-            <Sun className="h-4 w-4" />
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/dashboard')}
-          className="h-9 w-9 rounded-lg hover:bg-accent/50"
-        >
-          <X className="h-4 w-4" />
-        </Button>
+    <div className="min-h-screen bg-background">
+      {/* Progress Bar */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <span className="font-semibold">Setup Progress</span>
+            </div>
+            <span className="text-sm text-muted-foreground">Step {step} of {totalSteps}</span>
+          </div>
+          <Progress value={progressPercentage} className="h-2" />
+        </div>
       </div>
 
-      <div className="w-full max-w-4xl">
-        <AnimatePresence mode="wait">
-          {step === 1 && (
-            <motion.div
-              key="step1"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-8"
-            >
-              <div className="text-center space-y-3">
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.1 }}
-                  className="inline-block"
-                >
-                  <Sparkles className="h-12 w-12 text-primary mx-auto mb-2" />
-                </motion.div>
-                <h1 className="text-4xl md:text-5xl font-bold">Welcome!</h1>
-                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                  Let's get to know you a bit. This helps us tailor your dashboard to your goals.
-                </p>
-              </div>
+      <div className="container mx-auto px-4 py-24">
+        {step === 1 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-6xl mx-auto"
+          >
+            <div className="text-center mb-12">
+              <h1 className="text-4xl font-bold mb-4">Welcome to D-TRACK!</h1>
+              <p className="text-lg text-muted-foreground">Choose your primary focus</p>
+            </div>
 
-              <div className="grid md:grid-cols-3 gap-6">
-                <ModeCard
-                  icon={<GraduationCap className="h-12 w-12" />}
-                  title="Student"
-                  description="Manage classes, assignments, and academic life"
-                  onClick={() => handleModeSelect('student')}
-                />
-                <ModeCard
-                  icon={<Briefcase className="h-12 w-12" />}
-                  title="Professional"
-                  description="Track projects, tasks, and work productivity"
-                  onClick={() => handleModeSelect('professional')}
-                />
-                <ModeCard
-                  icon={<Zap className="h-12 w-12" />}
-                  title="Both"
-                  description="Full access to student and professional tools"
-                  onClick={() => handleModeSelect('both')}
-                />
-              </div>
-            </motion.div>
-          )}
-
-          {step === 2 && (
-            <motion.div
-              key="step2"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-8"
-            >
-              <div className="text-center space-y-3">
-                <h2 className="text-3xl font-bold">Choose Your Plan</h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  All plans include a 30-day free trial with full access. You can upgrade or switch anytime.
-                </p>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-6">
-                {selectedPlan === 'student' && (
-                  <PlanCard
-                    title="Student Plan"
-                    price="$9.99"
-                    features={[
-                      'Class scheduling',
-                      'Assignment tracking',
-                      'File storage',
-                      'Study analytics',
-                    ]}
-                    highlighted
-                  />
-                )}
-                {selectedPlan === 'professional' && (
-                  <PlanCard
-                    title="Professional Plan"
-                    price="$14.99"
-                    features={[
-                      'Project management',
-                      'Task tracking',
-                      'Time tracking',
-                      'Analytics & reports',
-                    ]}
-                    highlighted
-                  />
-                )}
-                {selectedPlan === 'combined' && (
-                  <PlanCard
-                    title="Combined Plan"
-                    price="$19.99"
-                    features={[
-                      'All student features',
-                      'All professional features',
-                      'Seamless mode switching',
-                      'Priority support',
-                    ]}
-                    highlighted
-                  />
-                )}
-              </div>
-
-              <div className="flex justify-center">
-                <Button onClick={handlePlanConfirm} size="lg">
-                  Start 30-Day Trial
-                </Button>
-              </div>
-            </motion.div>
-          )}
-
-          {step === 3 && (
-            <motion.div
-              key="step3"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              <div className="text-center space-y-3">
-                <h2 className="text-3xl font-bold">Welcome! Let's get to know you a bit.</h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  This helps us tailor your dashboard to your goals.
-                </p>
-              </div>
-
-              {/* Progress indicator for "Both" mode */}
-              {selectedMode === 'both' && (
-                <div className="max-w-md mx-auto space-y-2">
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>Step {subStep} of {totalSteps}</span>
-                    <span>{Math.round(progressPercentage)}%</span>
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card 
+                className="cursor-pointer hover:shadow-lg transition-all border-2 hover:border-primary"
+                onClick={() => handleModeSelect('student')}
+              >
+                <CardHeader>
+                  <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-4">
+                    <GraduationCap className="h-6 w-6 text-blue-500" />
                   </div>
-                  <Progress value={progressPercentage} className="h-2" />
+                  <CardTitle>Student</CardTitle>
+                  <CardDescription>Manage classes, assignments, and academic life</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li>• Class scheduling</li>
+                    <li>• Assignment tracking</li>
+                    <li>• Study analytics</li>
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="cursor-pointer hover:shadow-lg transition-all border-2 hover:border-primary"
+                onClick={() => handleModeSelect('professional')}
+              >
+                <CardHeader>
+                  <div className="h-12 w-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-4">
+                    <Briefcase className="h-6 w-6 text-purple-500" />
+                  </div>
+                  <CardTitle>Professional</CardTitle>
+                  <CardDescription>Track projects, tasks, and work productivity</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li>• Project management</li>
+                    <li>• Time tracking</li>
+                    <li>• Team collaboration</li>
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="cursor-pointer hover:shadow-lg transition-all border-2 hover:border-primary"
+                onClick={() => handleModeSelect('both')}
+              >
+                <CardHeader>
+                  <div className="h-12 w-12 rounded-xl bg-gradient-primary/10 flex items-center justify-center mb-4">
+                    <Zap className="h-6 w-6 text-primary" />
+                  </div>
+                  <CardTitle>Both</CardTitle>
+                  <CardDescription>Full access to student and professional tools</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li>• All student features</li>
+                    <li>• All professional features</li>
+                    <li>• Seamless switching</li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          </motion.div>
+        )}
+
+        {step === 2 && (selectedMode === 'student' || selectedMode === 'both') && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-2xl mx-auto"
+          >
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <GraduationCap className="h-6 w-6 text-blue-500" />
+                  </div>
+                  <div>
+                    <CardTitle>Student Information</CardTitle>
+                    <CardDescription>Tell us about your academic journey</CardDescription>
+                  </div>
                 </div>
-              )}
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <SchoolAutocomplete 
+                  onSchoolChange={setSchoolName}
+                  defaultSchool={schoolName}
+                />
 
-              {/* Student Information Card */}
-              {(selectedMode === 'student' || (selectedMode === 'both' && subStep === 1)) && (
-                <Card className="p-6 md:p-8 space-y-6 bg-card border-2 hover:shadow-premium transition-all duration-300">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 rounded-xl bg-primary/10">
-                        <GraduationCap className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold">Student Information</h3>
-                        <p className="text-sm text-muted-foreground">For students and learners building their schedule</p>
-                      </div>
-                    </div>
+                <div className="space-y-2">
+                  <Label htmlFor="major">Program / Field of Study</Label>
+                  <Input
+                    id="major"
+                    value={major}
+                    onChange={(e) => setMajor(e.target.value)}
+                    placeholder="e.g., Computer Science"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="year">Year / Semester</Label>
+                  <Input
+                    id="year"
+                    value={year}
+                    onChange={(e) => setYear(e.target.value)}
+                    placeholder="e.g., 3rd Year, Fall 2025"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setStep(1)}
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    onClick={() => selectedMode === 'both' ? setStep(3) : handleComplete()} 
+                    className="flex-1"
+                    disabled={isLoading || !schoolName || !major || !year}
+                  >
+                    {selectedMode === 'both' ? 'Next: Professional Info' : isLoading ? 'Setting up...' : 'Complete Setup'}
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {step === 2 && selectedMode === 'professional' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-2xl mx-auto"
+          >
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                    <Briefcase className="h-6 w-6 text-purple-500" />
                   </div>
-
-                  <div className="space-y-4">
-                    <SchoolAutocomplete 
-                      onSchoolChange={setSchoolName}
-                      defaultSchool={schoolName}
-                    />
-
-                    <div className="space-y-2">
-                      <Label htmlFor="major">Program / Field of Study</Label>
-                      <Input
-                        id="major"
-                        value={major}
-                        onChange={(e) => setMajor(e.target.value)}
-                        placeholder="e.g., Computer Science"
-                        className="input-sleek"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="year">Year / Semester</Label>
-                      <Input
-                        id="year"
-                        value={year}
-                        onChange={(e) => setYear(e.target.value)}
-                        placeholder="e.g., 3rd Year, Fall 2025"
-                        className="input-sleek"
-                      />
-                    </div>
+                  <div>
+                    <CardTitle>Professional Information</CardTitle>
+                    <CardDescription>Tell us about your work</CardDescription>
                   </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="companyName">Company Name</Label>
+                  <Input
+                    id="companyName"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="Enter your company name"
+                  />
+                </div>
 
-                  {selectedMode === 'both' ? (
-                    <Button 
-                      onClick={() => setSubStep(2)} 
-                      className="w-full button-premium" 
-                      size="lg"
-                      disabled={!schoolName || !major || !year}
-                    >
-                      Next: Professional Info
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={handleComplete} 
-                      className="w-full button-premium" 
-                      size="lg"
-                      disabled={isLoading || !schoolName || !major || !year}
-                    >
-                      {isLoading ? 'Setting up your dashboard...' : 'Complete Setup'}
-                    </Button>
-                  )}
-                </Card>
-              )}
+                <div className="space-y-2">
+                  <Label htmlFor="jobTitle">Position / Role</Label>
+                  <Input
+                    id="jobTitle"
+                    value={jobTitle}
+                    onChange={(e) => setJobTitle(e.target.value)}
+                    placeholder="e.g., Software Engineer"
+                  />
+                </div>
 
-              {/* Professional Information Card */}
-              {(selectedMode === 'professional' || (selectedMode === 'both' && subStep === 2)) && (
-                <Card className="p-6 md:p-8 space-y-6 bg-card border-2 hover:shadow-premium transition-all duration-300">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 rounded-xl bg-primary/10">
-                        <Briefcase className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold">Professional Information</h3>
-                        <p className="text-sm text-muted-foreground">For professionals and teams tracking their work</p>
-                      </div>
-                    </div>
+                <div className="space-y-2">
+                  <Label htmlFor="department">Industry / Department</Label>
+                  <Input
+                    id="department"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    placeholder="e.g., Technology"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setStep(1)}
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    onClick={handleComplete} 
+                    className="flex-1"
+                    disabled={isLoading || !companyName || !jobTitle || !department}
+                  >
+                    {isLoading ? 'Setting up...' : 'Complete Setup'}
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {step === 3 && selectedMode === 'both' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-2xl mx-auto"
+          >
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                    <Briefcase className="h-6 w-6 text-purple-500" />
                   </div>
-
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="companyName">Company Name</Label>
-                      <Input
-                        id="companyName"
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        placeholder="Enter your company name"
-                        className="input-sleek"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="jobTitle">Position / Role</Label>
-                      <Input
-                        id="jobTitle"
-                        value={jobTitle}
-                        onChange={(e) => setJobTitle(e.target.value)}
-                        placeholder="e.g., Software Engineer"
-                        className="input-sleek"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="department">Industry / Department</Label>
-                      <Input
-                        id="department"
-                        value={department}
-                        onChange={(e) => setDepartment(e.target.value)}
-                        placeholder="e.g., Technology"
-                        className="input-sleek"
-                      />
-                    </div>
+                  <div>
+                    <CardTitle>Professional Information</CardTitle>
+                    <CardDescription>Tell us about your work</CardDescription>
                   </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="companyName">Company Name</Label>
+                  <Input
+                    id="companyName"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="Enter your company name"
+                  />
+                </div>
 
-                  <div className="flex gap-3">
-                    {selectedMode === 'both' && (
-                      <Button 
-                        onClick={() => setSubStep(1)} 
-                        variant="outline"
-                        className="flex-1" 
-                        size="lg"
-                      >
-                        Back
-                      </Button>
-                    )}
-                    <Button 
-                      onClick={handleComplete} 
-                      className="flex-1 button-premium" 
-                      size="lg"
-                      disabled={isLoading || !companyName || !jobTitle || !department}
-                    >
-                      {isLoading ? 'Setting up your dashboard...' : 'Complete Setup'}
-                    </Button>
-                  </div>
-                </Card>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <div className="space-y-2">
+                  <Label htmlFor="jobTitle">Position / Role</Label>
+                  <Input
+                    id="jobTitle"
+                    value={jobTitle}
+                    onChange={(e) => setJobTitle(e.target.value)}
+                    placeholder="e.g., Software Engineer"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="department">Industry / Department</Label>
+                  <Input
+                    id="department"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    placeholder="e.g., Technology"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setStep(2)}
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    onClick={handleComplete} 
+                    className="flex-1"
+                    disabled={isLoading || !companyName || !jobTitle || !department}
+                  >
+                    {isLoading ? 'Setting up...' : 'Complete Setup'}
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </div>
     </div>
-  );
-}
-
-function ModeCard({ icon, title, description, onClick }: any) {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.05, y: -5 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      <Card
-        className="p-8 cursor-pointer transition-all hover:shadow-premium group bg-gradient-card border-2 hover:border-primary/50"
-        onClick={onClick}
-      >
-        <div className="space-y-4 text-center">
-          <motion.div 
-            className="mx-auto w-fit p-4 rounded-2xl bg-primary/10 text-primary group-hover:bg-gradient-primary group-hover:text-white transition-all duration-300"
-            whileHover={{ rotate: 5 }}
-          >
-            {icon}
-          </motion.div>
-          <div className="space-y-2">
-            <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">{title}</h3>
-            <p className="text-sm text-muted-foreground">{description}</p>
-          </div>
-        </div>
-      </Card>
-    </motion.div>
-  );
-}
-
-function PlanCard({ title, price, features, highlighted }: any) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <Card className={`p-8 ${highlighted ? 'border-2 border-primary shadow-premium bg-gradient-card' : 'bg-card'} hover:shadow-lg transition-all duration-300`}>
-        <div className="space-y-6">
-          <div className="text-center space-y-3">
-            <h3 className="text-2xl font-bold">{title}</h3>
-            <div className="text-4xl font-bold text-gradient">
-              {price}
-              <span className="text-sm text-muted-foreground font-normal">/month</span>
-            </div>
-            <p className="text-sm text-muted-foreground">After 30-day trial</p>
-          </div>
-          <ul className="space-y-3">
-            {features.map((feature: string, index: number) => (
-              <li key={index} className="flex items-center gap-3">
-                <div className="p-1 rounded-full bg-primary/10">
-                  <Check className="h-3 w-3 text-primary" />
-                </div>
-                <span className="text-sm">{feature}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </Card>
-    </motion.div>
   );
 }

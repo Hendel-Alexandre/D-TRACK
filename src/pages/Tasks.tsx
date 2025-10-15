@@ -201,6 +201,40 @@ export default function Tasks() {
   useEffect(() => {
     fetchTasks()
     fetchProjects()
+
+    // Set up realtime subscription for tasks
+    const channel = supabase
+      .channel('tasks-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks',
+          filter: `user_id=eq.${user?.id}`
+        },
+        (payload) => {
+          console.log('Task change received:', payload);
+          if (payload.eventType === 'INSERT') {
+            setTasks(prev => [payload.new as Task, ...prev]);
+            toast({
+              title: 'New Task Added',
+              description: `"${(payload.new as Task).title}" has been created`
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            setTasks(prev => prev.map(task => 
+              task.id === payload.new.id ? payload.new as Task : task
+            ));
+          } else if (payload.eventType === 'DELETE') {
+            setTasks(prev => prev.filter(task => task.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user])
 
   const filteredTasks = tasks.filter(task => {

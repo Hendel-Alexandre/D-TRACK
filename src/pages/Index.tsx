@@ -120,14 +120,14 @@ const Index = () => {
           </div>
 
           {/* Dashboard Preview */}
-          <div className="mt-20 relative">
+          <div className="mt-20 relative max-w-4xl mx-auto">
             <Card className="glass-effect border-white/10 backdrop-blur-xl overflow-hidden shadow-2xl hover:shadow-glow transition-all duration-500 rounded-3xl p-3">
               <video
                 autoPlay
                 muted
                 loop
                 playsInline
-                className="w-full h-auto rounded-2xl"
+                className="w-full h-auto rounded-2xl max-h-[500px] object-cover"
               >
                 <source src={heroVideo} type="video/mp4" />
               </video>
