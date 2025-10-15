@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import datatrackLogo from '@/assets/datatrack-logo.png';
+import demoVideo from '@/assets/demo-video.mp4';
 import Orb from '@/components/3D/Orb';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
@@ -134,8 +135,16 @@ const Index = () => {
                 </div>
               </div>
               <div className="p-8 bg-gradient-to-br from-purple-600/10 to-pink-500/10">
-                <div className="aspect-video bg-gradient-to-br from-purple-600/20 to-pink-500/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-border/30">
-                  <Activity className="h-24 w-24 text-primary/60" />
+                <div className="aspect-video rounded-xl overflow-hidden border border-border/30">
+                  <video
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-full object-cover"
+                  >
+                    <source src={demoVideo} type="video/mp4" />
+                  </video>
                 </div>
               </div>
             </div>
