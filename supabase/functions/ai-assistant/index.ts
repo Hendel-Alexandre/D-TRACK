@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+const googleApiKey = Deno.env.get('GOOGLE_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -30,8 +30,8 @@ serve(async (req) => {
       });
     }
 
-    if (!lovableApiKey) {
-      throw new Error('Lovable AI key not configured');
+    if (!googleApiKey) {
+      throw new Error('Google API key not configured');
     }
 
     // Create Supabase client with user's auth context
@@ -122,22 +122,24 @@ async function parseNaturalLanguage(data: any, supabase: any) {
     Respond only with valid JSON, no other text.
   `;
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${googleApiKey}`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${lovableApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
-      messages: [{ role: 'user', content: prompt }],
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 1000,
+      }
     }),
   });
 
   const result = await response.json();
-  console.log('OpenAI response:', result);
+  console.log('Google Gemini response:', result);
   
-  const parsedTask = JSON.parse(result.choices[0].message.content);
+  const parsedTask = JSON.parse(result.candidates[0].content.parts[0].text);
   console.log('Parsed task:', parsedTask);
   
   // Create the task in the database
@@ -214,20 +216,18 @@ async function generateProgressNudge(data: any, supabase: any) {
     - "Ready for a fresh start? Let's tackle that overdue task and get back on track."
   `;
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${googleApiKey}`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${lovableApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
-      messages: [{ role: 'user', content: prompt }],
+      contents: [{ parts: [{ text: prompt }] }],
     }),
   });
 
   const result = await response.json();
-  const nudge = result.choices[0].message.content;
+  const nudge = result.candidates[0].content.parts[0].text;
   
   return new Response(JSON.stringify({ 
     success: true, 
@@ -285,20 +285,18 @@ async function suggestNextTask(data: any, supabase: any) {
     }
   `;
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${googleApiKey}`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${lovableApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
-      messages: [{ role: 'user', content: prompt }],
+      contents: [{ parts: [{ text: prompt }] }],
     }),
   });
 
   const result = await response.json();
-  const suggestion = JSON.parse(result.choices[0].message.content);
+  const suggestion = JSON.parse(result.candidates[0].content.parts[0].text);
   
   const suggestedTask = tasks.find((t: any) => t.id === suggestion.suggestedTaskId);
   
@@ -359,20 +357,18 @@ async function analyzeProductivity(data: any, supabase: any) {
     Keep it encouraging and actionable.
   `;
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${googleApiKey}`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${lovableApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
-      messages: [{ role: 'user', content: prompt }],
+      contents: [{ parts: [{ text: prompt }] }],
     }),
   });
 
   const result = await response.json();
-  const analysis = JSON.parse(result.choices[0].message.content);
+  const analysis = JSON.parse(result.candidates[0].content.parts[0].text);
   
   return new Response(JSON.stringify({ 
     success: true,
@@ -425,110 +421,94 @@ User message: ${JSON.stringify(message)}`;
 
   const tools = [
     {
-      type: "function",
-      function: {
-        name: "create_task",
-        description: "Create a new task in D-TRACK",
-        parameters: {
-          type: "object",
-          properties: {
-            title: { type: "string", description: "Task title" },
-            description: { type: "string", description: "Task description" },
-            due_date: { type: "string", description: "Due date in YYYY-MM-DD format" },
-            priority: { type: "string", enum: ["Low", "Medium", "High", "Urgent"], description: "Task priority" },
-            reminder_minutes: { type: "number", description: "Reminder before due date in minutes" }
-          },
-          required: ["title"]
-        }
+      name: "create_task",
+      description: "Create a new task in D-TRACK",
+      parameters: {
+        type: "object",
+        properties: {
+          title: { type: "string", description: "Task title" },
+          description: { type: "string", description: "Task description" },
+          due_date: { type: "string", description: "Due date in YYYY-MM-DD format" },
+          priority: { type: "string", enum: ["Low", "Medium", "High", "Urgent"], description: "Task priority" },
+          reminder_minutes: { type: "number", description: "Reminder before due date in minutes" }
+        },
+        required: ["title"]
       }
     },
     {
-      type: "function",
-      function: {
-        name: "create_note",
-        description: "Create a new note in D-TRACK",
-        parameters: {
-          type: "object",
-          properties: {
-            title: { type: "string", description: "Note title" },
-            content: { type: "string", description: "Note content" },
-            category: { type: "string", description: "Note category" }
-          },
-          required: ["title", "content"]
-        }
+      name: "create_note",
+      description: "Create a new note in D-TRACK",
+      parameters: {
+        type: "object",
+        properties: {
+          title: { type: "string", description: "Note title" },
+          content: { type: "string", description: "Note content" },
+          category: { type: "string", description: "Note category" }
+        },
+        required: ["title", "content"]
       }
     },
     {
-      type: "function",
-      function: {
-        name: "create_project",
-        description: "Create a new project in D-TRACK",
-        parameters: {
-          type: "object",
-          properties: {
-            name: { type: "string", description: "Project name" },
-            description: { type: "string", description: "Project description" },
-            start_date: { type: "string", description: "Start date in YYYY-MM-DD format" },
-            end_date: { type: "string", description: "End date in YYYY-MM-DD format" }
-          },
-          required: ["name"]
-        }
+      name: "create_project",
+      description: "Create a new project in D-TRACK",
+      parameters: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "Project name" },
+          description: { type: "string", description: "Project description" },
+          start_date: { type: "string", description: "Start date in YYYY-MM-DD format" },
+          end_date: { type: "string", description: "End date in YYYY-MM-DD format" }
+        },
+        required: ["name"]
       }
     },
     {
-      type: "function",
-      function: {
-        name: "create_calendar_event",
-        description: "Create a new calendar event in D-TRACK",
-        parameters: {
-          type: "object",
-          properties: {
-            title: { type: "string", description: "Event title" },
-            description: { type: "string", description: "Event description" },
-            event_date: { type: "string", description: "Event date in YYYY-MM-DD format" },
-            start_time: { type: "string", description: "Start time in HH:MM format" },
-            end_time: { type: "string", description: "End time in HH:MM format" }
-          },
-          required: ["title", "event_date"]
-        }
+      name: "create_calendar_event",
+      description: "Create a new calendar event in D-TRACK",
+      parameters: {
+        type: "object",
+        properties: {
+          title: { type: "string", description: "Event title" },
+          description: { type: "string", description: "Event description" },
+          event_date: { type: "string", description: "Event date in YYYY-MM-DD format" },
+          start_time: { type: "string", description: "Start time in HH:MM format" },
+          end_time: { type: "string", description: "End time in HH:MM format" }
+        },
+        required: ["title", "event_date"]
       }
     }
   ];
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${googleApiKey}`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${lovableApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: message }
+      contents: [
+        { role: 'user', parts: [{ text: systemPrompt + '\n\n' + message }] }
       ],
-      tools: tools,
-      max_completion_tokens: 1000
+      tools: [{
+        functionDeclarations: tools
+      }],
+      generationConfig: {
+        temperature: 0.9,
+        maxOutputTokens: 1000,
+      }
     }),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('OpenAI API error:', response.status, errorText);
+    console.error('Google Gemini API error:', response.status, errorText);
     if (response.status === 429) {
       return new Response(
-        JSON.stringify({ error: 'RATE_LIMIT', message: 'AI is temporarily rate-limited or quota is exhausted. Please try again shortly.' }),
+        JSON.stringify({ error: 'RATE_LIMIT', message: 'AI is temporarily rate-limited. Please try again shortly.' }),
         { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    if (response.status === 402) {
-      return new Response(
-        JSON.stringify({ error: 'PAYMENT_REQUIRED', message: 'AI credits are exhausted. Please add funds to continue.' }),
-        { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
     return new Response(
-      JSON.stringify({ error: 'AI_GATEWAY_ERROR', message: 'Upstream AI error' }),
+      JSON.stringify({ error: 'GEMINI_API_ERROR', message: 'Gemini API error' }),
       { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -536,22 +516,24 @@ User message: ${JSON.stringify(message)}`;
   const result = await response.json();
   console.log('AI result:', JSON.stringify(result));
   
-  if (!result.choices || !result.choices[0] || !result.choices[0].message) {
+  if (!result.candidates || !result.candidates[0]) {
     console.error('Unexpected AI response format:', result);
     throw new Error('Invalid response from AI');
   }
   
-  const choice = result.choices[0];
-  let aiResponse = choice.message.content || '';
+  const candidate = result.candidates[0];
+  const content = candidate.content;
+  let aiResponse = content.parts.find((p: any) => p.text)?.text || '';
   let createdItems = [];
 
-  // Handle tool calls
-  if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
-    console.log('Tool calls detected:', choice.message.tool_calls);
+  // Handle function calls
+  const functionCalls = content.parts.filter((p: any) => p.functionCall);
+  if (functionCalls.length > 0) {
+    console.log('Function calls detected:', functionCalls);
     
-    for (const toolCall of choice.message.tool_calls) {
-      const functionName = toolCall.function.name;
-      const args = JSON.parse(toolCall.function.arguments);
+    for (const part of functionCalls) {
+      const functionName = part.functionCall.name;
+      const args = part.functionCall.args;
       
       console.log(`Executing tool: ${functionName}`, args);
       
@@ -577,6 +559,7 @@ User message: ${JSON.stringify(message)}`;
             if (error) throw error;
             createdItems.push({ type: 'task', item: task });
             aiResponse = `✅ Task created: "${args.title}"${args.due_date ? ` (Due: ${args.due_date})` : ''}. What else can I help you with?`;
+            createdItems[createdItems.length - 1].itemType = 'task';
             break;
           }
           
@@ -595,6 +578,7 @@ User message: ${JSON.stringify(message)}`;
             if (error) throw error;
             createdItems.push({ type: 'note', item: note });
             aiResponse = `✅ Note created: "${args.title}". Anything else?`;
+            createdItems[createdItems.length - 1].itemType = 'note';
             break;
           }
           
@@ -615,6 +599,7 @@ User message: ${JSON.stringify(message)}`;
             if (error) throw error;
             createdItems.push({ type: 'project', item: project });
             aiResponse = `✅ Project created: "${args.name}". Ready to add tasks to it?`;
+            createdItems[createdItems.length - 1].itemType = 'project';
             break;
           }
           
@@ -639,6 +624,7 @@ User message: ${JSON.stringify(message)}`;
             if (error) throw error;
             createdItems.push({ type: 'calendar_event', item: event });
             aiResponse = `✅ Calendar event created: "${args.title}" on ${args.event_date}${args.description ? ` - ${args.description}` : ''}. What's next?`;
+            createdItems[createdItems.length - 1].itemType = 'calendar';
             break;
           }
         }
