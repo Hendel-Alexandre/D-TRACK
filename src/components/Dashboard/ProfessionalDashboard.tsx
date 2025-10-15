@@ -68,10 +68,31 @@ export function ProfessionalDashboard() {
         tasks: tasks?.filter(t => t.status === 'Completed').length || 0,
       });
 
-      // Set empty chart data if no data exists
-      setRevenueData([]);
-      setActivityData([]);
-      setRecentActivity([]);
+      // Generate sample chart data for demonstration
+      setRevenueData([
+        { name: 'Jan', value: 4000 },
+        { name: 'Feb', value: 3000 },
+        { name: 'Mar', value: 5000 },
+        { name: 'Apr', value: 4500 },
+        { name: 'May', value: 6000 },
+        { name: 'Jun', value: 5500 },
+      ]);
+      
+      setActivityData([
+        { name: 'Mon', tasks: 12, projects: 4 },
+        { name: 'Tue', tasks: 19, projects: 3 },
+        { name: 'Wed', tasks: 15, projects: 5 },
+        { name: 'Thu', tasks: 22, projects: 4 },
+        { name: 'Fri', tasks: 18, projects: 6 },
+        { name: 'Sat', tasks: 8, projects: 2 },
+        { name: 'Sun', tasks: 5, projects: 1 },
+      ]);
+      
+      setRecentActivity([
+        { user: 'You', action: 'completed a task', time: '2 minutes ago' },
+        { user: 'Team', action: 'started a new project', time: '1 hour ago' },
+        { user: 'You', action: 'logged 3 hours', time: '3 hours ago' },
+      ]);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
