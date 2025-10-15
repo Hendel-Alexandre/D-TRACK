@@ -96,16 +96,46 @@ serve(async (req) => {
       return input.trim().slice(0, 10000);
     };
 
+    // SECURITY: Detect prompt injection attempts
+    const detectPromptInjection = (text: string): boolean => {
+      const suspiciousPatterns = [
+        /ignore (previous|all) (instructions|prompts)/i,
+        /system prompt/i,
+        /you are (now|actually)/i,
+        /\[\s*system\s*\]/i,
+        /forget (everything|all)/i,
+        /reveal (your|the) (instructions|prompt|system)/i,
+        /what are your (instructions|rules)/i,
+      ];
+      return suspiciousPatterns.some(pattern => pattern.test(text));
+    };
+
     // Override userId in data with authenticated user's ID for security
     const secureData = { ...data, userId: authenticatedUserId };
-    if (data.text) secureData.text = sanitizeText(data.text);
-    if (data.message) secureData.message = sanitizeText(data.message);
-
-    // Create Supabase admin client for logging
-    const supabaseAdmin = createClient(
-      supabaseUrl!,
-      supabaseServiceKey!
-    );
+    if (data.text) {
+      secureData.text = sanitizeText(data.text);
+      if (detectPromptInjection(secureData.text)) {
+        console.warn(`Prompt injection attempt detected from user ${authenticatedUserId}`);
+        return new Response(JSON.stringify({ 
+          error: 'Invalid request detected' 
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+    if (data.message) {
+      secureData.message = sanitizeText(data.message);
+      if (detectPromptInjection(secureData.message)) {
+        console.warn(`Prompt injection attempt detected from user ${authenticatedUserId}`);
+        return new Response(JSON.stringify({ 
+          error: 'Invalid request detected' 
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
 
     // Helper function to log AI usage
     const logUsage = async (action: string, tokenCount?: number) => {
@@ -147,11 +177,15 @@ serve(async (req) => {
         await logUsage(action);
         return result;
       default:
-        throw new Error('Unknown action');
+        return new Response(JSON.stringify({ error: 'Invalid request' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
     }
   } catch (error: any) {
-    console.error('Error in AI Assistant function:', error);
-    return new Response(JSON.stringify({ error: error?.message || 'Unknown error' }), {
+    const errorId = crypto.randomUUID();
+    console.error(`[${errorId}] Error in AI Assistant function:`, error);
+    return new Response(JSON.stringify({ error: 'Request failed. Please try again.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -506,8 +540,9 @@ async function handleDarvisChat(data: any, supabase: any) {
         validateFile(file);
         console.log(`File validation passed: ${file.name} (${file.type})`);
       } catch (error: any) {
-        console.error('File validation failed:', error.message);
-        throw new Error(`File validation failed for "${file.name}": ${error.message}`);
+        const errorId = crypto.randomUUID();
+        console.error(`[${errorId}] File validation failed for "${file.name}":`, error.message);
+        throw new Error('File upload failed. Please check file type and size.');
       }
     }
   }
@@ -867,11 +902,11 @@ async function generateImage(data: any) {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: any) {
-    console.error('Error generating image:', error);
+    const errorId = crypto.randomUUID();
+    console.error(`[${errorId}] Error generating image:`, error);
     return new Response(JSON.stringify({
       success: false,
-      message: 'Failed to generate image. Please try again.',
-      error: error.message
+      message: 'Failed to generate image. Please try again.'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

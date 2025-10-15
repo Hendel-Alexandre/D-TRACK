@@ -151,9 +151,10 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    console.error('Webhook error:', error.message);
+    const errorId = crypto.randomUUID();
+    console.error(`[${errorId}] Webhook error:`, error.message);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Webhook processing failed' }),
       {
         headers: { 'Content-Type': 'application/json' },
         status: 400,

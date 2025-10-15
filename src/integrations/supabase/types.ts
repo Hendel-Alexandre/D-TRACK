@@ -1247,6 +1247,10 @@ export type Database = {
         Args: { room_id_param: string }
         Returns: boolean
       }
+      is_student_conversation_member: {
+        Args: { conv_id: string }
+        Returns: boolean
+      }
       shares_conversation_with: {
         Args: { target_user_id: string }
         Returns: boolean
