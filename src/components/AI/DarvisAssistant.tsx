@@ -118,7 +118,7 @@ export function DarvisAssistant() {
           data: {
             message: userMessage.text,
             userId: user.id,
-            conversationHistory: messages.slice(-15), // Increased memory
+            conversationHistory: messages.slice(-20), // Keep last 20 messages for context
             files: fileData ? [fileData] : undefined
           }
         }

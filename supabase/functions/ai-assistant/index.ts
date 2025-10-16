@@ -549,7 +549,7 @@ async function handleDarvisChat(data: any, supabase: any) {
   
   // Build conversation context - sanitize (increased memory)
   const context = conversationHistory
-    .slice(-15) // Last 15 messages for better memory
+    .slice(-20) // Last 20 messages for better context retention
     .map((msg: any) => `${JSON.stringify(msg.sender)}: ${JSON.stringify(String(msg.text).slice(0, 500))}`)
     .join('\n');
   
@@ -567,10 +567,21 @@ CURRENT DATE & TIME:
 - Current time: ${currentTime}
 - Current month: ${currentMonth}
 
-You have direct access to create and query user data. When users ask questions, use the appropriate tool immediately.
+CRITICAL BEHAVIOR RULES:
+🎯 ACT IMMEDIATELY - DO NOT ASK CLARIFYING QUESTIONS
+- When a user asks you to create something (task, note, project, etc.), DO IT IMMEDIATELY using sensible defaults
+- NEVER ask "What date?", "What priority?", "What description?" - just use smart defaults
+- If the user says "create a note about groceries", create it NOW with title "Groceries" and minimal content
+- If the user says "how many tasks do I have?", call get_tasks immediately with count_only=true
+- If information is missing, use these defaults:
+  * Priority: "Medium"
+  * Due date: Today's date (${currentDate})
+  * Description: Leave empty or use the title
+  * Reminder: false
+- Only ask for clarification if the user's request is genuinely ambiguous (e.g., "create it" without context)
 
 Your capabilities:
-1. Create work tasks, notes, projects, calendar events
+1. Create work tasks, notes, projects, calendar events - ACT IMMEDIATELY with defaults
 2. Query work tasks - Use get_tasks to count, list, or filter
 3. Query student tasks - Use get_student_tasks for student work
 4. Query calendar - Use get_calendar_events to see what's scheduled
@@ -600,6 +611,7 @@ Guidelines for user-friendly communication:
 - Seamlessly access both student and work data - users don't need to specify mode
 - When asked about tasks, check both work tasks (tasks table) and student tasks (student_tasks table)
 - Provide context-aware responses based on what the user is asking about
+- MOST IMPORTANT: Take action immediately with smart defaults rather than asking questions
 
 Recent conversation:
 ${context}
