@@ -553,31 +553,42 @@ async function handleDarvisChat(data: any, supabase: any) {
     .map((msg: any) => `${JSON.stringify(msg.sender)}: ${JSON.stringify(String(msg.text).slice(0, 500))}`)
     .join('\n');
   
+  // Get current date/time context
+  const now = new Date();
+  const currentDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
+  const currentTime = now.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+  const currentMonth = now.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  const dayOfWeek = now.toLocaleString('en-US', { weekday: 'long' });
+
   const systemPrompt = `You are Darvis, the friendly AI assistant for D-TRACK (a task and time management app). 
 
-You have direct access to create tasks, notes, projects, and calendar events for users. When users request these actions, use the appropriate tool immediately.
+CURRENT DATE & TIME:
+- Today is ${dayOfWeek}, ${currentDate}
+- Current time: ${currentTime}
+- Current month: ${currentMonth}
+
+You have direct access to create and query user data. When users ask questions, use the appropriate tool immediately.
 
 Your capabilities:
-1. Create tasks - Use create_task when user wants to add/create a task
-2. Create notes - Use create_note when user wants to write/save a note
-3. Create projects - Use create_project when user wants to start a new project
-4. Create calendar events - Use create_calendar_event for meetings/appointments/schedules
-5. Add notes to calendar - Use add_note_to_calendar to add notes to events by searching for the event title or date (NO IDs needed!)
-6. Analyze images, documents, and other files uploaded by users
-7. Generate images from descriptions
-8. Generate documents (essays, reports, Excel spreadsheets)
-9. Convert documents between formats (PDF to Excel, Word to PDF, etc.)
-10. Check timesheets and attendance
-11. Provide workload insights
-12. Support multiple languages: English, Spanish, French, German, Portuguese, Italian
+1. Create tasks, notes, projects, calendar events
+2. Query tasks - Use get_tasks to count, list, or filter user's tasks
+3. Query calendar - Use get_calendar_events to see what's scheduled
+4. Query user profile - Use get_user_profile to see user information
+5. Query projects - Use get_projects to see user's projects
+6. Query notes - Use get_notes to see user's notes
+7. Add notes to calendar - Use add_note_to_calendar (search by title/date, NO IDs!)
+8. Analyze uploaded files (images, documents)
+9. Generate images from descriptions
+10. Generate documents (essays, reports, Excel spreadsheets)
+11. Convert documents between formats (PDF to Excel, Word to PDF, etc.)
+12. Check timesheets and attendance
+13. Provide workload insights
 
 Guidelines for user-friendly communication:
 - NEVER ask users for technical IDs or UUIDs - search by title/date instead
+- Always use current date/time in your responses when relevant
 - Use natural, conversational language
 - Be helpful and encouraging
-- Explain what you're doing in simple terms
-- Confirm actions with friendly messages
-- When users upload images or documents for conversion, process them immediately
 - Remember our conversation history - reference previous messages when relevant
 
 Recent conversation:
@@ -586,6 +597,46 @@ ${context}
 User message: ${JSON.stringify(message)}`;
 
   const tools = [
+    {
+      name: "get_tasks",
+      description: "Get user's tasks - count them, list them, filter by status or priority",
+      parameters: {
+        type: "object",
+        properties: {
+          status: { type: "string", enum: ["Todo", "In Progress", "Done", "All"], description: "Filter by status" },
+          priority: { type: "string", enum: ["Low", "Medium", "High", "Urgent", "All"], description: "Filter by priority" },
+          count_only: { type: "boolean", description: "If true, return only count" }
+        }
+      }
+    },
+    {
+      name: "get_projects",
+      description: "Get user's projects with their status and details",
+      parameters: {
+        type: "object",
+        properties: {
+          status: { type: "string", enum: ["Active", "Completed", "On Hold", "All"], description: "Filter by status" }
+        }
+      }
+    },
+    {
+      name: "get_notes",
+      description: "Get user's notes - search by title or list all",
+      parameters: {
+        type: "object",
+        properties: {
+          search: { type: "string", description: "Search in note titles and content" }
+        }
+      }
+    },
+    {
+      name: "get_user_profile",
+      description: "Get user's profile information (name, department, status, etc.)",
+      parameters: {
+        type: "object",
+        properties: {}
+      }
+    },
     {
       name: "create_task",
       description: "Create a new task in D-TRACK",
@@ -860,6 +911,83 @@ User message: ${JSON.stringify(message)}`;
       
       try {
         switch (functionName) {
+          case 'get_tasks': {
+            let query = supabase
+              .from('tasks')
+              .select('*')
+              .eq('user_id', userId);
+            
+            if (args.status && args.status !== 'All') {
+              query = query.eq('status', args.status);
+            }
+            if (args.priority && args.priority !== 'All') {
+              query = query.eq('priority', args.priority);
+            }
+            
+            const { data: tasks, error } = await query.order('created_at', { ascending: false });
+            
+            if (error) throw error;
+            
+            if (args.count_only) {
+              aiResponse = `You have ${tasks?.length || 0} task${tasks?.length === 1 ? '' : 's'}${args.status && args.status !== 'All' ? ` with status "${args.status}"` : ''}${args.priority && args.priority !== 'All' ? ` with priority "${args.priority}"` : ''}.`;
+            } else {
+              const taskSummary = tasks?.slice(0, 10).map(t => `- ${t.title} (${t.status}, ${t.priority}${t.due_date ? ', due: ' + t.due_date : ''})`).join('\n') || 'No tasks found.';
+              aiResponse = `You have ${tasks?.length || 0} task${tasks?.length === 1 ? '' : 's'}:\n\n${taskSummary}${tasks && tasks.length > 10 ? '\n\n...and ' + (tasks.length - 10) + ' more' : ''}`;
+            }
+            break;
+          }
+          
+          case 'get_projects': {
+            let query = supabase
+              .from('projects')
+              .select('*')
+              .eq('user_id', userId);
+            
+            if (args.status && args.status !== 'All') {
+              query = query.eq('status', args.status);
+            }
+            
+            const { data: projects, error } = await query.order('created_at', { ascending: false });
+            
+            if (error) throw error;
+            
+            const projectSummary = projects?.map(p => `- ${p.name} (${p.status}${p.start_date ? ', started: ' + p.start_date : ''})`).join('\n') || 'No projects found.';
+            aiResponse = `You have ${projects?.length || 0} project${projects?.length === 1 ? '' : 's'}:\n\n${projectSummary}`;
+            break;
+          }
+          
+          case 'get_notes': {
+            let query = supabase
+              .from('notes')
+              .select('*')
+              .eq('user_id', userId);
+            
+            if (args.search) {
+              query = query.or(`title.ilike.%${args.search}%,content.ilike.%${args.search}%`);
+            }
+            
+            const { data: notes, error } = await query.order('updated_at', { ascending: false }).limit(10);
+            
+            if (error) throw error;
+            
+            const noteSummary = notes?.map(n => `- ${n.title}${n.content ? ' - ' + n.content.substring(0, 50) + (n.content.length > 50 ? '...' : '') : ''}`).join('\n') || 'No notes found.';
+            aiResponse = `Found ${notes?.length || 0} note${notes?.length === 1 ? '' : 's'}:\n\n${noteSummary}`;
+            break;
+          }
+          
+          case 'get_user_profile': {
+            const { data: profile, error } = await supabase
+              .from('users')
+              .select('first_name, last_name, email, department, status')
+              .eq('id', userId)
+              .single();
+            
+            if (error) throw error;
+            
+            aiResponse = `Here's your profile:\nName: ${profile.first_name} ${profile.last_name}\nEmail: ${profile.email}\nDepartment: ${profile.department}\nStatus: ${profile.status}`;
+            break;
+          }
+          
           case 'create_task': {
             const { data: task, error } = await supabase
               .from('tasks')
@@ -994,17 +1122,25 @@ User message: ${JSON.stringify(message)}`;
           }
           
           case 'get_calendar_events': {
+            const startDate = args.start_date || new Date().toISOString().split('T')[0];
+            const endDate = args.end_date || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+            
             const { data: events, error } = await supabase
               .from('tasks')
               .select('*')
               .eq('user_id', userId)
-              .gte('due_date', args.start_date || new Date().toISOString().split('T')[0])
-              .lte('due_date', args.end_date || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0])
+              .gte('due_date', startDate)
+              .lte('due_date', endDate)
               .order('due_date', { ascending: true });
             
             if (error) throw error;
             
-            aiResponse = `Found ${events?.length || 0} events/tasks in your calendar.`;
+            if (!events || events.length === 0) {
+              aiResponse = `You have no events scheduled between ${startDate} and ${endDate}.`;
+            } else {
+              const eventSummary = events.map(e => `- ${e.title} on ${e.due_date} (${e.status})`).join('\n');
+              aiResponse = `You have ${events.length} event${events.length === 1 ? '' : 's'} scheduled:\n\n${eventSummary}`;
+            }
             break;
           }
           

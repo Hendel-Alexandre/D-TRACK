@@ -56,7 +56,7 @@ export function DarvisAssistant() {
     if (isOpen && messages.length === 0) {
       setMessages([{
         id: '1',
-        text: "Hi! I'm Darvis, your advanced AI assistant for D-TRACK. I can:\n\n• Create tasks, notes, projects, and calendar events\n• Add notes to your calendar events (just tell me the event name!)\n• Check your timesheets and attendance\n• Generate images from descriptions\n• Create documents (essays, reports, Excel sheets)\n• Convert documents (PDF to Excel, Word to PDF, etc.)\n• Transcribe audio/video files\n• Analyze uploaded images and documents\n• Create student class schedules\n• Research topics and find sources\n\nJust tell me what you need in plain language - I'll remember our conversation and never ask you for technical IDs!",
+        text: "Hi! I'm Darvis, your advanced AI assistant for D-TRACK. I can:\n\n• Query your tasks, projects, notes, and calendar\n• Tell you how many tasks you have and what's coming up\n• Check your profile and work schedule\n• Create tasks, notes, projects, and calendar events\n• Add notes to calendar events (just tell me the event name!)\n• Generate images and documents (essays, reports, Excel)\n• Convert documents (PDF to Excel, Word to PDF, etc.)\n• Analyze uploaded files and transcribe audio\n• Research topics and provide insights\n\nI always know today's date and time, and I remember our conversation. Just ask me anything in plain language!",
         sender: 'darvis',
         timestamp: new Date()
       }])
