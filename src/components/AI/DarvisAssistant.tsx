@@ -56,7 +56,7 @@ export function DarvisAssistant() {
     if (isOpen && messages.length === 0) {
       setMessages([{
         id: '1',
-        text: "Hi! I'm Darvis, your advanced AI assistant for D-TRACK. I can:\n\n• Query your tasks, projects, notes, and calendar\n• Tell you how many tasks you have and what's coming up\n• Check your profile and work schedule\n• Create tasks, notes, projects, and calendar events\n• Add notes to calendar events (just tell me the event name!)\n• Generate images and documents (essays, reports, Excel)\n• Convert documents (PDF to Excel, Word to PDF, etc.)\n• Analyze uploaded files and transcribe audio\n• Research topics and provide insights\n\nI always know today's date and time, and I remember our conversation. Just ask me anything in plain language!",
+        text: "Hi! I'm Darvis, your advanced AI assistant for D-TRACK. I can seamlessly work with both your student and professional data:\n\n📚 Student Mode:\n• Check your classes, assignments, and student tasks\n• View your student profile and files\n• Track assignment deadlines\n\n💼 Work Mode:\n• Manage work tasks, projects, and notes\n• Check your work profile and files\n• Review calendar and timesheets\n\n🎨 Creative Tools:\n• Generate images and documents\n• Convert documents between formats\n• Analyze uploaded files\n\n🔍 Smart Features:\n• Always know today's date and time\n• Remember our conversation\n• Search across all your data\n\nJust ask me anything in plain language - I'll know which mode you need!",
         sender: 'darvis',
         timestamp: new Date()
       }])

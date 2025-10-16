@@ -570,19 +570,26 @@ CURRENT DATE & TIME:
 You have direct access to create and query user data. When users ask questions, use the appropriate tool immediately.
 
 Your capabilities:
-1. Create tasks, notes, projects, calendar events
-2. Query tasks - Use get_tasks to count, list, or filter user's tasks
-3. Query calendar - Use get_calendar_events to see what's scheduled
-4. Query user profile - Use get_user_profile to see user information
-5. Query projects - Use get_projects to see user's projects
-6. Query notes - Use get_notes to see user's notes
-7. Add notes to calendar - Use add_note_to_calendar (search by title/date, NO IDs!)
-8. Analyze uploaded files (images, documents)
-9. Generate images from descriptions
-10. Generate documents (essays, reports, Excel spreadsheets)
-11. Convert documents between formats (PDF to Excel, Word to PDF, etc.)
-12. Check timesheets and attendance
-13. Provide workload insights
+1. Create work tasks, notes, projects, calendar events
+2. Query work tasks - Use get_tasks to count, list, or filter
+3. Query student tasks - Use get_student_tasks for student work
+4. Query calendar - Use get_calendar_events to see what's scheduled
+5. Query user profile - Use get_user_profile for basic info
+6. Query student profile - Use get_student_profile for school info
+7. Query work profile - Use get_work_profile for job info
+8. Query student classes - Use get_student_classes for schedule
+9. Query student assignments - Use get_student_assignments
+10. Query projects - Use get_projects to see user's projects
+11. Query notes - Use get_notes to see user's notes
+12. Query student files - Use get_student_files
+13. Query work files - Use get_work_files
+14. Add notes to calendar - Use add_note_to_calendar (search by title/date, NO IDs!)
+15. Analyze uploaded files (images, documents)
+16. Generate images from descriptions
+17. Generate documents (essays, reports, Excel spreadsheets)
+18. Convert documents between formats (PDF to Excel, Word to PDF, etc.)
+19. Check timesheets and attendance
+20. Provide workload insights
 
 Guidelines for user-friendly communication:
 - NEVER ask users for technical IDs or UUIDs - search by title/date instead
@@ -590,6 +597,9 @@ Guidelines for user-friendly communication:
 - Use natural, conversational language
 - Be helpful and encouraging
 - Remember our conversation history - reference previous messages when relevant
+- Seamlessly access both student and work data - users don't need to specify mode
+- When asked about tasks, check both work tasks (tasks table) and student tasks (student_tasks table)
+- Provide context-aware responses based on what the user is asking about
 
 Recent conversation:
 ${context}
@@ -803,6 +813,74 @@ User message: ${JSON.stringify(message)}`;
           topic: { type: "string", description: "Topic to research" }
         },
         required: ["topic"]
+      }
+    },
+    {
+      name: "get_student_tasks",
+      description: "Get student tasks - count, list, filter by status/priority",
+      parameters: {
+        type: "object",
+        properties: {
+          status: { type: "string", enum: ["Todo", "In Progress", "Done", "All"], description: "Filter by status" },
+          priority: { type: "string", enum: ["Low", "Medium", "High", "All"], description: "Filter by priority" },
+          count_only: { type: "boolean", description: "If true, return only count" }
+        }
+      }
+    },
+    {
+      name: "get_student_classes",
+      description: "Get student's classes with schedule information",
+      parameters: {
+        type: "object",
+        properties: {}
+      }
+    },
+    {
+      name: "get_student_assignments",
+      description: "Get student assignments with status and type filters",
+      parameters: {
+        type: "object",
+        properties: {
+          status: { type: "string", enum: ["pending", "in_progress", "completed", "submitted", "All"], description: "Filter by status" },
+          type: { type: "string", enum: ["assignment", "exam", "quiz", "project", "All"], description: "Filter by type" }
+        }
+      }
+    },
+    {
+      name: "get_student_profile",
+      description: "Get student profile information (school, major, year)",
+      parameters: {
+        type: "object",
+        properties: {}
+      }
+    },
+    {
+      name: "get_work_profile",
+      description: "Get work profile information (company, job title, department)",
+      parameters: {
+        type: "object",
+        properties: {}
+      }
+    },
+    {
+      name: "get_student_files",
+      description: "Get student files - can filter by class or assignment",
+      parameters: {
+        type: "object",
+        properties: {
+          class_id: { type: "string", description: "Filter by class ID" },
+          assignment_id: { type: "string", description: "Filter by assignment ID" }
+        }
+      }
+    },
+    {
+      name: "get_work_files",
+      description: "Get work files - can filter by project",
+      parameters: {
+        type: "object",
+        properties: {
+          project_id: { type: "string", description: "Filter by project ID" }
+        }
       }
     }
   ];
@@ -1331,6 +1409,122 @@ User message: ${JSON.stringify(message)}`;
             const sources = sourcesResult.candidates?.[0]?.content?.parts?.[0]?.text || '';
             
             aiResponse = `Here are credible sources for "${args.topic}":\n\n${sources}`;
+            break;
+          }
+          
+          case 'get_student_tasks': {
+            let query = supabase.from('student_tasks').select('*').eq('user_id', userId);
+            
+            if (args.status && args.status !== 'All') query = query.eq('status', args.status);
+            if (args.priority && args.priority !== 'All') query = query.eq('priority', args.priority);
+            
+            const { data: tasks, error } = await query.order('created_at', { ascending: false });
+            if (error) throw error;
+            
+            if (args.count_only) {
+              aiResponse = `You have ${tasks?.length || 0} student task${tasks?.length === 1 ? '' : 's'}.`;
+            } else {
+              const taskSummary = tasks?.slice(0, 10).map(t => `- ${t.title} (${t.status}, ${t.priority}${t.due_date ? ', due: ' + t.due_date : ''})`).join('\n') || 'No student tasks found.';
+              aiResponse = `You have ${tasks?.length || 0} student task${tasks?.length === 1 ? '' : 's'}:\n\n${taskSummary}${tasks && tasks.length > 10 ? '\n\n...and ' + (tasks.length - 10) + ' more' : ''}`;
+            }
+            break;
+          }
+          
+          case 'get_student_classes': {
+            const { data: classes, error } = await supabase
+              .from('student_classes')
+              .select('*')
+              .eq('user_id', userId)
+              .order('day_of_week');
+            
+            if (error) throw error;
+            
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const classSummary = classes?.map(c => 
+              `- ${c.name} (${days[c.day_of_week]}, ${c.start_time}-${c.end_time})${c.instructor ? ' with ' + c.instructor : ''}${c.location ? ' at ' + c.location : ''}`
+            ).join('\n') || 'No classes found.';
+            aiResponse = `You have ${classes?.length || 0} class${classes?.length === 1 ? '' : 'es'}:\n\n${classSummary}`;
+            break;
+          }
+          
+          case 'get_student_assignments': {
+            let query = supabase.from('student_assignments').select('*').eq('user_id', userId);
+            
+            if (args.status && args.status !== 'All') query = query.eq('status', args.status);
+            if (args.type && args.type !== 'All') query = query.eq('type', args.type);
+            
+            const { data: assignments, error } = await query.order('due_date');
+            if (error) throw error;
+            
+            const assignmentSummary = assignments?.map(a => 
+              `- ${a.title} (${a.type}, ${a.status}) - Due: ${new Date(a.due_date).toLocaleDateString()}`
+            ).join('\n') || 'No assignments found.';
+            aiResponse = `You have ${assignments?.length || 0} assignment${assignments?.length === 1 ? '' : 's'}:\n\n${assignmentSummary}`;
+            break;
+          }
+          
+          case 'get_student_profile': {
+            const { data: profile, error } = await supabase
+              .from('student_profiles')
+              .select('*')
+              .eq('user_id', userId)
+              .maybeSingle();
+            
+            if (error) throw error;
+            
+            if (!profile) {
+              aiResponse = "You don't have a student profile set up yet. Would you like to create one?";
+            } else {
+              aiResponse = `📚 Student Profile:\n- School: ${profile.school_name || 'Not set'}\n- Major: ${profile.major || 'Not set'}\n- Year: ${profile.year || 'Not set'}`;
+            }
+            break;
+          }
+          
+          case 'get_work_profile': {
+            const { data: profile, error } = await supabase
+              .from('work_profiles')
+              .select('*')
+              .eq('user_id', userId)
+              .maybeSingle();
+            
+            if (error) throw error;
+            
+            if (!profile) {
+              aiResponse = "You don't have a work profile set up yet. Would you like to create one?";
+            } else {
+              aiResponse = `💼 Work Profile:\n- Company: ${profile.company_name || 'Not set'}\n- Job Title: ${profile.job_title || 'Not set'}\n- Department: ${profile.department || 'Not set'}`;
+            }
+            break;
+          }
+          
+          case 'get_student_files': {
+            let query = supabase.from('student_files').select('*').eq('user_id', userId);
+            
+            if (args.class_id) query = query.eq('class_id', args.class_id);
+            if (args.assignment_id) query = query.eq('assignment_id', args.assignment_id);
+            
+            const { data: files, error } = await query.order('created_at', { ascending: false });
+            if (error) throw error;
+            
+            const fileSummary = files?.slice(0, 10).map(f => 
+              `- ${f.file_name} (${f.file_type || 'unknown'})${f.tags ? ' - Tags: ' + f.tags.join(', ') : ''}`
+            ).join('\n') || 'No student files found.';
+            aiResponse = `You have ${files?.length || 0} student file${files?.length === 1 ? '' : 's'}:\n\n${fileSummary}${files && files.length > 10 ? '\n\n...and ' + (files.length - 10) + ' more' : ''}`;
+            break;
+          }
+          
+          case 'get_work_files': {
+            let query = supabase.from('work_files').select('*').eq('user_id', userId);
+            
+            if (args.project_id) query = query.eq('project_id', args.project_id);
+            
+            const { data: files, error } = await query.order('created_at', { ascending: false });
+            if (error) throw error;
+            
+            const fileSummary = files?.slice(0, 10).map(f => 
+              `- ${f.file_name} (${f.file_type || 'unknown'})${f.tags ? ' - Tags: ' + f.tags.join(', ') : ''}`
+            ).join('\n') || 'No work files found.';
+            aiResponse = `You have ${files?.length || 0} work file${files?.length === 1 ? '' : 's'}:\n\n${fileSummary}${files && files.length > 10 ? '\n\n...and ' + (files.length - 10) + ' more' : ''}`;
             break;
           }
         }
