@@ -36,21 +36,24 @@ export function useProfilePicture() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
+      // Get public URL with cache-busting timestamp
+      const timestamp = new Date().getTime();
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
+      
+      const cachedUrl = `${publicUrl}?t=${timestamp}`;
 
       // Update user profile
       const { error: updateError } = await supabase
         .from('users')
-        .update({ avatar_url: publicUrl })
+        .update({ avatar_url: cachedUrl })
         .eq('id', userId);
 
       if (updateError) throw updateError;
 
       toast.success('Profile picture updated successfully!');
-      return publicUrl;
+      return cachedUrl;
     } catch (error: any) {
       console.error('Error uploading profile picture:', error);
       toast.error(error.message || 'Failed to upload profile picture');

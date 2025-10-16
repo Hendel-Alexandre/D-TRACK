@@ -9,23 +9,30 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 
 interface DarvisResponse {
-  type: 'creation_complete' | 'general'
+  type: 'creation_complete' | 'general' | 'confirmation_required'
   message: string
   created_items?: Array<{
-    type: 'task' | 'note' | 'project' | 'calendar_event'
+    type: 'task' | 'note' | 'project' | 'calendar_event' | 'student_class' | 'image' | 'document'
     item: any
   }>
+  pending_action?: {
+    action: string
+    params: any
+  }
 }
 
 export function DarvisAssistant() {
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Array<{id: string, text: string, sender: 'user' | 'darvis', timestamp: Date, createdItems?: any[]}>>([])
+  const [messages, setMessages] = useState<Array<{id: string, text: string, sender: 'user' | 'darvis', timestamp: Date, createdItems?: any[], images?: string[], downloadLink?: any}>>([])
   const [input, setInput] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const [audioChunks, setAudioChunks] = useState<Blob[]>([])
+  const [lastAction, setLastAction] = useState<any>(null) // For undo functionality
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { user } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
@@ -42,7 +49,7 @@ export function DarvisAssistant() {
     if (isOpen && messages.length === 0) {
       setMessages([{
         id: '1',
-        text: "Hi! I'm Darvis, your AI assistant for D-TRACK. I can create tasks, notes, projects, and calendar events for you. Just tell me what you need! Try: 'Create a task to call James tomorrow at 2pm' or 'Add a note about the meeting'",
+        text: "Hi! I'm Darvis, your advanced AI assistant for D-TRACK. I can:\n\n• Create tasks, notes, projects, and calendar events\n• Access your timesheets and check attendance\n• Generate images and documents (essays, reports, Excel sheets)\n• Transcribe and summarize audio/video files\n• Read and modify your calendar\n• Create student class schedules from text or images\n• Research topics and find sources\n• Write essays and more!\n\nJust tell me what you need! I'll always ask for confirmation before important actions. You can also undo the last action anytime.",
         sender: 'darvis',
         timestamp: new Date()
       }])
@@ -51,17 +58,50 @@ export function DarvisAssistant() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim() || !user || isProcessing) return
+    if ((!input.trim() && !selectedFile) || !user || isProcessing) return
+
+    let messageText = input.trim()
+    let fileData = null
+
+    // Handle file upload
+    if (selectedFile) {
+      const maxSize = 100 * 1024 * 1024; // 100MB
+      if (selectedFile.size > maxSize) {
+        toast({
+          title: 'File too large',
+          description: 'Maximum file size is 100MB',
+          variant: 'destructive'
+        })
+        return
+      }
+
+      const reader = new FileReader()
+      await new Promise((resolve) => {
+        reader.onloadend = () => {
+          fileData = {
+            type: selectedFile.type,
+            data: reader.result,
+            name: selectedFile.name,
+            size: selectedFile.size
+          }
+          resolve(null)
+        }
+        reader.readAsDataURL(selectedFile)
+      })
+
+      messageText = messageText || `Analyze this file: ${selectedFile.name}`
+    }
 
     const userMessage = {
       id: Date.now().toString(),
-      text: input.trim(),
+      text: messageText,
       sender: 'user' as const,
       timestamp: new Date()
     }
 
     setMessages(prev => [...prev, userMessage])
     setInput('')
+    setSelectedFile(null)
     setIsProcessing(true)
 
     try {
@@ -71,7 +111,8 @@ export function DarvisAssistant() {
           data: {
             message: userMessage.text,
             userId: user.id,
-            conversationHistory: messages.slice(-5)
+            conversationHistory: messages.slice(-5),
+            files: fileData ? [fileData] : undefined
           }
         }
       })
@@ -108,7 +149,7 @@ export function DarvisAssistant() {
 
       const response: DarvisResponse = data.response
 
-      const darvisMessage = {
+      const darvisMessage: any = {
         id: (Date.now() + 1).toString(),
         text: response.message,
         sender: 'darvis' as const,
@@ -116,14 +157,32 @@ export function DarvisAssistant() {
         createdItems: response.created_items
       }
 
+      // Handle images
+      if (response.created_items?.some(item => item.type === 'image')) {
+        darvisMessage.images = response.created_items
+          .filter(item => item.type === 'image')
+          .map(item => item.item.url)
+      }
+
+      // Handle documents
+      if (response.created_items?.some(item => item.type === 'document')) {
+        const doc = response.created_items.find(item => item.type === 'document')
+        darvisMessage.downloadLink = doc?.item
+      }
+
       setMessages(prev => [...prev, darvisMessage])
 
-      // Show success toast if items were created
+      // Store last action for undo
       if (response.created_items && response.created_items.length > 0) {
+        setLastAction({
+          items: response.created_items,
+          timestamp: new Date()
+        })
+
         response.created_items.forEach(item => {
           toast({
             title: 'Created Successfully',
-            description: `Your ${item.type.replace('_', ' ')} has been created! Click the message to view.`
+            description: `Your ${item.type.replace('_', ' ')} has been created!`
           })
         })
       }
@@ -307,15 +366,41 @@ export function DarvisAssistant() {
                           task: '/tasks',
                           note: '/notes',
                           project: '/projects',
-                          calendar_event: '/calendar'
+                          calendar_event: '/calendar',
+                          student_class: '/student-classes'
                         };
-                        navigate(routes[item.type] || '/dashboard');
-                        setIsOpen(false);
+                        if (item.type !== 'image' && item.type !== 'document') {
+                          navigate(routes[item.type] || '/dashboard');
+                          setIsOpen(false);
+                        }
                       }
                     }}
                   >
                     <p className="text-sm">{message.text}</p>
-                    {message.createdItems && message.createdItems.length > 0 && (
+                    
+                    {/* Display images */}
+                    {message.images && message.images.length > 0 && (
+                      <div className="mt-2 space-y-2">
+                        {message.images.map((imgUrl: string, idx: number) => (
+                          <img key={idx} src={imgUrl} alt="Generated" className="rounded-lg max-w-full" />
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Display download button for documents */}
+                    {message.downloadLink && (
+                      <div className="mt-2">
+                        <a
+                          href={message.downloadLink.download}
+                          download={message.downloadLink.filename}
+                          className="inline-block px-3 py-1 bg-primary text-primary-foreground rounded text-xs hover:opacity-80"
+                        >
+                          Download {message.downloadLink.filename}
+                        </a>
+                      </div>
+                    )}
+                    
+                    {message.createdItems && message.createdItems.length > 0 && !message.images && !message.downloadLink && (
                       <p className="text-xs opacity-70 mt-1">Click to view →</p>
                     )}
                     <p className="text-xs opacity-70 mt-1">
@@ -329,8 +414,37 @@ export function DarvisAssistant() {
             </div>
 
             {/* Input */}
-            <form onSubmit={handleSubmit} className="p-4 border-t">
+            <form onSubmit={handleSubmit} className="p-4 border-t space-y-2">
+              {selectedFile && (
+                <div className="text-xs bg-muted p-2 rounded flex items-center justify-between">
+                  <span>{selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)}MB)</span>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setSelectedFile(null)}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
               <div className="flex gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) setSelectedFile(file);
+                  }}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isProcessing}
+                  className="h-10 w-10 p-0"
+                  title="Upload image/video/audio (max 100MB)"
+                >
+                  📎
+                </Button>
                 <Button
                   type="button"
                   size="sm"
@@ -348,11 +462,11 @@ export function DarvisAssistant() {
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask Darvis anything about your tasks..."
+                  placeholder="Ask Darvis anything..."
                   className="flex-1"
                   disabled={isProcessing || isRecording}
                 />
-                <Button type="submit" disabled={!input.trim() || isProcessing || isRecording} size="sm">
+                <Button type="submit" disabled={(!input.trim() && !selectedFile) || isProcessing || isRecording} size="sm">
                   {isProcessing ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (

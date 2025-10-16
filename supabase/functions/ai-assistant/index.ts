@@ -635,6 +635,103 @@ User message: ${JSON.stringify(message)}`;
         },
         required: ["title", "event_date"]
       }
+    },
+    {
+      name: "get_timesheets",
+      description: "Get user's timesheet entries to analyze work hours and check attendance",
+      parameters: {
+        type: "object",
+        properties: {
+          start_date: { type: "string", description: "Start date in YYYY-MM-DD format" },
+          end_date: { type: "string", description: "End date in YYYY-MM-DD format" }
+        }
+      }
+    },
+    {
+      name: "check_late_status",
+      description: "Check if user was late for work based on timesheet punch-in times",
+      parameters: {
+        type: "object",
+        properties: {
+          date: { type: "string", description: "Date to check in YYYY-MM-DD format" },
+          expected_start_time: { type: "string", description: "Expected start time in HH:MM format, default is 09:00" }
+        },
+        required: ["date"]
+      }
+    },
+    {
+      name: "get_calendar_events",
+      description: "Get user's calendar events and tasks for a date range",
+      parameters: {
+        type: "object",
+        properties: {
+          start_date: { type: "string", description: "Start date in YYYY-MM-DD format" },
+          end_date: { type: "string", description: "End date in YYYY-MM-DD format" }
+        }
+      }
+    },
+    {
+      name: "create_student_class",
+      description: "Create a class schedule entry for a student",
+      parameters: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "Class name" },
+          instructor: { type: "string", description: "Instructor name" },
+          location: { type: "string", description: "Class location" },
+          day_of_week: { type: "number", description: "Day of week (0=Sunday, 1=Monday, 2=Tuesday, etc.)" },
+          start_time: { type: "string", description: "Start time in HH:MM format" },
+          end_time: { type: "string", description: "End time in HH:MM format" },
+          color: { type: "string", description: "Hex color code for the class" }
+        },
+        required: ["name", "day_of_week", "start_time", "end_time"]
+      }
+    },
+    {
+      name: "update_calendar_note",
+      description: "Add a note to an existing calendar event or task",
+      parameters: {
+        type: "object",
+        properties: {
+          event_id: { type: "string", description: "Event/task UUID to update" },
+          note: { type: "string", description: "Note to add to the description" }
+        },
+        required: ["event_id", "note"]
+      }
+    },
+    {
+      name: "generate_image",
+      description: "Generate an image based on a detailed text description",
+      parameters: {
+        type: "object",
+        properties: {
+          prompt: { type: "string", description: "Detailed description of the image" }
+        },
+        required: ["prompt"]
+      }
+    },
+    {
+      name: "generate_document",
+      description: "Generate essays, reports, or Excel spreadsheets",
+      parameters: {
+        type: "object",
+        properties: {
+          type: { type: "string", enum: ["essay", "report", "excel", "spreadsheet"], description: "Document type" },
+          prompt: { type: "string", description: "What the document should contain" }
+        },
+        required: ["type", "prompt"]
+      }
+    },
+    {
+      name: "find_sources",
+      description: "Research a topic and suggest credible sources",
+      parameters: {
+        type: "object",
+        properties: {
+          topic: { type: "string", description: "Topic to research" }
+        },
+        required: ["topic"]
+      }
     }
   ];
 
@@ -830,10 +927,200 @@ User message: ${JSON.stringify(message)}`;
             createdItems[createdItems.length - 1].itemType = 'calendar';
             break;
           }
+          
+          case 'get_timesheets': {
+            const { data: timesheets, error } = await supabase
+              .from('timesheets')
+              .select('*')
+              .eq('user_id', userId)
+              .gte('date', args.start_date || new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0])
+              .lte('date', args.end_date || new Date().toISOString().split('T')[0])
+              .order('date', { ascending: false });
+            
+            if (error) throw error;
+            
+            const totalHours = timesheets?.reduce((sum, t) => sum + parseFloat(t.hours || 0), 0) || 0;
+            aiResponse = `Found ${timesheets?.length || 0} timesheet entries with ${totalHours.toFixed(2)} total hours.`;
+            break;
+          }
+          
+          case 'check_late_status': {
+            const expectedTime = args.expected_start_time || '09:00';
+            const { data: timesheets, error } = await supabase
+              .from('timesheets')
+              .select('*')
+              .eq('user_id', userId)
+              .eq('date', args.date)
+              .order('created_at', { ascending: true })
+              .limit(1);
+            
+            if (error) throw error;
+            
+            if (!timesheets || timesheets.length === 0) {
+              aiResponse = `No timesheet entry found for ${args.date}. You may not have punched in that day.`;
+            } else {
+              const punchIn = new Date(timesheets[0].created_at);
+              const punchTime = `${punchIn.getHours().toString().padStart(2, '0')}:${punchIn.getMinutes().toString().padStart(2, '0')}`;
+              const expected = expectedTime.split(':').map(Number);
+              const actual = [punchIn.getHours(), punchIn.getMinutes()];
+              const isLate = actual[0] > expected[0] || (actual[0] === expected[0] && actual[1] > expected[1]);
+              
+              aiResponse = isLate 
+                ? `Yes, you were late on ${args.date}. You punched in at ${punchTime}, expected was ${expectedTime}.`
+                : `No, you were on time on ${args.date}! You punched in at ${punchTime}.`;
+            }
+            break;
+          }
+          
+          case 'get_calendar_events': {
+            const { data: events, error } = await supabase
+              .from('tasks')
+              .select('*')
+              .eq('user_id', userId)
+              .gte('due_date', args.start_date || new Date().toISOString().split('T')[0])
+              .lte('due_date', args.end_date || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0])
+              .order('due_date', { ascending: true });
+            
+            if (error) throw error;
+            
+            aiResponse = `Found ${events?.length || 0} events/tasks in your calendar.`;
+            break;
+          }
+          
+          case 'create_student_class': {
+            const { data: studentClass, error } = await supabase
+              .from('student_classes')
+              .insert({
+                user_id: userId,
+                name: args.name,
+                instructor: args.instructor || null,
+                location: args.location || null,
+                day_of_week: args.day_of_week,
+                start_time: args.start_time,
+                end_time: args.end_time,
+                color: args.color || '#3b82f6'
+              })
+              .select()
+              .single();
+            
+            if (error) throw error;
+            
+            createdItems.push({ type: 'student_class', item: studentClass });
+            aiResponse = `✅ Class "${args.name}" added to your schedule!`;
+            createdItems[createdItems.length - 1].itemType = 'class';
+            break;
+          }
+          
+          case 'update_calendar_note': {
+            const { data: existingEvent, error: fetchError } = await supabase
+              .from('tasks')
+              .select('*')
+              .eq('id', args.event_id)
+              .eq('user_id', userId)
+              .single();
+            
+            if (fetchError || !existingEvent) throw new Error('Event not found');
+            
+            const updatedDescription = existingEvent.description 
+              ? `${existingEvent.description}\n\n${args.note}`
+              : args.note;
+            
+            const { error: updateError } = await supabase
+              .from('tasks')
+              .update({ description: updatedDescription })
+              .eq('id', args.event_id)
+              .eq('user_id', userId);
+            
+            if (updateError) throw updateError;
+            
+            aiResponse = `✅ Note added to "${existingEvent.title}"`;
+            break;
+          }
+          
+          case 'generate_image': {
+            // Call the internal image generation function
+            const imageResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${googleApiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: `Generate a high-quality image: ${args.prompt}` }] }],
+                modalities: ['image', 'text'],
+                generationConfig: { temperature: 1 }
+              }),
+            });
+            
+            if (!imageResponse.ok) throw new Error('Image generation failed');
+            
+            const imageResult = await imageResponse.json();
+            const imagePart = imageResult.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData);
+            
+            if (!imagePart?.inlineData?.data) throw new Error('No image data');
+            
+            const imageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
+            createdItems.push({ type: 'image', item: { url: imageUrl } });
+            aiResponse = `✅ Image generated successfully!`;
+            createdItems[createdItems.length - 1].itemType = 'image';
+            break;
+          }
+          
+          case 'generate_document': {
+            let docPrompt = `Create a ${args.type}: ${args.prompt}`;
+            
+            const docResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${googleApiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: docPrompt }] }],
+                generationConfig: { temperature: 0.7, maxOutputTokens: 4000 }
+              }),
+            });
+            
+            if (!docResponse.ok) throw new Error('Document generation failed');
+            
+            const docResult = await docResponse.json();
+            const docContent = docResult.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            
+            const blob = new TextEncoder().encode(docContent);
+            const base64 = btoa(String.fromCharCode(...blob));
+            const extension = args.type === 'excel' || args.type === 'spreadsheet' ? 'csv' : 'md';
+            
+            createdItems.push({ 
+              type: 'document', 
+              item: { 
+                content: docContent,
+                download: `data:text/plain;base64,${base64}`,
+                filename: `document_${Date.now()}.${extension}`
+              } 
+            });
+            aiResponse = `✅ ${args.type} generated! You can download it.`;
+            createdItems[createdItems.length - 1].itemType = 'document';
+            break;
+          }
+          
+          case 'find_sources': {
+            const sourcesPrompt = `Research the topic "${args.topic}" and provide 5 credible sources with brief descriptions. Format as: 1. [Source Name] - [Brief description and why it's credible]`;
+            
+            const sourcesResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${googleApiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: sourcesPrompt }] }],
+                generationConfig: { temperature: 0.7, maxOutputTokens: 2000 }
+              }),
+            });
+            
+            if (!sourcesResponse.ok) throw new Error('Source finding failed');
+            
+            const sourcesResult = await sourcesResponse.json();
+            const sources = sourcesResult.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            
+            aiResponse = `Here are credible sources for "${args.topic}":\n\n${sources}`;
+            break;
+          }
         }
       } catch (error: any) {
         console.error(`Error executing ${functionName}:`, error);
-        aiResponse = `I had trouble creating that ${functionName.replace('create_', '')}. Please try again or check your permissions.`;
+        aiResponse = `I had trouble with that request. Please try again.`;
       }
     }
   }

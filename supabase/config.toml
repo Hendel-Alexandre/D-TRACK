@@ -6,6 +6,12 @@ verify_jwt = true
 [functions.transcribe-audio]
 verify_jwt = true
 
+[functions.transcribe-media]
+verify_jwt = true
+
+[functions.generate-document]
+verify_jwt = true
+
 [functions.create-checkout-session]
 verify_jwt = true
 
