@@ -547,31 +547,38 @@ async function handleDarvisChat(data: any, supabase: any) {
     }
   }
   
-  // Build conversation context - sanitize
+  // Build conversation context - sanitize (increased memory)
   const context = conversationHistory
-    .slice(-5) // Last 5 messages for context
+    .slice(-15) // Last 15 messages for better memory
     .map((msg: any) => `${JSON.stringify(msg.sender)}: ${JSON.stringify(String(msg.text).slice(0, 500))}`)
     .join('\n');
   
-  const systemPrompt = `You are Darvis, the AI assistant for D-TRACK (a task and time management app). 
+  const systemPrompt = `You are Darvis, the friendly AI assistant for D-TRACK (a task and time management app). 
 
 You have direct access to create tasks, notes, projects, and calendar events for users. When users request these actions, use the appropriate tool immediately.
 
 Your capabilities:
-1. Create tasks - Use create_task tool when user wants to add/create a task
-2. Create notes - Use create_note tool when user wants to write/save a note
-3. Create projects - Use create_project tool when user wants to start a new project
-4. Create calendar events - Use create_calendar_event tool for meetings/appointments
-5. Analyze images, documents, and other files uploaded by users
-6. Summarize user's workload and provide insights
-7. Support multiple languages: English, Spanish, French, German, Portuguese, Italian
+1. Create tasks - Use create_task when user wants to add/create a task
+2. Create notes - Use create_note when user wants to write/save a note
+3. Create projects - Use create_project when user wants to start a new project
+4. Create calendar events - Use create_calendar_event for meetings/appointments/schedules
+5. Add notes to calendar - Use add_note_to_calendar to add notes to events by searching for the event title or date (NO IDs needed!)
+6. Analyze images, documents, and other files uploaded by users
+7. Generate images from descriptions
+8. Generate documents (essays, reports, Excel spreadsheets)
+9. Convert documents between formats (PDF to Excel, Word to PDF, etc.)
+10. Check timesheets and attendance
+11. Provide workload insights
+12. Support multiple languages: English, Spanish, French, German, Portuguese, Italian
 
-Guidelines:
-- Be friendly, helpful, and concise
-- When user requests task/note/project/event creation, use tools immediately
-- Extract dates, times, priorities from natural language
-- Confirm after creation with a friendly message
-- Use encouraging, professional tone
+Guidelines for user-friendly communication:
+- NEVER ask users for technical IDs or UUIDs - search by title/date instead
+- Use natural, conversational language
+- Be helpful and encouraging
+- Explain what you're doing in simple terms
+- Confirm actions with friendly messages
+- When users upload images or documents for conversion, process them immediately
+- Remember our conversation history - reference previous messages when relevant
 
 Recent conversation:
 ${context}
@@ -688,15 +695,29 @@ User message: ${JSON.stringify(message)}`;
       }
     },
     {
-      name: "update_calendar_note",
-      description: "Add a note to an existing calendar event or task",
+      name: "add_note_to_calendar",
+      description: "Add a note to a calendar event by searching for it by title or date",
       parameters: {
         type: "object",
         properties: {
-          event_id: { type: "string", description: "Event/task UUID to update" },
-          note: { type: "string", description: "Note to add to the description" }
+          event_title: { type: "string", description: "Title of the event to update" },
+          event_date: { type: "string", description: "Date of the event (YYYY-MM-DD format)" },
+          note: { type: "string", description: "Note to add" }
         },
-        required: ["event_id", "note"]
+        required: ["note"]
+      }
+    },
+    {
+      name: "convert_document",
+      description: "Convert documents between formats (PDF to Excel, Word to PDF, etc.)",
+      parameters: {
+        type: "object",
+        properties: {
+          source_format: { type: "string", description: "Source format (pdf, docx, excel, csv, md)" },
+          target_format: { type: "string", description: "Target format (pdf, docx, excel, csv, md)" },
+          content: { type: "string", description: "Content or description of what to convert" }
+        },
+        required: ["source_format", "target_format", "content"]
       }
     },
     {
@@ -1011,52 +1032,77 @@ User message: ${JSON.stringify(message)}`;
             break;
           }
           
-          case 'update_calendar_note': {
-            const { data: existingEvent, error: fetchError } = await supabase
+          case 'add_note_to_calendar': {
+            // Search for event by title or date
+            let query = supabase
               .from('tasks')
               .select('*')
-              .eq('id', args.event_id)
-              .eq('user_id', userId)
-              .single();
+              .eq('user_id', userId);
             
-            if (fetchError || !existingEvent) throw new Error('Event not found');
+            if (args.event_title) {
+              query = query.ilike('title', `%${args.event_title}%`);
+            }
+            if (args.event_date) {
+              query = query.eq('due_date', args.event_date);
+            }
             
-            const updatedDescription = existingEvent.description 
-              ? `${existingEvent.description}\n\n${args.note}`
+            const { data: events, error: fetchError } = await query.order('created_at', { ascending: false }).limit(5);
+            
+            if (fetchError) throw fetchError;
+            if (!events || events.length === 0) {
+              aiResponse = `I couldn't find any events matching "${args.event_title || args.event_date}". Could you be more specific?`;
+              break;
+            }
+            
+            // Update the most recent matching event
+            const eventToUpdate = events[0];
+            const updatedDescription = eventToUpdate.description 
+              ? `${eventToUpdate.description}\n\n${args.note}`
               : args.note;
             
             const { error: updateError } = await supabase
               .from('tasks')
               .update({ description: updatedDescription })
-              .eq('id', args.event_id)
+              .eq('id', eventToUpdate.id)
               .eq('user_id', userId);
             
             if (updateError) throw updateError;
             
-            aiResponse = `✅ Note added to "${existingEvent.title}"`;
+            aiResponse = `✅ Note added to "${eventToUpdate.title}"${eventToUpdate.due_date ? ` (${eventToUpdate.due_date})` : ''}`;
             break;
           }
           
           case 'generate_image': {
-            // Call the internal image generation function
-            const imageResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${googleApiKey}`, {
+            // Use Lovable AI Gateway for image generation
+            const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+            if (!lovableApiKey) throw new Error('LOVABLE_API_KEY not configured');
+            
+            const imageResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Authorization': `Bearer ${lovableApiKey}`,
+                'Content-Type': 'application/json',
+              },
               body: JSON.stringify({
-                contents: [{ role: 'user', parts: [{ text: `Generate a high-quality image: ${args.prompt}` }] }],
-                modalities: ['image', 'text'],
-                generationConfig: { temperature: 1 }
+                model: 'google/gemini-2.5-flash-image-preview',
+                messages: [
+                  { role: 'user', content: args.prompt }
+                ],
+                modalities: ['image', 'text']
               }),
             });
             
-            if (!imageResponse.ok) throw new Error('Image generation failed');
+            if (!imageResponse.ok) {
+              const errorText = await imageResponse.text();
+              console.error('Image generation error:', imageResponse.status, errorText);
+              throw new Error('Image generation failed');
+            }
             
             const imageResult = await imageResponse.json();
-            const imagePart = imageResult.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData);
+            const imageUrl = imageResult.choices?.[0]?.message?.images?.[0]?.image_url?.url;
             
-            if (!imagePart?.inlineData?.data) throw new Error('No image data');
+            if (!imageUrl) throw new Error('No image data returned');
             
-            const imageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
             createdItems.push({ type: 'image', item: { url: imageUrl } });
             aiResponse = `✅ Image generated successfully!`;
             createdItems[createdItems.length - 1].itemType = 'image';
@@ -1093,6 +1139,40 @@ User message: ${JSON.stringify(message)}`;
               } 
             });
             aiResponse = `✅ ${args.type} generated! You can download it.`;
+            createdItems[createdItems.length - 1].itemType = 'document';
+            break;
+          }
+          
+          case 'convert_document': {
+            const conversionPrompt = `Convert this ${args.source_format} content to ${args.target_format} format:\n\n${args.content}\n\nProvide the converted content in proper ${args.target_format} format.`;
+            
+            const convertResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${googleApiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: conversionPrompt }] }],
+                generationConfig: { temperature: 0.3, maxOutputTokens: 4000 }
+              }),
+            });
+            
+            if (!convertResponse.ok) throw new Error('Document conversion failed');
+            
+            const convertResult = await convertResponse.json();
+            const convertedContent = convertResult.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            
+            const blob = new TextEncoder().encode(convertedContent);
+            const base64 = btoa(String.fromCharCode(...blob));
+            const extension = args.target_format === 'excel' ? 'csv' : args.target_format === 'docx' ? 'md' : args.target_format;
+            
+            createdItems.push({ 
+              type: 'document', 
+              item: { 
+                content: convertedContent,
+                download: `data:text/plain;base64,${base64}`,
+                filename: `converted_${Date.now()}.${extension}`
+              } 
+            });
+            aiResponse = `✅ Document converted from ${args.source_format} to ${args.target_format}!`;
             createdItems[createdItems.length - 1].itemType = 'document';
             break;
           }
@@ -1143,48 +1223,45 @@ async function generateImage(data: any) {
   console.log('Generating image with prompt:', message);
   
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${googleApiKey}`, {
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
+    }
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [
-          { 
-            role: 'user', 
-            parts: [{ text: `Generate a high-quality image based on this description: ${message}. Make it detailed and visually appealing.` }] 
-          }
+        model: 'google/gemini-2.5-flash-image-preview',
+        messages: [
+          { role: 'user', content: message }
         ],
-        modalities: ['image', 'text'],
-        generationConfig: {
-          temperature: 1,
-        }
+        modalities: ['image', 'text']
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
+      console.error('Image generation API error:', response.status, errorText);
       throw new Error('Failed to generate image');
     }
 
     const result = await response.json();
-    console.log('Image generation result:', JSON.stringify(result));
+    console.log('Image generation result received');
     
-    // Extract the image from Gemini's response
-    const candidate = result.candidates?.[0];
-    const imagePart = candidate?.content?.parts?.find((part: any) => part.inlineData);
+    const imageUrl = result.choices?.[0]?.message?.images?.[0]?.image_url?.url;
     
-    if (!imagePart?.inlineData?.data) {
+    if (!imageUrl) {
       throw new Error('No image data in response');
     }
-
-    const imageData = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
     
     return new Response(JSON.stringify({
       success: true,
       message: 'Image generated successfully!',
-      image: imageData
+      image: imageUrl
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

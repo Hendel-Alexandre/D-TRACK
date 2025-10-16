@@ -45,11 +45,18 @@ export function DarvisAssistant() {
     scrollToBottom()
   }, [messages])
 
+  // Auto-scroll when chat opens
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(scrollToBottom, 100)
+    }
+  }, [isOpen])
+
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       setMessages([{
         id: '1',
-        text: "Hi! I'm Darvis, your advanced AI assistant for D-TRACK. I can:\n\n• Create tasks, notes, projects, and calendar events\n• Access your timesheets and check attendance\n• Generate images and documents (essays, reports, Excel sheets)\n• Transcribe and summarize audio/video files\n• Read and modify your calendar\n• Create student class schedules from text or images\n• Research topics and find sources\n• Write essays and more!\n\nJust tell me what you need! I'll always ask for confirmation before important actions. You can also undo the last action anytime.",
+        text: "Hi! I'm Darvis, your advanced AI assistant for D-TRACK. I can:\n\n• Create tasks, notes, projects, and calendar events\n• Add notes to your calendar events (just tell me the event name!)\n• Check your timesheets and attendance\n• Generate images from descriptions\n• Create documents (essays, reports, Excel sheets)\n• Convert documents (PDF to Excel, Word to PDF, etc.)\n• Transcribe audio/video files\n• Analyze uploaded images and documents\n• Create student class schedules\n• Research topics and find sources\n\nJust tell me what you need in plain language - I'll remember our conversation and never ask you for technical IDs!",
         sender: 'darvis',
         timestamp: new Date()
       }])
@@ -111,7 +118,7 @@ export function DarvisAssistant() {
           data: {
             message: userMessage.text,
             userId: user.id,
-            conversationHistory: messages.slice(-5),
+            conversationHistory: messages.slice(-15), // Increased memory
             files: fileData ? [fileData] : undefined
           }
         }
