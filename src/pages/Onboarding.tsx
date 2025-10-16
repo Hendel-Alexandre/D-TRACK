@@ -1,96 +1,100 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { GraduationCap, Briefcase, Zap, Plus, ArrowRight, Sparkles } from 'lucide-react';
+import { MapPin, Globe, Check, Sparkles, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { SchoolAutocomplete } from '@/components/Onboarding/SchoolAutocomplete';
 
-type ModeType = 'student' | 'professional' | 'both' | null;
+// Comprehensive country data with provinces/states/cities
+const locationData: Record<string, string[]> = {
+  'United States': ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'],
+  'Canada': ['Alberta', 'British Columbia', 'Manitoba', 'New Brunswick', 'Newfoundland and Labrador', 'Northwest Territories', 'Nova Scotia', 'Nunavut', 'Ontario', 'Prince Edward Island', 'Quebec', 'Saskatchewan', 'Yukon'],
+  'United Kingdom': ['England', 'Scotland', 'Wales', 'Northern Ireland', 'London', 'Birmingham', 'Manchester', 'Glasgow', 'Edinburgh', 'Liverpool', 'Bristol', 'Cardiff', 'Belfast'],
+  'Australia': ['New South Wales', 'Victoria', 'Queensland', 'Western Australia', 'South Australia', 'Tasmania', 'Northern Territory', 'Australian Capital Territory'],
+  'Germany': ['Baden-Württemberg', 'Bavaria', 'Berlin', 'Brandenburg', 'Bremen', 'Hamburg', 'Hesse', 'Lower Saxony', 'Mecklenburg-Vorpommern', 'North Rhine-Westphalia', 'Rhineland-Palatinate', 'Saarland', 'Saxony', 'Saxony-Anhalt', 'Schleswig-Holstein', 'Thuringia'],
+  'France': ['Île-de-France', 'Provence-Alpes-Côte d\'Azur', 'Auvergne-Rhône-Alpes', 'Nouvelle-Aquitaine', 'Occitanie', 'Hauts-de-France', 'Brittany', 'Normandy', 'Grand Est', 'Centre-Val de Loire', 'Burgundy', 'Pays de la Loire'],
+  'India': ['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi', 'Mumbai', 'Bangalore', 'Hyderabad', 'Chennai', 'Kolkata'],
+  'China': ['Beijing', 'Shanghai', 'Guangdong', 'Zhejiang', 'Jiangsu', 'Shandong', 'Sichuan', 'Henan', 'Hubei', 'Fujian', 'Hunan', 'Anhui', 'Liaoning', 'Shaanxi', 'Heilongjiang', 'Shanxi', 'Jiangxi', 'Guangxi', 'Yunnan', 'Chongqing', 'Tianjin'],
+  'Japan': ['Tokyo', 'Osaka', 'Kyoto', 'Hokkaido', 'Fukuoka', 'Nagoya', 'Sapporo', 'Yokohama', 'Kobe', 'Hiroshima', 'Sendai'],
+  'Brazil': ['São Paulo', 'Rio de Janeiro', 'Bahia', 'Minas Gerais', 'Paraná', 'Rio Grande do Sul', 'Pernambuco', 'Ceará', 'Pará', 'Goiás', 'Santa Catarina', 'Maranhão'],
+  'Mexico': ['Mexico City', 'Jalisco', 'Nuevo León', 'Puebla', 'Guanajuato', 'Veracruz', 'Chiapas', 'Michoacán', 'Oaxaca', 'Chihuahua', 'Guerrero', 'Tamaulipas'],
+  'South Africa': ['Gauteng', 'Western Cape', 'KwaZulu-Natal', 'Eastern Cape', 'Limpopo', 'Mpumalanga', 'North West', 'Free State', 'Northern Cape'],
+  'Nigeria': ['Lagos', 'Kano', 'Ibadan', 'Abuja', 'Port Harcourt', 'Benin City', 'Kaduna', 'Maiduguri', 'Zaria', 'Aba', 'Jos', 'Ilorin'],
+  'Spain': ['Madrid', 'Catalonia', 'Andalusia', 'Valencia', 'Galicia', 'Castile and León', 'Basque Country', 'Castilla-La Mancha', 'Murcia', 'Aragon', 'Extremadura', 'Balearic Islands'],
+  'Italy': ['Lazio', 'Lombardy', 'Campania', 'Sicily', 'Veneto', 'Piedmont', 'Emilia-Romagna', 'Apulia', 'Tuscany', 'Calabria', 'Sardinia', 'Liguria'],
+  'Netherlands': ['North Holland', 'South Holland', 'Utrecht', 'North Brabant', 'Gelderland', 'Limburg', 'Overijssel', 'Groningen', 'Friesland', 'Flevoland', 'Drenthe', 'Zeeland'],
+  'Argentina': ['Buenos Aires', 'Córdoba', 'Santa Fe', 'Mendoza', 'Tucumán', 'Entre Ríos', 'Salta', 'Chaco', 'Corrientes', 'Misiones', 'Santiago del Estero'],
+  'South Korea': ['Seoul', 'Busan', 'Incheon', 'Daegu', 'Daejeon', 'Gwangju', 'Ulsan', 'Sejong', 'Gyeonggi', 'Gangwon', 'North Chungcheong', 'South Chungcheong'],
+  'Indonesia': ['Jakarta', 'West Java', 'East Java', 'Central Java', 'North Sumatra', 'South Sulawesi', 'Banten', 'Lampung', 'East Kalimantan', 'South Sumatra', 'Bali'],
+  'Philippines': ['Metro Manila', 'Cebu', 'Davao', 'Calabarzon', 'Central Luzon', 'Western Visayas', 'Central Visayas', 'Zamboanga Peninsula', 'Northern Mindanao', 'Bicol Region'],
+  'Turkey': ['Istanbul', 'Ankara', 'Izmir', 'Bursa', 'Antalya', 'Adana', 'Gaziantep', 'Konya', 'Mersin', 'Diyarbakır', 'Kayseri', 'Eskişehir'],
+  'Poland': ['Masovian', 'Silesian', 'Greater Poland', 'Lesser Poland', 'Lower Silesian', 'Łódź', 'West Pomeranian', 'Pomeranian', 'Lublin', 'Kuyavian-Pomeranian'],
+  'Egypt': ['Cairo', 'Alexandria', 'Giza', 'Shubra El-Kheima', 'Port Said', 'Suez', 'Luxor', 'Aswan', 'Mansoura', 'Tanta', 'Ismailia'],
+  'Thailand': ['Bangkok', 'Chiang Mai', 'Phuket', 'Pattaya', 'Nakhon Ratchasima', 'Khon Kaen', 'Udon Thani', 'Hat Yai', 'Nakhon Si Thammarat', 'Surat Thani'],
+  'Vietnam': ['Ho Chi Minh City', 'Hanoi', 'Da Nang', 'Hai Phong', 'Can Tho', 'Bien Hoa', 'Nha Trang', 'Hue', 'Buon Ma Thuot', 'Vung Tau'],
+  'Malaysia': ['Kuala Lumpur', 'Selangor', 'Johor', 'Penang', 'Perak', 'Pahang', 'Sarawak', 'Sabah', 'Kedah', 'Kelantan', 'Terengganu', 'Malacca'],
+  'Singapore': ['Central Region', 'East Region', 'North Region', 'North-East Region', 'West Region'],
+  'New Zealand': ['Auckland', 'Wellington', 'Canterbury', 'Waikato', 'Bay of Plenty', 'Manawatū-Whanganui', 'Otago', 'Northland', 'Taranaki', 'Southland'],
+  'Chile': ['Santiago', 'Valparaíso', 'Biobío', 'Araucanía', 'Maule', 'Los Lagos', 'Antofagasta', 'Coquimbo', 'O\'Higgins', 'Ñuble'],
+  'Colombia': ['Bogotá', 'Antioquia', 'Valle del Cauca', 'Atlántico', 'Bolívar', 'Santander', 'Cundinamarca', 'Norte de Santander', 'Tolima', 'Cauca'],
+  'Peru': ['Lima', 'Arequipa', 'La Libertad', 'Piura', 'Lambayeque', 'Cusco', 'Junín', 'Puno', 'Ica', 'Cajamarca'],
+  'Venezuela': ['Capital District', 'Miranda', 'Zulia', 'Carabobo', 'Lara', 'Aragua', 'Bolívar', 'Anzoátegui', 'Táchira', 'Mérida'],
+  'Kenya': ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Ruiru', 'Kikuyu', 'Kangundo-Tala', 'Malindi', 'Naivasha'],
+  'Ghana': ['Greater Accra', 'Ashanti', 'Western', 'Eastern', 'Central', 'Northern', 'Volta', 'Brong-Ahafo', 'Upper East', 'Upper West'],
+  'Pakistan': ['Punjab', 'Sindh', 'Khyber Pakhtunkhwa', 'Balochistan', 'Islamabad', 'Karachi', 'Lahore', 'Faisalabad', 'Rawalpindi', 'Multan'],
+  'Bangladesh': ['Dhaka', 'Chittagong', 'Rajshahi', 'Khulna', 'Barisal', 'Sylhet', 'Rangpur', 'Mymensingh'],
+  'Saudi Arabia': ['Riyadh', 'Makkah', 'Eastern Province', 'Medina', 'Asir', 'Jazan', 'Qassim', 'Tabuk', 'Hail', 'Northern Borders'],
+  'United Arab Emirates': ['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman', 'Ras Al Khaimah', 'Fujairah', 'Umm Al Quwain'],
+  'Israel': ['Jerusalem', 'Tel Aviv', 'Haifa', 'Rishon LeZion', 'Petah Tikva', 'Ashdod', 'Netanya', 'Beersheba', 'Holon', 'Bnei Brak'],
+  'Sweden': ['Stockholm', 'Västra Götaland', 'Skåne', 'Uppsala', 'Östergötland', 'Jönköping', 'Halland', 'Örebro', 'Gävleborg', 'Dalarna'],
+  'Norway': ['Oslo', 'Viken', 'Vestland', 'Trøndelag', 'Rogaland', 'Innlandet', 'Nordland', 'Agder', 'Møre og Romsdal', 'Vestfold og Telemark'],
+  'Denmark': ['Capital Region', 'Central Denmark', 'North Denmark', 'Zealand', 'Southern Denmark'],
+  'Finland': ['Uusimaa', 'Pirkanmaa', 'Southwest Finland', 'North Ostrobothnia', 'Central Finland', 'Satakunta', 'Päijänne Tavastia', 'Kanta-Häme'],
+  'Belgium': ['Flanders', 'Wallonia', 'Brussels', 'Antwerp', 'East Flanders', 'Flemish Brabant', 'Limburg', 'West Flanders', 'Hainaut', 'Liège'],
+  'Austria': ['Vienna', 'Lower Austria', 'Upper Austria', 'Styria', 'Tyrol', 'Carinthia', 'Salzburg', 'Vorarlberg', 'Burgenland'],
+  'Switzerland': ['Zürich', 'Bern', 'Vaud', 'Aargau', 'Geneva', 'Lucerne', 'Ticino', 'Valais', 'St. Gallen', 'Basel-Stadt'],
+  'Portugal': ['Lisbon', 'Porto', 'Setúbal', 'Braga', 'Aveiro', 'Faro', 'Coimbra', 'Leiria', 'Viseu', 'Santarém'],
+  'Greece': ['Attica', 'Central Macedonia', 'Thessaloniki', 'West Greece', 'Crete', 'Epirus', 'Central Greece', 'Peloponnese', 'Thessaly', 'East Macedonia and Thrace'],
+  'Czech Republic': ['Prague', 'Central Bohemia', 'South Moravia', 'Moravian-Silesian', 'Olomouc', 'Zlín', 'South Bohemia', 'Hradec Králové', 'Pardubice', 'Plzeň'],
+  'Romania': ['Bucharest', 'Ilfov', 'Cluj', 'Timiș', 'Iași', 'Constanța', 'Brașov', 'Dolj', 'Prahova', 'Galați'],
+  'Hungary': ['Budapest', 'Pest', 'Bács-Kiskun', 'Hajdú-Bihar', 'Borsod-Abaúj-Zemplén', 'Szabolcs-Szatmár-Bereg', 'Csongrád-Csanád', 'Győr-Moson-Sopron', 'Jász-Nagykun-Szolnok'],
+  'Other': ['City/Region 1', 'City/Region 2', 'City/Region 3', 'Other']
+};
+
+const countries = Object.keys(locationData).sort();
 
 export default function OnboardingNew() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [step, setStep] = useState(1);
-  const [selectedMode, setSelectedMode] = useState<ModeType>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Student form data
-  const [schoolName, setSchoolName] = useState('');
-  const [major, setMajor] = useState('');
-  const [year, setYear] = useState('');
-  
-  // Professional form data
-  const [companyName, setCompanyName] = useState('');
-  const [jobTitle, setJobTitle] = useState('');
-  const [department, setDepartment] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState('');
 
-  const totalSteps = selectedMode === 'both' ? 3 : 2;
-  const progressPercentage = (step / totalSteps) * 100;
-
-  const handleModeSelect = (mode: ModeType) => {
-    setSelectedMode(mode);
-    setStep(2);
-  };
+  const availableRegions = selectedCountry ? locationData[selectedCountry] : [];
 
   const handleComplete = async () => {
-    if (!user || !selectedMode) return;
-
-    // Validate required fields
-    if (selectedMode === 'student' || selectedMode === 'both') {
-      if (!schoolName || !major || !year) {
-        toast.error('Please fill in all student information fields');
-        return;
-      }
-    }
-
-    if (selectedMode === 'professional' || selectedMode === 'both') {
-      if (!companyName || !jobTitle || !department) {
-        toast.error('Please fill in all professional information fields');
-        return;
-      }
+    if (!user || !selectedCountry || !selectedRegion) {
+      toast.error('Please select both country and region');
+      return;
     }
 
     setIsLoading(true);
 
     try {
-      // Create or update profiles based on selection
-      if (selectedMode === 'student' || selectedMode === 'both') {
-        const { error: studentError } = await supabase
-          .from('student_profiles' as any)
-          .upsert({
-            user_id: user.id,
-            school_name: schoolName,
-            major,
-            year,
-          }, {
-            onConflict: 'user_id'
-          });
-        
-        if (studentError) throw studentError;
-      }
+      // Store location in user metadata
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+          country: selectedCountry,
+          region: selectedRegion
+        }
+      });
 
-      if (selectedMode === 'professional' || selectedMode === 'both') {
-        const { error: workError } = await supabase
-          .from('work_profiles' as any)
-          .upsert({
-            user_id: user.id,
-            company_name: companyName,
-            job_title: jobTitle,
-            department,
-          }, {
-            onConflict: 'user_id'
-          });
-        
-        if (workError) throw workError;
-      }
+      if (updateError) throw updateError;
 
       // Check if user_mode_settings already exists
       const { data: existingSettings, error: fetchSettingsError } = await supabase
@@ -103,32 +107,26 @@ export default function OnboardingNew() {
         throw fetchSettingsError;
       }
 
-      // Update user_mode_settings
-      const activeMode = selectedMode === 'both' ? 'work' : selectedMode === 'student' ? 'student' : 'work';
-      
       if (existingSettings) {
         // Update existing record
-        const { error: updateError } = await supabase
+        const { error: updateSettingsError } = await supabase
           .from('user_mode_settings' as any)
           .update({
-            active_mode: activeMode,
-            student_mode_enabled: selectedMode === 'student' || selectedMode === 'both',
-            work_mode_enabled: selectedMode === 'professional' || selectedMode === 'both',
             onboarding_completed: true,
             plan_type: 'trial',
           })
           .eq('user_id', user.id);
         
-        if (updateError) throw updateError;
+        if (updateSettingsError) throw updateSettingsError;
       } else {
         // Insert new record
         const { error: insertError } = await supabase
           .from('user_mode_settings' as any)
           .insert({
             user_id: user.id,
-            active_mode: activeMode,
-            student_mode_enabled: selectedMode === 'student' || selectedMode === 'both',
-            work_mode_enabled: selectedMode === 'professional' || selectedMode === 'both',
+            active_mode: 'work',
+            student_mode_enabled: false,
+            work_mode_enabled: true,
             onboarding_completed: true,
             plan_type: 'trial',
             trial_start_date: new Date().toISOString(),
@@ -138,7 +136,7 @@ export default function OnboardingNew() {
         if (insertError) throw insertError;
       }
 
-      // Save onboarding profile only if not already present
+      // Save onboarding profile
       const { data: existingOnboarding, error: fetchOnboardingError } = await supabase
         .from('onboarding_profiles' as any)
         .select('id')
@@ -154,324 +152,122 @@ export default function OnboardingNew() {
           .from('onboarding_profiles' as any)
           .insert({
             user_id: user.id,
-            selected_mode: selectedMode,
-            selected_plan: selectedMode === 'student' ? 'student' : selectedMode === 'professional' ? 'professional' : 'combined',
+            selected_mode: 'work',
+            selected_plan: 'professional',
           });
         if (profileError) throw profileError;
       }
 
-      toast.success('Welcome aboard! Your 30-day trial has started 🎉');
+      toast.success('Welcome to D-TRACK! 🎉 Your 30-day trial has started.');
       
-      // Small delay to ensure database sync before redirect
       await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Redirect to dashboard
       navigate('/dashboard', { replace: true });
     } catch (error) {
       console.error('Error completing onboarding:', error);
-      toast.error('Failed to complete onboarding. Please try again.');
+      toast.error('Failed to complete setup. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <span className="font-semibold">Setup Progress</span>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-lg"
+      >
+        <Card className="border-2 shadow-2xl">
+          <CardHeader className="text-center pb-2">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring" }}
+              className="mx-auto h-16 w-16 rounded-2xl bg-gradient-primary flex items-center justify-center mb-4"
+            >
+              <Sparkles className="h-8 w-8 text-white" />
+            </motion.div>
+            <CardTitle className="text-3xl font-bold">Welcome to D-TRACK!</CardTitle>
+            <CardDescription className="text-base mt-2">
+              Let's get you started with just one quick question
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="space-y-6 pt-6">
+            {/* Country Selection */}
+            <div className="space-y-3">
+              <Label htmlFor="country" className="flex items-center gap-2 text-base font-medium">
+                <Globe className="h-5 w-5 text-primary" />
+                Where are you located?
+              </Label>
+              <Select value={selectedCountry} onValueChange={(value) => {
+                setSelectedCountry(value);
+                setSelectedRegion(''); // Reset region when country changes
+              }}>
+                <SelectTrigger id="country" className="h-12 text-base">
+                  <SelectValue placeholder="Select your country" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  {countries.map((country) => (
+                    <SelectItem key={country} value={country} className="text-base">
+                      {country}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <span className="text-sm text-muted-foreground">Step {step} of {totalSteps}</span>
-          </div>
-          <Progress value={progressPercentage} className="h-2" />
-        </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-24">
-        {step === 1 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-6xl mx-auto"
-          >
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold mb-4">Welcome to D-TRACK!</h1>
-              <p className="text-lg text-muted-foreground">Choose your primary focus</p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6">
-              <Card 
-                className="cursor-pointer hover:shadow-lg transition-all border-2 hover:border-primary"
-                onClick={() => handleModeSelect('student')}
+            {/* Region Selection */}
+            {selectedCountry && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-3"
               >
-                <CardHeader>
-                  <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-4">
-                    <GraduationCap className="h-6 w-6 text-blue-500" />
-                  </div>
-                  <CardTitle>Student</CardTitle>
-                  <CardDescription>Manage classes, assignments, and academic life</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li>• Class scheduling</li>
-                    <li>• Assignment tracking</li>
-                    <li>• Study analytics</li>
-                  </ul>
-                </CardContent>
-              </Card>
+                <Label htmlFor="region" className="flex items-center gap-2 text-base font-medium">
+                  <MapPin className="h-5 w-5 text-primary" />
+                  Select your region/city
+                </Label>
+                <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                  <SelectTrigger id="region" className="h-12 text-base">
+                    <SelectValue placeholder="Select your region or city" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {availableRegions.map((region) => (
+                      <SelectItem key={region} value={region} className="text-base">
+                        {region}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </motion.div>
+            )}
 
-              <Card 
-                className="cursor-pointer hover:shadow-lg transition-all border-2 hover:border-primary"
-                onClick={() => handleModeSelect('professional')}
-              >
-                <CardHeader>
-                  <div className="h-12 w-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-4">
-                    <Briefcase className="h-6 w-6 text-purple-500" />
-                  </div>
-                  <CardTitle>Professional</CardTitle>
-                  <CardDescription>Track projects, tasks, and work productivity</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li>• Project management</li>
-                    <li>• Time tracking</li>
-                    <li>• Team collaboration</li>
-                  </ul>
-                </CardContent>
-              </Card>
+            {/* Complete Button */}
+            <Button 
+              onClick={handleComplete} 
+              disabled={isLoading || !selectedCountry || !selectedRegion}
+              size="lg"
+              className="w-full h-12 text-base font-semibold"
+            >
+              {isLoading ? (
+                'Setting up your account...'
+              ) : (
+                <>
+                  Complete Setup
+                  <Check className="h-5 w-5 ml-2" />
+                </>
+              )}
+            </Button>
 
-              <Card 
-                className="cursor-pointer hover:shadow-lg transition-all border-2 hover:border-primary"
-                onClick={() => handleModeSelect('both')}
-              >
-                <CardHeader>
-                  <div className="h-12 w-12 rounded-xl bg-gradient-primary/10 flex items-center justify-center mb-4">
-                    <Zap className="h-6 w-6 text-primary" />
-                  </div>
-                  <CardTitle>Both</CardTitle>
-                  <CardDescription>Full access to student and professional tools</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li>• All student features</li>
-                    <li>• All professional features</li>
-                    <li>• Seamless switching</li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </div>
-          </motion.div>
-        )}
-
-        {step === 2 && (selectedMode === 'student' || selectedMode === 'both') && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl mx-auto"
-          >
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                    <GraduationCap className="h-6 w-6 text-blue-500" />
-                  </div>
-                  <div>
-                    <CardTitle>Student Information</CardTitle>
-                    <CardDescription>Tell us about your academic journey</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <SchoolAutocomplete 
-                  onSchoolChange={setSchoolName}
-                  defaultSchool={schoolName}
-                />
-
-                <div className="space-y-2">
-                  <Label htmlFor="major">Program / Field of Study</Label>
-                  <Input
-                    id="major"
-                    value={major}
-                    onChange={(e) => setMajor(e.target.value)}
-                    placeholder="e.g., Computer Science"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="year">Year / Semester</Label>
-                  <Input
-                    id="year"
-                    value={year}
-                    onChange={(e) => setYear(e.target.value)}
-                    placeholder="e.g., 3rd Year, Fall 2025"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setStep(1)}
-                  >
-                    Back
-                  </Button>
-                  <Button 
-                    onClick={() => selectedMode === 'both' ? setStep(3) : handleComplete()} 
-                    className="flex-1"
-                    disabled={isLoading || !schoolName || !major || !year}
-                  >
-                    {selectedMode === 'both' ? 'Next: Professional Info' : isLoading ? 'Setting up...' : 'Complete Setup'}
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {step === 2 && selectedMode === 'professional' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl mx-auto"
-          >
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                    <Briefcase className="h-6 w-6 text-purple-500" />
-                  </div>
-                  <div>
-                    <CardTitle>Professional Information</CardTitle>
-                    <CardDescription>Tell us about your work</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name</Label>
-                  <Input
-                    id="companyName"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="Enter your company name"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="jobTitle">Position / Role</Label>
-                  <Input
-                    id="jobTitle"
-                    value={jobTitle}
-                    onChange={(e) => setJobTitle(e.target.value)}
-                    placeholder="e.g., Software Engineer"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="department">Industry / Department</Label>
-                  <Input
-                    id="department"
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                    placeholder="e.g., Technology"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setStep(1)}
-                  >
-                    Back
-                  </Button>
-                  <Button 
-                    onClick={handleComplete} 
-                    className="flex-1"
-                    disabled={isLoading || !companyName || !jobTitle || !department}
-                  >
-                    {isLoading ? 'Setting up...' : 'Complete Setup'}
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {step === 3 && selectedMode === 'both' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl mx-auto"
-          >
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                    <Briefcase className="h-6 w-6 text-purple-500" />
-                  </div>
-                  <div>
-                    <CardTitle>Professional Information</CardTitle>
-                    <CardDescription>Tell us about your work</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name</Label>
-                  <Input
-                    id="companyName"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="Enter your company name"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="jobTitle">Position / Role</Label>
-                  <Input
-                    id="jobTitle"
-                    value={jobTitle}
-                    onChange={(e) => setJobTitle(e.target.value)}
-                    placeholder="e.g., Software Engineer"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="department">Industry / Department</Label>
-                  <Input
-                    id="department"
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                    placeholder="e.g., Technology"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setStep(2)}
-                  >
-                    Back
-                  </Button>
-                  <Button 
-                    onClick={handleComplete} 
-                    className="flex-1"
-                    disabled={isLoading || !companyName || !jobTitle || !department}
-                  >
-                    {isLoading ? 'Setting up...' : 'Complete Setup'}
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-      </div>
+            {/* Info Text */}
+            <p className="text-center text-sm text-muted-foreground">
+              🎉 Start your 30-day free trial • No credit card required
+            </p>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }
