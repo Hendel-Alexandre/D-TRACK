@@ -33,7 +33,7 @@ import StudentClasses from "./pages/StudentClasses";
 import StudentAssignments from "./pages/StudentAssignments";
 import StudentFiles from "./pages/StudentFiles";
 import WorkFiles from "./pages/WorkFiles";
-import Darvis from "./pages/Darvis";
+import Lumen from "./pages/Lumen";
 import "./lib/i18n";
 
 const queryClient = new QueryClient();
@@ -254,9 +254,9 @@ const App = () => (
                 <Route index element={<WorkFiles />} />
               </Route>
               
-              <Route path="/darvis" element={
+              <Route path="/lumen" element={
                 <ProtectedRoute>
-                  <Darvis />
+                  <Lumen />
                 </ProtectedRoute>
               } />
               

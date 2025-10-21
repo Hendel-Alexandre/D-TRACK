@@ -43,7 +43,7 @@ const studentNavigation = [
   {
     label: 'AI Assistant',
     items: [
-      { title: 'Darvis AI', url: '/darvis', icon: Sparkles },
+      { title: 'Lumen AI', url: '/lumen', icon: Sparkles },
     ]
   },
   {
@@ -81,7 +81,7 @@ const workNavigation = [
   {
     label: 'AI Assistant',
     items: [
-      { title: 'Darvis AI', url: '/darvis', icon: Sparkles },
+      { title: 'Lumen AI', url: '/lumen', icon: Sparkles },
     ]
   },
   {
@@ -145,7 +145,7 @@ export function AppSidebar() {
         <div className="p-6 border-b border-border/50">
           <img 
             src={datatrackLogo} 
-            alt="D-Track" 
+            alt="LumenR" 
             className={`transition-all duration-300 mx-auto dark:invert ${
               isCollapsed ? 'h-20 w-auto' : 'h-32 w-auto'
             }`}

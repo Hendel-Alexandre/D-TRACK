@@ -4,7 +4,7 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
-import { DarvisAssistant } from '@/components/AI/DarvisAssistant'
+import { LumenAssistant } from '@/components/AI/LumenAssistant'
 import { useMode } from '@/contexts/ModeContext'
 import { StudentDashboard } from '@/components/Dashboard/StudentDashboard'
 import { WorkDashboard } from '@/components/Dashboard/WorkDashboard'
@@ -54,7 +54,7 @@ export default function Dashboard() {
     return (
       <>
         <MobileDashboardWrapper />
-        <DarvisAssistant />
+        <LumenAssistant />
       </>
     )
   }
@@ -108,8 +108,8 @@ export default function Dashboard() {
         </motion.div>
       </motion.div>
       
-      {/* Darvis AI Assistant */}
-      <DarvisAssistant />
+      {/* Lumen AI Assistant */}
+      <LumenAssistant />
     </div>
   )
 }

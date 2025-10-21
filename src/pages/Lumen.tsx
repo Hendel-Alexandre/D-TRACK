@@ -26,7 +26,7 @@ interface Conversation {
   updated_at: string;
 }
 
-export default function Darvis() {
+export default function Lumen() {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -66,7 +66,7 @@ export default function Darvis() {
       setConversations([
         {
           id: 'default',
-          title: 'Chat with Darvis',
+          title: 'Chat with Lumen',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }
@@ -80,7 +80,7 @@ export default function Darvis() {
   const loadChatHistory = async (conversationId: string) => {
     try {
       const { data, error } = await supabase
-        .from('darvis_chats')
+        .from('lumen_chats')
         .select('*')
         .eq('user_id', user?.id)
         .order('created_at', { ascending: true });
@@ -184,7 +184,7 @@ export default function Darvis() {
       }
 
       const { error: userMsgError } = await supabase
-        .from('darvis_chats')
+        .from('lumen_chats')
         .insert(userMessageData);
 
       if (userMsgError) throw userMsgError;
@@ -207,10 +207,10 @@ export default function Darvis() {
         content.toLowerCase().includes('make an image')
       );
 
-      // Call Darvis with files
+      // Call Lumen with files
       const { data, error } = await supabase.functions.invoke('ai-assistant', {
         body: {
-          action: isImageRequest ? 'generate_image' : 'darvis_chat',
+          action: isImageRequest ? 'generate_image' : 'lumen_chat',
           data: {
             message: content || 'Analyze these files',
             files: filesToSend,
@@ -233,7 +233,7 @@ export default function Darvis() {
       }
 
       const { error: assistantMsgError } = await supabase
-        .from('darvis_chats')
+        .from('lumen_chats')
         .insert(assistantMessage);
 
       if (assistantMsgError) throw assistantMsgError;
@@ -318,7 +318,7 @@ export default function Darvis() {
                 <Sparkles className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">Darvis AI</h1>
+                <h1 className="text-xl font-bold">Lumen AI</h1>
                 <p className="text-xs text-muted-foreground">Your intelligent assistant</p>
               </div>
             </div>
@@ -343,7 +343,7 @@ export default function Darvis() {
                   <Sparkles className="h-12 w-12 text-primary-foreground" />
                 </div>
                 <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
-                  Welcome to Darvis AI
+                  Welcome to Lumen AI
                 </h2>
                 <p className="text-muted-foreground max-w-md text-lg">
                   I can help you with tasks, generate images, analyze files, and more. Just ask!
@@ -478,7 +478,7 @@ export default function Darvis() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                  placeholder="Message Darvis AI..."
+                  placeholder="Message Lumen AI..."
                   disabled={loading}
                   className="pr-12 bg-background/50 border-muted-foreground/20"
                 />

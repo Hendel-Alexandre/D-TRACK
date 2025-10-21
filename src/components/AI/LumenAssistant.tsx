@@ -8,11 +8,11 @@ import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 
-interface DarvisResponse {
+interface LumenResponse {
   type: 'creation_complete' | 'general' | 'confirmation_required'
   message: string
   created_items?: Array<{
-    type: 'task' | 'note' | 'project' | 'calendar_event' | 'student_class' | 'image' | 'document'
+    type: 'task' | 'note' | 'project' | 'calendar_event' | 'business_project' | 'image' | 'document'
     item: any
   }>
   pending_action?: {
@@ -21,15 +21,15 @@ interface DarvisResponse {
   }
 }
 
-export function DarvisAssistant() {
+export function LumenAssistant() {
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Array<{id: string, text: string, sender: 'user' | 'darvis', timestamp: Date, createdItems?: any[], images?: string[], downloadLink?: any}>>([])
+  const [messages, setMessages] = useState<Array<{id: string, text: string, sender: 'user' | 'lumen', timestamp: Date, createdItems?: any[], images?: string[], downloadLink?: any}>>([])
   const [input, setInput] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const [audioChunks, setAudioChunks] = useState<Blob[]>([])
-  const [lastAction, setLastAction] = useState<any>(null) // For undo functionality
+  const [lastAction, setLastAction] = useState<any>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -45,7 +45,6 @@ export function DarvisAssistant() {
     scrollToBottom()
   }, [messages])
 
-  // Auto-scroll when chat opens
   useEffect(() => {
     if (isOpen) {
       setTimeout(scrollToBottom, 100)
@@ -56,8 +55,8 @@ export function DarvisAssistant() {
     if (isOpen && messages.length === 0) {
       setMessages([{
         id: '1',
-        text: "Hi! I'm Darvis, your advanced AI assistant for D-TRACK. I can seamlessly work with both your student and professional data:\n\n📚 Student Mode:\n• Check your classes, assignments, and student tasks\n• View your student profile and files\n• Track assignment deadlines\n\n💼 Work Mode:\n• Manage work tasks, projects, and notes\n• Check your work profile and files\n• Review calendar and timesheets\n\n🎨 Creative Tools:\n• Generate images and documents\n• Convert documents between formats\n• Analyze uploaded files\n\n🔍 Smart Features:\n• Always know today's date and time\n• Remember our conversation\n• Search across all your data\n\nJust ask me anything in plain language - I'll know which mode you need!",
-        sender: 'darvis',
+        text: "Hi! I'm Lumen, your AI business assistant for LumenR. I can help you manage every aspect of your service business:\n\n🏢 Business Management:\n• Create and track projects\n• Manage team members and tasks\n• Monitor client relationships\n• Track inventory and materials\n\n📊 Financial Operations:\n• Generate quotes and invoices\n• Track payments and expenses\n• View financial analytics\n• Budget forecasting\n\n🎨 Smart Features:\n• Generate documents and reports\n• Analyze business data\n• AI-powered insights\n• Natural language commands\n\n💡 Productivity:\n• Smart scheduling\n• Task automation\n• Real-time updates\n• Team collaboration\n\nJust tell me what you need in plain language!",
+        sender: 'lumen',
         timestamp: new Date()
       }])
     }
@@ -70,9 +69,8 @@ export function DarvisAssistant() {
     let messageText = input.trim()
     let fileData = null
 
-    // Handle file upload
     if (selectedFile) {
-      const maxSize = 100 * 1024 * 1024; // 100MB
+      const maxSize = 100 * 1024 * 1024
       if (selectedFile.size > maxSize) {
         toast({
           title: 'File too large',
@@ -114,11 +112,11 @@ export function DarvisAssistant() {
     try {
       const { data, error } = await supabase.functions.invoke('ai-assistant', {
         body: {
-          action: 'darvis_chat',
+          action: 'lumen_chat',
           data: {
             message: userMessage.text,
             userId: user.id,
-            conversationHistory: messages.slice(-20), // Keep last 20 messages for context
+            conversationHistory: messages.slice(-20),
             files: fileData ? [fileData] : undefined
           }
         }
@@ -127,7 +125,7 @@ export function DarvisAssistant() {
       if (error) {
         const status = (error as any)?.status
         const friendly = status === 429
-          ? 'Darvis is temporarily rate-limited. Please wait ~30–60 seconds and try again.'
+          ? 'Lumen is temporarily rate-limited. Please wait ~30–60 seconds and try again.'
           : status === 402
           ? 'AI credits are exhausted. Please try again later.'
           : (error.message || "I'm having trouble processing that request.")
@@ -135,11 +133,11 @@ export function DarvisAssistant() {
         setMessages(prev => [...prev, {
           id: (Date.now() + 1).toString(),
           text: friendly,
-          sender: 'darvis' as const,
+          sender: 'lumen' as const,
           timestamp: new Date()
         }])
 
-        toast({ title: 'Darvis unavailable', description: friendly, variant: 'destructive' })
+        toast({ title: 'Lumen unavailable', description: friendly, variant: 'destructive' })
         return
       }
 
@@ -148,38 +146,35 @@ export function DarvisAssistant() {
         setMessages(prev => [...prev, {
           id: (Date.now() + 1).toString(),
           text: friendly,
-          sender: 'darvis' as const,
+          sender: 'lumen' as const,
           timestamp: new Date()
         }])
         return
       }
 
-      const response: DarvisResponse = data.response
+      const response: LumenResponse = data.response
 
-      const darvisMessage: any = {
+      const lumenMessage: any = {
         id: (Date.now() + 1).toString(),
         text: response.message,
-        sender: 'darvis' as const,
+        sender: 'lumen' as const,
         timestamp: new Date(),
         createdItems: response.created_items
       }
 
-      // Handle images
       if (response.created_items?.some(item => item.type === 'image')) {
-        darvisMessage.images = response.created_items
+        lumenMessage.images = response.created_items
           .filter(item => item.type === 'image')
           .map(item => item.item.url)
       }
 
-      // Handle documents
       if (response.created_items?.some(item => item.type === 'document')) {
         const doc = response.created_items.find(item => item.type === 'document')
-        darvisMessage.downloadLink = doc?.item
+        lumenMessage.downloadLink = doc?.item
       }
 
-      setMessages(prev => [...prev, darvisMessage])
+      setMessages(prev => [...prev, lumenMessage])
 
-      // Store last action for undo
       if (response.created_items && response.created_items.length > 0) {
         setLastAction({
           items: response.created_items,
@@ -195,11 +190,11 @@ export function DarvisAssistant() {
       }
 
     } catch (error: any) {
-      console.error('Darvis error:', error)
+      console.error('Lumen error:', error)
       const errorMessage = {
         id: (Date.now() + 1).toString(),
         text: "I'm having trouble processing that request. Please try again or rephrase your question.",
-        sender: 'darvis' as const,
+        sender: 'lumen' as const,
         timestamp: new Date()
       }
       setMessages(prev => [...prev, errorMessage])
@@ -207,7 +202,6 @@ export function DarvisAssistant() {
       setIsProcessing(false)
     }
   }
-
 
   const startRecording = async () => {
     try {
@@ -258,7 +252,6 @@ export function DarvisAssistant() {
     setIsProcessing(true)
     
     try {
-      // Convert blob to base64
       const reader = new FileReader()
       reader.readAsDataURL(audioBlob)
       
@@ -297,7 +290,6 @@ export function DarvisAssistant() {
 
   return (
     <>
-      {/* Floating Chat Button */}
       <AnimatePresence>
         {!isOpen && (
           <motion.div
@@ -313,13 +305,12 @@ export function DarvisAssistant() {
               <MessageCircle className="h-7 w-7 text-white" />
             </Button>
             <div className="absolute -top-12 right-0 bg-primary text-primary-foreground px-3 py-1 rounded-lg text-sm whitespace-nowrap shadow-lg animate-pulse">
-              Ask Darvis!
+              Ask Lumen!
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Chat Panel */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -328,15 +319,14 @@ export function DarvisAssistant() {
             exit={{ opacity: 0, scale: 0.8, x: 20, y: 20 }}
             className="fixed bottom-6 right-6 w-96 h-[500px] z-50 bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
           >
-            {/* Header */}
             <div className="flex items-center justify-between p-4 border-b bg-gradient-primary text-white">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                   <MessageCircle className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="font-semibold">Darvis AI</h3>
-                  <p className="text-xs opacity-90">Your D-TRACK Assistant</p>
+                  <h3 className="font-semibold">Lumen AI</h3>
+                  <p className="text-xs opacity-90">Your LumenR Business Assistant</p>
                 </div>
               </div>
               <Button
@@ -349,7 +339,6 @@ export function DarvisAssistant() {
               </Button>
             </div>
 
-            {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map(message => (
                 <motion.div
@@ -374,7 +363,7 @@ export function DarvisAssistant() {
                           note: '/notes',
                           project: '/projects',
                           calendar_event: '/calendar',
-                          student_class: '/student-classes'
+                          business_project: '/projects'
                         };
                         if (item.type !== 'image' && item.type !== 'document') {
                           navigate(routes[item.type] || '/dashboard');
@@ -383,9 +372,8 @@ export function DarvisAssistant() {
                       }
                     }}
                   >
-                    <p className="text-sm">{message.text}</p>
+                    <p className="text-sm whitespace-pre-wrap">{message.text}</p>
                     
-                    {/* Display images */}
                     {message.images && message.images.length > 0 && (
                       <div className="mt-2 space-y-2">
                         {message.images.map((imgUrl: string, idx: number) => (
@@ -394,7 +382,6 @@ export function DarvisAssistant() {
                       </div>
                     )}
                     
-                    {/* Display download button for documents */}
                     {message.downloadLink && (
                       <div className="mt-2">
                         <a
@@ -420,7 +407,6 @@ export function DarvisAssistant() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
             <form onSubmit={handleSubmit} className="p-4 border-t space-y-2">
               {selectedFile && (
                 <div className="text-xs bg-muted p-2 rounded flex items-center justify-between">
@@ -469,11 +455,16 @@ export function DarvisAssistant() {
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask Darvis anything..."
+                  placeholder="Ask Lumen anything..."
                   className="flex-1"
                   disabled={isProcessing || isRecording}
                 />
-                <Button type="submit" disabled={(!input.trim() && !selectedFile) || isProcessing || isRecording} size="sm">
+                <Button 
+                  type="submit" 
+                  size="sm" 
+                  disabled={(!input.trim() && !selectedFile) || isProcessing || isRecording}
+                  className="h-10 w-10 p-0"
+                >
                   {isProcessing ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
@@ -481,11 +472,6 @@ export function DarvisAssistant() {
                   )}
                 </Button>
               </div>
-              {isRecording && (
-                <p className="text-xs text-center text-muted-foreground mt-2 animate-pulse">
-                  Recording... Click stop when finished
-                </p>
-              )}
             </form>
           </motion.div>
         )}

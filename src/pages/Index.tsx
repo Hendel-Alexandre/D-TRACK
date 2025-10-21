@@ -45,7 +45,7 @@ const Index = () => {
           <div className="flex items-center">
             <img 
               src={datatrackLogo} 
-              alt="D-Track" 
+              alt="LumenR" 
               className="h-12 w-auto invert"
             />
           </div>
@@ -98,12 +98,12 @@ const Index = () => {
             </Badge>
             
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
-              Boost Productivity with
-              <span className="bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent block mt-2">AI-Powered Time Tracking</span>
+              Run Your Service Business
+              <span className="bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent block mt-2">Smarter with LumenR</span>
             </h1>
             
             <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Transform your workflow with intelligent time management
+              All-in-one platform to manage projects, teams, inventory, and finances — powered by AI
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
@@ -245,7 +245,7 @@ const Index = () => {
               { icon: Calendar, title: 'Smart Scheduling', description: 'AI-powered calendar that adapts to your workflow patterns.', color: 'purple' },
               { icon: MessageSquare, title: 'Team Collaboration', description: 'Real-time messaging, file sharing, and project coordination.', color: 'green' },
               { icon: FileText, title: 'Detailed Reports', description: 'Comprehensive analytics with customizable dashboards and exports.', color: 'orange' },
-              { icon: Brain, title: 'Darvis AI Assistant', description: 'Intelligent automation that learns from your work patterns.', color: 'cyan' },
+              { icon: Brain, title: 'Lumen AI Assistant', description: 'Intelligent business insights and automation for your operations.', color: 'cyan' },
               { icon: Shield, title: 'Secure & Private', description: 'Enterprise-grade security with full data encryption and compliance.', color: 'emerald' }
             ].map((feature, index) => (
               <Card 
@@ -287,8 +287,8 @@ const Index = () => {
           {[
             { 
               icon: Target, 
-              title: 'Automatic Time Tracking', 
-              description: 'No manual entry needed. D-Track intelligently captures time spent on every task and project, giving you complete visibility into where your hours go.',
+              title: 'Project Management', 
+              description: 'Track projects from quote to completion. LumenR keeps your team aligned and clients informed every step of the way.',
               gradient: 'from-blue-500/20 to-purple-500/20'
             },
             { 
@@ -300,7 +300,7 @@ const Index = () => {
             { 
               icon: Brain, 
               title: 'AI-Powered Insights', 
-              description: 'Darvis AI analyzes your work patterns, identifies bottlenecks, and suggests optimizations to help you work smarter, not harder.',
+              description: 'Lumen AI analyzes your business patterns, identifies opportunities, and suggests optimizations to help you grow smarter.',
               gradient: 'from-green-500/20 to-teal-500/20'
             },
             { 
@@ -443,7 +443,7 @@ const Index = () => {
             Ready to Transform Your Workflow?
           </h2>
           <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-            Join thousands of teams already using D-Track to boost productivity
+            Join service businesses already using LumenR to streamline operations
           </p>
           <Link to="/signup">
             <Button size="lg" className="gap-2 text-lg px-8 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
@@ -494,7 +494,7 @@ const Index = () => {
             </div>
           </div>
           <div className="pt-8 border-t border-white/10 text-center text-sm text-gray-500">
-            © 2024 D-Track. All rights reserved.
+            © 2024 LumenR. All rights reserved.
           </div>
         </div>
       </footer>

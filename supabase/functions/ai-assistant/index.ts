@@ -168,8 +168,8 @@ serve(async (req) => {
         result = await analyzeProductivity(secureData, supabase);
         await logUsage(action);
         return result;
-      case 'darvis_chat':
-        result = await handleDarvisChat(secureData, supabase);
+      case 'lumen_chat':
+        result = await handleLumenChat(secureData, supabase);
         await logUsage(action);
         return result;
       case 'generate_image':

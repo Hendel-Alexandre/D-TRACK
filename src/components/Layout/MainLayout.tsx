@@ -4,7 +4,7 @@ import { AppSidebar } from './AppSidebar'
 import { TopBar } from './TopBar'
 import NoteNotificationPopup from '@/components/notifications/NoteNotificationPopup'
 import { useNoteNotifications } from '@/hooks/useNoteNotifications'
-import { DarvisAssistant } from '@/components/AI/DarvisAssistant'
+import { LumenAssistant } from '@/components/AI/LumenAssistant'
 import { OnboardingProvider } from '@/components/Onboarding/OnboardingProvider'
 import { OnboardingRedirect } from '@/components/Dashboard/OnboardingRedirect'
 
@@ -25,7 +25,7 @@ export function MainLayout() {
                 </div>
               </main>
             </div>
-            <DarvisAssistant />
+            <LumenAssistant />
         
           <NoteNotificationPopup
             notification={notification}
