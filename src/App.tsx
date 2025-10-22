@@ -34,6 +34,7 @@ import StudentAssignments from "./pages/StudentAssignments";
 import StudentFiles from "./pages/StudentFiles";
 import WorkFiles from "./pages/WorkFiles";
 import Lumen from "./pages/Lumen";
+import RoleManagement from "./pages/RoleManagement";
 import "./lib/i18n";
 
 const queryClient = new QueryClient();
@@ -259,6 +260,14 @@ const App = () => (
                   <Lumen />
                 </ProtectedRoute>
               } />
+              
+              <Route path="/role-management" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<RoleManagement />} />
+              </Route>
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />

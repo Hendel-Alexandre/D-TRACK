@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useTimeTracking } from '@/contexts/TimeTrackingContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useMode } from '@/contexts/ModeContext'
+import { useUserRole } from '@/hooks/useUserRole'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -18,6 +19,7 @@ import {
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { RoleBadge } from '@/components/ui/role-badge'
 
 export function TopBar() {
   const { t, i18n } = useTranslation()
@@ -25,6 +27,7 @@ export function TopBar() {
   const { user, userProfile, signOut, updateUserStatus } = useAuth()
   const { isTracking, isPaused, elapsedTime, toggleTracking, formatTime } = useTimeTracking()
   const { mode, toggleMode } = useMode()
+  const { roles } = useUserRole()
   
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng)
@@ -77,6 +80,15 @@ export function TopBar() {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
+          {/* Role Badges */}
+          {roles.length > 0 && (
+            <div className="hidden md:flex gap-2">
+              {roles.map(role => (
+                <RoleBadge key={role} role={role} />
+              ))}
+            </div>
+          )}
+
           {/* Mode Switcher */}
           {user && (
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>

@@ -80,7 +80,7 @@ export default function Lumen() {
   const loadChatHistory = async (conversationId: string) => {
     try {
       const { data, error } = await supabase
-        .from('lumen_chats')
+        .from('darvis_chats')
         .select('*')
         .eq('user_id', user?.id)
         .order('created_at', { ascending: true });
@@ -184,7 +184,7 @@ export default function Lumen() {
       }
 
       const { error: userMsgError } = await supabase
-        .from('lumen_chats')
+        .from('darvis_chats')
         .insert(userMessageData);
 
       if (userMsgError) throw userMsgError;
@@ -233,7 +233,7 @@ export default function Lumen() {
       }
 
       const { error: assistantMsgError } = await supabase
-        .from('lumen_chats')
+        .from('darvis_chats')
         .insert(assistantMessage);
 
       if (assistantMsgError) throw assistantMsgError;

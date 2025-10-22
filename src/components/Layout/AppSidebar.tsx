@@ -14,12 +14,14 @@ import {
   Timer,
   Upload,
   ScanText,
-  Sparkles
+  Sparkles,
+  Shield
 } from 'lucide-react'
 import datatrackLogo from '@/assets/datatrack-logo.png'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useMode } from '@/contexts/ModeContext'
+import { useUserRole } from '@/hooks/useUserRole'
 import {
   Sidebar,
   SidebarContent,
@@ -108,6 +110,7 @@ const workNavigation = [
     items: [
       { title: 'team', url: '/team', icon: Users },
       { title: 'messages', url: '/messages', icon: MessageCircle },
+      { title: 'Role Management', url: '/role-management', icon: Shield, adminOnly: true },
     ]
   },
   {
@@ -123,6 +126,7 @@ export function AppSidebar() {
   const location = useLocation()
   const { t } = useTranslation()
   const { mode } = useMode()
+  const { isAdmin } = useUserRole()
   
   const navigationGroups = mode === 'student' ? studentNavigation : workNavigation;
   
@@ -163,26 +167,29 @@ export function AppSidebar() {
               )}
               <SidebarGroupContent>
                 <SidebarMenu className="space-y-1 px-3">
-                  {group.items.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild className="h-11 rounded-lg">
-                        <NavLink 
-                          to={item.url} 
-                          end 
-                          className={({ isActive }) => 
-                            `flex items-center gap-4 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${getNavClasses({ isActive })}`
-                          }
-                        >
-                          <item.icon className="h-5 w-5 flex-shrink-0" />
-                          {!isCollapsed && (
-                            <span className="truncate">
-                              {t(item.title)}
-                            </span>
-                          )}
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
+                  {group.items.map((item: any) => {
+                    if (item.adminOnly && !isAdmin()) return null;
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild className="h-11 rounded-lg">
+                          <NavLink 
+                            to={item.url} 
+                            end 
+                            className={({ isActive }) => 
+                              `flex items-center gap-4 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${getNavClasses({ isActive })}`
+                            }
+                          >
+                            <item.icon className="h-5 w-5 flex-shrink-0" />
+                            {!isCollapsed && (
+                              <span className="truncate">
+                                {t(item.title)}
+                              </span>
+                            )}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
