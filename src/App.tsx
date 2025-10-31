@@ -21,6 +21,13 @@ import Settings from "./pages/Settings";
 import History from "./pages/History";
 import Messages from "./pages/Messages";
 import OCRCallReport from "./pages/OCRCallReport";
+import Clients from "./pages/Clients";
+import Invoices from "./pages/Invoices";
+import Quotes from "./pages/Quotes";
+import Receipts from "./pages/Receipts";
+import Services from "./pages/Services";
+import Products from "./pages/Products";
+import Tax from "./pages/Tax";
 
 import Index from "./pages/Index";
 import EnterpriseContact from "./pages/EnterpriseContact";
@@ -165,6 +172,62 @@ const App = () => (
                 </ProtectedRoute>
               }>
                 <Route index element={<Notes />} />
+              </Route>
+              
+              <Route path="/clients" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Clients />} />
+              </Route>
+              
+              <Route path="/invoices" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Invoices />} />
+              </Route>
+              
+              <Route path="/quotes" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Quotes />} />
+              </Route>
+              
+              <Route path="/receipts" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Receipts />} />
+              </Route>
+              
+              <Route path="/services" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Services />} />
+              </Route>
+              
+              <Route path="/products" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Products />} />
+              </Route>
+              
+              <Route path="/tax" element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Tax />} />
               </Route>
               
               <Route path="/reports" element={
