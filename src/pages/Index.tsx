@@ -98,12 +98,12 @@ const Index = () => {
             </Badge>
             
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
-              Run Your Service Business
-              <span className="bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent block mt-2">Smarter with LumenR</span>
+              Financial Management Made
+              <span className="bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent block mt-2">Effortless with LumenR</span>
             </h1>
             
             <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              All-in-one platform to manage projects, teams, inventory, and finances — powered by AI
+              All-in-one AI platform to manage clients, projects, invoices, and operations powered by automation
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
@@ -115,7 +115,7 @@ const Index = () => {
             </div>
 
             <p className="text-sm text-gray-400">
-              7-day free trial • No credit card required • Cancel anytime
+              30-day free trial • No credit card required • Cancel anytime
             </p>
           </div>
 
@@ -152,27 +152,27 @@ const Index = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="text-center space-y-2">
               <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                <AnimatedCounter end={50} suffix="+" />
+                <AnimatedCounter end={500} suffix="+" />
               </div>
-              <div className="text-sm text-gray-400 font-medium">Active Users</div>
+              <div className="text-sm text-gray-400 font-medium">Active Businesses</div>
             </div>
             <div className="text-center space-y-2">
               <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                <AnimatedCounter end={2} suffix="K+" />
+                $<AnimatedCounter end={2} suffix="M+" />
               </div>
-              <div className="text-sm text-gray-400 font-medium">Hours Tracked</div>
+              <div className="text-sm text-gray-400 font-medium">Invoices Processed</div>
             </div>
             <div className="text-center space-y-2">
               <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
                 <AnimatedCounter end={99} suffix=".9%" />
               </div>
-              <div className="text-sm text-gray-400 font-medium">Uptime</div>
+              <div className="text-sm text-gray-400 font-medium">Payment Success Rate</div>
             </div>
             <div className="text-center space-y-2">
               <div className="flex items-center justify-center text-4xl md:text-5xl font-bold text-blue-400">
                 <Globe className="h-10 w-10 mr-2" />
               </div>
-              <div className="text-sm text-gray-400 font-medium">Worldwide Coverage</div>
+              <div className="text-sm text-gray-400 font-medium">Global Support</div>
             </div>
           </div>
         </div>
@@ -188,18 +188,18 @@ const Index = () => {
         }`}>
           <Badge variant="outline" className="mb-4 border-white/20 text-gray-300">The Problem</Badge>
           <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white">
-            Why Time Management Still Fails
+            Why Financial Management Is Still Broken
           </h2>
           <p className="text-xl text-gray-400">
-            Traditional tools create more problems than they solve
+            Traditional accounting tools create chaos instead of clarity
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {[
-            { icon: X, title: 'Scattered Tools', description: 'Switching between apps creates confusion and lost time.', color: 'orange' },
-            { icon: BarChart, title: 'No Visibility', description: 'Without insights, it\'s hard to optimize or manage workflows.', color: 'purple' },
-            { icon: Users, title: 'Poor Collaboration', description: 'Silos slow down progress and duplicate effort.', color: 'blue' }
+            { icon: X, title: 'Scattered Data', description: 'Invoices, receipts, and client info spread across multiple platforms.', color: 'orange' },
+            { icon: BarChart, title: 'No Financial Visibility', description: 'Without real-time insights, cash flow becomes a guessing game.', color: 'purple' },
+            { icon: Users, title: 'Manual Work', description: 'Hours wasted on data entry, invoice generation, and reconciliation.', color: 'blue' }
           ].map((item, index) => (
             <Card 
               key={index}
@@ -232,21 +232,21 @@ const Index = () => {
           }`}>
             <Badge variant="outline" className="mb-4 border-white/20 text-gray-300">The Solution</Badge>
             <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white">
-              A Smarter Way to Work
+              All Your Finances in One Place
             </h2>
             <p className="text-lg text-gray-400">
-              Everything you need in one intelligent platform
+              Complete financial management powered by AI automation
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {[
-              { icon: Clock, title: 'Time Tracking', description: 'Automatic time capture with intelligent categorization and insights.', color: 'blue' },
-              { icon: Calendar, title: 'Smart Scheduling', description: 'AI-powered calendar that adapts to your workflow patterns.', color: 'purple' },
-              { icon: MessageSquare, title: 'Team Collaboration', description: 'Real-time messaging, file sharing, and project coordination.', color: 'green' },
-              { icon: FileText, title: 'Detailed Reports', description: 'Comprehensive analytics with customizable dashboards and exports.', color: 'orange' },
-              { icon: Brain, title: 'Lumen AI Assistant', description: 'Intelligent business insights and automation for your operations.', color: 'cyan' },
-              { icon: Shield, title: 'Secure & Private', description: 'Enterprise-grade security with full data encryption and compliance.', color: 'emerald' }
+              { icon: FileText, title: 'Smart Invoicing', description: 'Create, send, and track invoices with automated reminders and payment links.', color: 'blue' },
+              { icon: Calendar, title: 'Quote Management', description: 'Professional quotes that convert to invoices with one click.', color: 'purple' },
+              { icon: MessageSquare, title: 'Client Portal', description: 'Let clients view projects, approve quotes, and manage payments seamlessly.', color: 'green' },
+              { icon: BarChart, title: 'Receipt OCR', description: 'Auto-extract data from receipts using AI-powered optical character recognition.', color: 'orange' },
+              { icon: Brain, title: 'AI Financial Insights', description: 'Get intelligent recommendations on cash flow, tax planning, and profitability.', color: 'cyan' },
+              { icon: Shield, title: 'Tax Automation', description: 'Automatic quarterly summaries and real-time tax obligation tracking.', color: 'emerald' }
             ].map((feature, index) => (
               <Card 
                 key={index}
@@ -279,7 +279,7 @@ const Index = () => {
         }`}>
           <Badge variant="outline" className="mb-4 border-white/20 text-gray-300">Powerful Features</Badge>
           <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white">
-            Everything You Need to Stay Productive
+            Everything You Need to Run Your Finances
           </h2>
         </div>
 
@@ -287,26 +287,26 @@ const Index = () => {
           {[
             { 
               icon: Target, 
-              title: 'Project Management', 
-              description: 'Track projects from quote to completion. LumenR keeps your team aligned and clients informed every step of the way.',
+              title: 'Complete Invoice Lifecycle', 
+              description: 'From quote to payment - manage the entire invoice journey. Track statuses, send reminders, and get paid faster with integrated payment processing.',
               gradient: 'from-blue-500/20 to-purple-500/20'
             },
             { 
               icon: Users, 
-              title: 'Real-time Team Collaboration', 
-              description: 'Chat, share files, assign tasks, and coordinate projects seamlessly. Keep everyone aligned with instant updates and notifications.',
+              title: 'Client & Project Hub', 
+              description: 'Centralize all client data, linked invoices, quotes, and documents. Give clients secure portal access to view progress and approve work.',
               gradient: 'from-purple-500/20 to-pink-500/20'
             },
             { 
               icon: Brain, 
-              title: 'AI-Powered Insights', 
-              description: 'Lumen AI analyzes your business patterns, identifies opportunities, and suggests optimizations to help you grow smarter.',
+              title: 'AI Financial Assistant', 
+              description: 'LumenR AI predicts cash flow, identifies late-payment risks, suggests pricing optimizations, and automates routine financial tasks.',
               gradient: 'from-green-500/20 to-teal-500/20'
             },
             { 
               icon: BarChart, 
-              title: 'Custom Reports & Dashboards', 
-              description: 'Build beautiful reports with drag-and-drop simplicity. Track KPIs, generate client invoices, and export data in any format.',
+              title: 'Analytics & Reports', 
+              description: 'Visual dashboards show revenue trends, top clients, profitability by project, and tax summaries. Export to CSV or PDF in seconds.',
               gradient: 'from-orange-500/20 to-yellow-500/20'
             }
           ].map((feature, index) => (

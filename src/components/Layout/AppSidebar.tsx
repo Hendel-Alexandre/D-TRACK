@@ -15,7 +15,13 @@ import {
   Upload,
   ScanText,
   Sparkles,
-  Shield
+  Shield,
+  Receipt,
+  DollarSign,
+  Package,
+  FileStack,
+  Calculator,
+  Briefcase
 } from 'lucide-react'
 import datatrackLogo from '@/assets/datatrack-logo.png'
 import { NavLink, useLocation } from 'react-router-dom'
@@ -72,12 +78,12 @@ const studentNavigation = [
   }
 ];
 
-// Work Mode Navigation
+// Professional Mode Navigation - Financial Management
 const workNavigation = [
   {
-    label: 'overview',
+    label: 'Overview',
     items: [
-      { title: 'dashboard', url: '/dashboard', icon: Home },
+      { title: 'Dashboard', url: '/dashboard', icon: Home },
     ]
   },
   {
@@ -87,36 +93,49 @@ const workNavigation = [
     ]
   },
   {
-    label: 'work',
+    label: 'Financial',
     items: [
-      { title: 'timesheets', url: '/timesheets', icon: Clock },
-      { title: 'tasks', url: '/tasks', icon: CheckSquare },
-      { title: 'projects', url: '/projects', icon: FolderOpen },
-      { title: 'calendar', url: '/calendar', icon: Calendar },
-      { title: 'Files', url: '/work-files', icon: Upload },
-      { title: 'notes', url: '/notes', icon: FileText },
-      { title: 'OCR Call Report', url: '/ocr-call-report', icon: ScanText },
+      { title: 'Clients', url: '/clients', icon: Users },
+      { title: 'Invoices', url: '/invoices', icon: FileText },
+      { title: 'Quotes', url: '/quotes', icon: DollarSign },
+      { title: 'Receipts', url: '/receipts', icon: Receipt },
+      { title: 'Tax', url: '/tax', icon: Calculator },
     ]
   },
   {
-    label: 'insights',
+    label: 'Business',
     items: [
-      { title: 'reports', url: '/reports', icon: BarChart3 },
-      { title: 'history', url: '/history', icon: Activity },
+      { title: 'Projects', url: '/projects', icon: FolderOpen },
+      { title: 'Services', url: '/services', icon: Briefcase },
+      { title: 'Products', url: '/products', icon: Package },
+      { title: 'Calendar', url: '/calendar', icon: Calendar },
     ]
   },
   {
-    label: 'team',
+    label: 'Documents',
     items: [
-      { title: 'team', url: '/team', icon: Users },
-      { title: 'messages', url: '/messages', icon: MessageCircle },
+      { title: 'Files', url: '/documents', icon: FileStack },
+      { title: 'Notes', url: '/notes', icon: FileText },
+    ]
+  },
+  {
+    label: 'Analytics',
+    items: [
+      { title: 'Reports', url: '/reports', icon: BarChart3 },
+    ]
+  },
+  {
+    label: 'Team',
+    items: [
+      { title: 'Team Members', url: '/team', icon: Users },
+      { title: 'Messages', url: '/messages', icon: MessageCircle },
       { title: 'Role Management', url: '/role-management', icon: Shield, adminOnly: true },
     ]
   },
   {
-    label: 'system',
+    label: 'System',
     items: [
-      { title: 'settings', url: '/settings', icon: Settings },
+      { title: 'Settings', url: '/settings', icon: Settings },
     ]
   }
 ];
