@@ -98,8 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         captchaToken,
         data: {
           first_name: firstName,
-          last_name: lastName,
-          department
+          last_name: lastName
         }
       }
     })
@@ -111,9 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: data.user.id,
           first_name: firstName,
           last_name: lastName,
-          email,
-          department: department as any,
-          status: 'Available'
+          email
         })
 
       if (profileError) {
@@ -129,16 +126,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const updateUserStatus = async (status: 'Available' | 'Away' | 'Busy') => {
-    if (!user) return
-
-    const { error } = await supabase
-      .from('users')
-      .update({ status })
-      .eq('id', user.id)
-
-    if (!error) {
-      setUserProfile((prev: any) => ({ ...prev, status }))
-    }
+    // Status feature removed for financial platform
+    console.log('Status update:', status)
   }
 
   const value = {

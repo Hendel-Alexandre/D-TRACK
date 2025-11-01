@@ -10,16 +10,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ModeProvider } from "@/contexts/ModeContext";
 import { MainLayout } from "@/components/Layout/MainLayout";
 import Dashboard from "./pages/Dashboard";
-import Projects from "./pages/Projects";
-import Tasks from "./pages/Tasks";
-import Calendar from "./pages/Calendar";
-import Timesheets from "./pages/Timesheets";
-import Notes from "./pages/Notes";
-import Reports from "./pages/Reports";
-import Team from "./pages/Team";
 import Settings from "./pages/Settings";
-import History from "./pages/History";
-import Messages from "./pages/Messages";
 import OCRCallReport from "./pages/OCRCallReport";
 import Clients from "./pages/Clients";
 import Invoices from "./pages/Invoices";
@@ -28,19 +19,12 @@ import Receipts from "./pages/Receipts";
 import Services from "./pages/Services";
 import Products from "./pages/Products";
 import Tax from "./pages/Tax";
-
 import Index from "./pages/Index";
-import EnterpriseContact from "./pages/EnterpriseContact";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Onboarding from "./pages/Onboarding";
 import PlanManagement from "./pages/PlanManagement";
 import NotFound from "./pages/NotFound";
-import StudentClasses from "./pages/StudentClasses";
-import StudentAssignments from "./pages/StudentAssignments";
-import StudentFiles from "./pages/StudentFiles";
-import WorkFiles from "./pages/WorkFiles";
-import Lumen from "./pages/Lumen";
 import RoleManagement from "./pages/RoleManagement";
 import "./lib/i18n";
 
@@ -104,7 +88,6 @@ const App = () => (
               <Routes>
               {/* Landing Page - Public */}
               <Route path="/" element={<Index />} />
-              <Route path="/enterprise-contact" element={<EnterpriseContact />} />
               
               {/* Auth Routes - Public */}
               <Route path="/login" element={
@@ -132,46 +115,6 @@ const App = () => (
                 </ProtectedRoute>
               }>
                 <Route index element={<Dashboard />} />
-              </Route>
-              
-              <Route path="/timesheets" element={
-                <ProtectedRoute>
-                  <MainLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<Timesheets />} />
-              </Route>
-              
-              <Route path="/tasks" element={
-                <ProtectedRoute>
-                  <MainLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<Tasks />} />
-              </Route>
-              
-              <Route path="/calendar" element={
-                <ProtectedRoute>
-                  <MainLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<Calendar />} />
-              </Route>
-              
-              <Route path="/projects" element={
-                <ProtectedRoute>
-                  <MainLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<Projects />} />
-              </Route>
-              
-              <Route path="/notes" element={
-                <ProtectedRoute>
-                  <MainLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<Notes />} />
               </Route>
               
               <Route path="/clients" element={
@@ -230,38 +173,6 @@ const App = () => (
                 <Route index element={<Tax />} />
               </Route>
               
-              <Route path="/reports" element={
-                <ProtectedRoute>
-                  <MainLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<Reports />} />
-              </Route>
-              
-              <Route path="/team" element={
-                <ProtectedRoute>
-                  <MainLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<Team />} />
-              </Route>
-              
-              <Route path="/messages" element={
-                <ProtectedRoute>
-                  <MainLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<Messages />} />
-              </Route>
-              
-              <Route path="/history" element={
-                <ProtectedRoute>
-                  <MainLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<History />} />
-              </Route>
-              
               <Route path="/settings" element={
                 <ProtectedRoute>
                   <MainLayout />
@@ -285,44 +196,6 @@ const App = () => (
               }>
                 <Route index element={<OCRCallReport />} />
               </Route>
-              
-              <Route path="/student-classes" element={
-                <ProtectedRoute>
-                  <MainLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<StudentClasses />} />
-              </Route>
-              
-              <Route path="/student-assignments" element={
-                <ProtectedRoute>
-                  <MainLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<StudentAssignments />} />
-              </Route>
-              
-              <Route path="/student-files" element={
-                <ProtectedRoute>
-                  <MainLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<StudentFiles />} />
-              </Route>
-              
-              <Route path="/work-files" element={
-                <ProtectedRoute>
-                  <MainLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<WorkFiles />} />
-              </Route>
-              
-              <Route path="/lumen" element={
-                <ProtectedRoute>
-                  <Lumen />
-                </ProtectedRoute>
-              } />
               
               <Route path="/role-management" element={
                 <ProtectedRoute>
