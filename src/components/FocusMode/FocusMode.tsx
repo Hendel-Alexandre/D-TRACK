@@ -65,21 +65,9 @@ export function FocusMode({ className = '' }: FocusModeProps) {
     if (!user) return
 
     try {
-      const today = new Date().toISOString().split('T')[0]
-      
-      const { data: tasks } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('user_id', user.id)
-        .neq('status', 'Completed')
-        .or(`due_date.eq.${today},due_date.is.null`)
-        .order('priority', { ascending: false })
-        .order('created_at', { ascending: true })
-
-      setTodayTasks(tasks || [])
-      if (tasks && tasks.length > 0 && !currentTask) {
-        setCurrentTask(tasks[0])
-      }
+      // For now, focus mode will be empty until we add tasks back
+      setTodayTasks([])
+      setCurrentTask(null)
     } catch (error) {
       console.error('Error loading today tasks:', error)
     }
@@ -116,32 +104,11 @@ export function FocusMode({ className = '' }: FocusModeProps) {
   }
 
   const completeTask = async (taskId: string) => {
-    try {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ status: 'Completed' })
-        .eq('id', taskId)
-
-      if (error) throw error
-
-      setTodayTasks(prev => prev.filter(task => task.id !== taskId))
-      
-      if (currentTask?.id === taskId) {
-        const nextTask = todayTasks.find(task => task.id !== taskId)
-        setCurrentTask(nextTask || null)
-      }
-
-      toast({
-        title: 'Task Completed! ✅',
-        description: 'Great job! Keep the momentum going.',
-      })
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive'
-      })
-    }
+    // Tasks functionality will be added later
+    toast({
+      title: 'Feature Coming Soon',
+      description: 'Task management will be available soon.',
+    })
   }
 
   const formatTime = (seconds: number) => {

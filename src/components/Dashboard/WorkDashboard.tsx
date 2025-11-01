@@ -77,37 +77,34 @@ export function WorkDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const { data: tasksData } = await supabase
-        .from('tasks')
+      const { data: clients } = await supabase
+        .from('clients')
         .select('*')
         .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
 
-      const { data: projectsData } = await supabase
-        .from('projects')
+      const { data: invoices } = await supabase
+        .from('invoices')
         .select('*')
         .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
-        .limit(3);
 
-      const { data: timesheets } = await supabase
-        .from('timesheets')
+      const { data: quotes } = await supabase
+        .from('quotes')
         .select('*')
         .eq('user_id', user?.id)
-        .gte('date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
 
-      const totalHours = timesheets?.reduce((sum, t) => sum + Number(t.hours), 0) || 0;
+      const totalRevenue = invoices?.filter(i => i.status === 'paid').reduce((sum, i) => sum + Number(i.total), 0) || 0
+      const completedInvoices = invoices?.filter(i => i.status === 'paid').length || 0
 
       setStats({
-        totalTasks: tasksData?.length || 0,
-        inProgress: tasksData?.filter(t => t.status === 'In Progress').length || 0,
-        completed: tasksData?.filter(t => t.status === 'Completed').length || 0,
-        projects: projectsData?.length || 0,
-        hoursThisWeek: totalHours,
+        totalTasks: clients?.length || 0,
+        inProgress: invoices?.filter(i => i.status === 'pending').length || 0,
+        completed: completedInvoices,
+        projects: quotes?.length || 0,
+        hoursThisWeek: totalRevenue,
       });
 
-      setTasks(tasksData?.filter(t => t.status === 'In Progress').slice(0, 2) || []);
-      setProjects(projectsData || []);
+      setTasks([]);
+      setProjects([]);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     }

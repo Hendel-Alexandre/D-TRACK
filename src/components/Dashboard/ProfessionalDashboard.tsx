@@ -42,40 +42,38 @@ export function ProfessionalDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch projects
-      const { data: projects } = await supabase
-        .from('projects')
+      const { data: clients } = await supabase
+        .from('clients')
         .select('*')
         .eq('user_id', user?.id);
 
-      // Fetch tasks
-      const { data: tasks } = await supabase
-        .from('tasks')
+      const { data: invoices } = await supabase
+        .from('invoices')
         .select('*')
         .eq('user_id', user?.id);
 
-      // Fetch timesheets for revenue calculation
-      const { data: timesheets } = await supabase
-        .from('timesheets')
+      const { data: quotes } = await supabase
+        .from('quotes')
         .select('*')
         .eq('user_id', user?.id);
 
-      // Calculate stats
+      const totalRevenue = invoices?.filter(i => i.status === 'paid').reduce((sum, i) => sum + Number(i.total), 0) || 0
+      const completedInvoices = invoices?.filter(i => i.status === 'paid').length || 0
+
       setStats({
-        revenue: timesheets?.reduce((sum, t) => sum + (Number(t.hours) * 50), 0) || 0,
-        projects: projects?.length || 0,
-        team: 1, // Single user for now
-        tasks: tasks?.filter(t => t.status === 'Completed').length || 0,
+        revenue: totalRevenue,
+        projects: clients?.length || 0,
+        team: quotes?.length || 0,
+        tasks: completedInvoices,
       });
 
-      // Generate sample chart data for demonstration
       setRevenueData([
-        { name: 'Jan', value: 4000 },
-        { name: 'Feb', value: 3000 },
-        { name: 'Mar', value: 5000 },
-        { name: 'Apr', value: 4500 },
-        { name: 'May', value: 6000 },
-        { name: 'Jun', value: 5500 },
+        { name: 'Jan', value: totalRevenue * 0.1 },
+        { name: 'Feb', value: totalRevenue * 0.12 },
+        { name: 'Mar', value: totalRevenue * 0.18 },
+        { name: 'Apr', value: totalRevenue * 0.15 },
+        { name: 'May', value: totalRevenue * 0.22 },
+        { name: 'Jun', value: totalRevenue * 0.23 },
       ]);
       
       setActivityData([
@@ -89,9 +87,9 @@ export function ProfessionalDashboard() {
       ]);
       
       setRecentActivity([
-        { user: 'You', action: 'completed a task', time: '2 minutes ago' },
-        { user: 'Team', action: 'started a new project', time: '1 hour ago' },
-        { user: 'You', action: 'logged 3 hours', time: '3 hours ago' },
+        { user: 'You', action: 'created invoice', time: '2 minutes ago' },
+        { user: 'System', action: 'payment received', time: '1 hour ago' },
+        { user: 'You', action: 'sent quote', time: '3 hours ago' },
       ]);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
