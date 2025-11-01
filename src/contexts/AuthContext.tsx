@@ -24,29 +24,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) {
-        // Defer status update and profile fetch to avoid blocking the auth callback
+        // Defer profile fetch to avoid blocking the auth callback
         setTimeout(() => {
           const uid = session.user!.id
-          if (event === 'SIGNED_IN') {
-            supabase
-              .from('users')
-              .update({ status: 'Available' })
-              .eq('id', uid)
-              .then(() => {})
-          }
           fetchUserProfile(uid)
         }, 0)
       } else {
-        // Defer status update on sign out; never block the callback
-        if (event === 'SIGNED_OUT' && user?.id) {
-          const prevId = user.id
-          setTimeout(() => {
-            supabase
-              .from('users')
-              .update({ status: 'Away' })
-              .eq('id', prevId)
-          }, 0)
-        }
         setUserProfile(null)
         setLoading(false)
       }
@@ -56,14 +39,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       if (session?.user) {
-        // Defer status update and profile fetch for existing session
+        // Defer profile fetch for existing session
         setTimeout(() => {
           const uid = session.user!.id
-          supabase
-            .from('users')
-            .update({ status: 'Available' })
-            .eq('id', uid)
-            .then(() => {})
           fetchUserProfile(uid)
         }, 0)
       } else {
@@ -71,24 +49,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     })
 
-    // Set status to Away when page is closed/refreshed
-    const handleBeforeUnload = () => {
-      if (user?.id) {
-        // Fire-and-forget; cannot await during unload
-        setTimeout(() => {
-          supabase
-            .from('users')
-            .update({ status: 'Away' })
-            .eq('id', user.id as string)
-        }, 0)
-      }
-    }
-
-    window.addEventListener('beforeunload', handleBeforeUnload)
-
     return () => {
       subscription.unsubscribe()
-      window.removeEventListener('beforeunload', handleBeforeUnload)
     }
   }, [])
 

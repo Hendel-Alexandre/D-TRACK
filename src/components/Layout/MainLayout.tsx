@@ -2,15 +2,11 @@ import { Outlet } from 'react-router-dom'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from './AppSidebar'
 import { TopBar } from './TopBar'
-import NoteNotificationPopup from '@/components/notifications/NoteNotificationPopup'
-import { useNoteNotifications } from '@/hooks/useNoteNotifications'
 import { LumenAssistant } from '@/components/AI/LumenAssistant'
 import { OnboardingProvider } from '@/components/Onboarding/OnboardingProvider'
 import { OnboardingRedirect } from '@/components/Dashboard/OnboardingRedirect'
 
 export function MainLayout() {
-  const { notification, isPopupOpen, closePopup, onNotificationHandled } = useNoteNotifications()
-
   return (
     <OnboardingProvider>
       <OnboardingRedirect>
@@ -26,13 +22,6 @@ export function MainLayout() {
               </main>
             </div>
             <LumenAssistant />
-        
-          <NoteNotificationPopup
-            notification={notification}
-            open={isPopupOpen}
-            onClose={closePopup}
-            onHandled={onNotificationHandled}
-          />
         </div>
       </SidebarProvider>
       </OnboardingRedirect>
