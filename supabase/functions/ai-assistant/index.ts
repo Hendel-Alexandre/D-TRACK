@@ -8,8 +8,8 @@ const corsHeaders = {
 };
 
 const googleApiKey = Deno.env.get('GOOGLE_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const supabaseUrl = Deno.env.get('EXTERNAL_SUPABASE_URL');
+const supabaseServiceKey = Deno.env.get('EXTERNAL_SUPABASE_SERVICE_ROLE_KEY');
 
 serve(async (req) => {
   console.log('AI Assistant function called:', req.method);
@@ -37,7 +37,7 @@ serve(async (req) => {
     // Create Supabase client with user's auth context
     const supabase = createClient(
       supabaseUrl!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
+      Deno.env.get('EXTERNAL_SUPABASE_ANON_KEY')!,
       { global: { headers: { Authorization: authHeader } } }
     );
 

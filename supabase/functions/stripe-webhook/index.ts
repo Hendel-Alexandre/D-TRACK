@@ -31,8 +31,8 @@ serve(async (req) => {
     console.log('Webhook event received:', event.type);
 
     const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('EXTERNAL_SUPABASE_URL') ?? '',
+      Deno.env.get('EXTERNAL_SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     switch (event.type) {
