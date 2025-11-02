@@ -4,16 +4,8 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// TODO: Replace with your actual Supabase project URL
-const EXTERNAL_SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
-
-// TODO: Replace with your actual Supabase anon/publishable key
-const EXTERNAL_SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
-
-if (!EXTERNAL_SUPABASE_URL || !EXTERNAL_SUPABASE_ANON_KEY || 
-    EXTERNAL_SUPABASE_URL === 'YOUR_SUPABASE_PROJECT_URL') {
-  throw new Error('Please configure your external Supabase credentials in src/integrations/supabase/external-client.ts');
-}
+const EXTERNAL_SUPABASE_URL = 'https://aoijgywewdgubcbvfnor.supabase.co';
+const EXTERNAL_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvaWpneXdld2RndWJjYnZmbm9yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MTMwNTIsImV4cCI6MjA3Njk4OTA1Mn0.1vFrtdby9WT_Fyo4jRZfJ1abWTiFR0ermdwlMUBDHvQ';
 
 export const supabase = createClient<Database>(
   EXTERNAL_SUPABASE_URL,

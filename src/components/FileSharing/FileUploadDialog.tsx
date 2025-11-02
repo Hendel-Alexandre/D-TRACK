@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
 import { toast } from '@/hooks/use-toast'
-import { supabase } from '@/integrations/supabase/client'
+import { supabase } from '@/integrations/supabase/external-client'
 import { useAuth } from '@/contexts/AuthContext'
 
 interface FileUploadDialogProps {

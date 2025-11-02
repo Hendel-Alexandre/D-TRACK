@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useModeSettings } from '@/hooks/useModeSettings';
 import { ProfileSetupDialog } from '@/components/Mode/ProfileSetupDialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/external-client';
 
 type AppMode = 'student' | 'work';
 

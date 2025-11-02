@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTrialStatus } from '@/hooks/useOnboarding';
 import { useMode } from '@/contexts/ModeContext';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/external-client';
 
 export default function PlanManagement() {
   const { user } = useAuth();

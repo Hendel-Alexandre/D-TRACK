@@ -4,7 +4,7 @@ import { Brain, TrendingUp, X, Lightbulb, Target } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { supabase } from '@/integrations/supabase/client'
+import { supabase } from '@/integrations/supabase/external-client'
 import { useAuth } from '@/contexts/AuthContext'
 
 interface AIProgressNudgeProps {
