@@ -55,7 +55,7 @@ export function LumenAssistant() {
     if (isOpen && messages.length === 0) {
       setMessages([{
         id: '1',
-        text: "Hi! I'm Lumen, your AI business assistant for LumenR. I can help you manage every aspect of your service business:\n\n🏢 Business Management:\n• Create and track projects\n• Manage team members and tasks\n• Monitor client relationships\n• Track inventory and materials\n\n📊 Financial Operations:\n• Generate quotes and invoices\n• Track payments and expenses\n• View financial analytics\n• Budget forecasting\n\n🎨 Smart Features:\n• Generate documents and reports\n• Analyze business data\n• AI-powered insights\n• Natural language commands\n\n💡 Productivity:\n• Smart scheduling\n• Task automation\n• Real-time updates\n• Team collaboration\n\nJust tell me what you need in plain language!",
+        text: "Hi! I'm Lumen, your AI business assistant for LumenR. I can help you manage your service business operations:\n\n🏢 Client Management:\n• Track client information\n• Monitor client relationships\n• Manage client communications\n\n📊 Financial Operations:\n• Generate quotes and invoices\n• Track receipts and expenses\n• View financial analytics\n• Tax reporting and tracking\n\n📦 Business Resources:\n• Manage services catalog\n• Track product inventory\n• Organize business documents\n\n🎨 Smart Features:\n• Generate documents and reports\n• Analyze business data\n• AI-powered insights\n• Natural language commands\n\nJust tell me what you need in plain language!",
         sender: 'lumen',
         timestamp: new Date()
       }])

@@ -5,10 +5,7 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { LumenAssistant } from '@/components/AI/LumenAssistant'
-import { useMode } from '@/contexts/ModeContext'
-import { StudentDashboard } from '@/components/Dashboard/StudentDashboard'
-import { WorkDashboard } from '@/components/Dashboard/WorkDashboard'
-import { MobileDashboardWrapper } from '@/components/Dashboard/MobileDashboardWrapper'
+import { ProfessionalDashboard } from '@/components/Dashboard/ProfessionalDashboard'
 import { TrialBanner } from '@/components/Dashboard/TrialBanner'
 import { useEffect, useState } from 'react'
 
@@ -32,7 +29,6 @@ const itemVariants = {
 export default function Dashboard() {
   const { t } = useTranslation()
   const { userProfile } = useAuth()
-  const { mode } = useMode()
   const navigate = useNavigate()
   const [isMobile, setIsMobile] = useState(false)
 
@@ -48,16 +44,6 @@ export default function Dashboard() {
   }, [])
 
   const displayName = userProfile?.first_name || ''
-
-  // Show mobile dashboard on mobile devices
-  if (isMobile) {
-    return (
-      <>
-        <MobileDashboardWrapper />
-        <LumenAssistant />
-      </>
-    )
-  }
 
   return (
     <div className="min-h-screen">
@@ -86,12 +72,12 @@ export default function Dashboard() {
 
             <div className="flex items-center gap-3">
               <Button 
-                onClick={() => navigate('/timesheets')} 
+                onClick={() => navigate('/clients')} 
                 className="button-premium gap-2 h-10"
                 size="sm"
               >
                 <Plus className="h-4 w-4" />
-                {t('startTracking')}
+                {t('newClient')}
               </Button>
             </div>
           </div>
@@ -102,9 +88,9 @@ export default function Dashboard() {
           <TrialBanner />
         </motion.div>
 
-        {/* Mode-Specific Dashboard */}
+        {/* Professional Dashboard */}
         <motion.div variants={itemVariants}>
-          {mode === 'student' ? <StudentDashboard /> : <WorkDashboard />}
+          <ProfessionalDashboard />
         </motion.div>
       </motion.div>
       

@@ -1,11 +1,9 @@
-import { Moon, Sun, Globe, ChevronDown, LogOut, Circle, Clock, Play, Pause, Settings, GraduationCap, Briefcase } from 'lucide-react'
+import { Moon, Sun, Globe, ChevronDown, LogOut, Circle, Settings } from 'lucide-react'
 import datatrackLogo from '@/assets/datatrack-logo.png'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
-import { useTimeTracking } from '@/contexts/TimeTrackingContext'
 import { useTheme } from '@/contexts/ThemeContext'
-import { useMode } from '@/contexts/ModeContext'
 import { useUserRole } from '@/hooks/useUserRole'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,8 +23,6 @@ export function TopBar() {
   const { t, i18n } = useTranslation()
   const { theme, toggleTheme } = useTheme()
   const { user, userProfile, signOut, updateUserStatus } = useAuth()
-  const { isTracking, isPaused, elapsedTime, toggleTracking, formatTime } = useTimeTracking()
-  const { mode, toggleMode } = useMode()
   const { roles } = useUserRole()
   
   const changeLanguage = (lng: string) => {
@@ -87,62 +83,6 @@ export function TopBar() {
                 <RoleBadge key={role} role={role} />
               ))}
             </div>
-          )}
-
-          {/* Mode Switcher */}
-          {user && (
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleMode}
-                className="gap-2 px-3 sm:px-4 py-2 h-8 sm:h-9 rounded-lg font-medium transition-all"
-              >
-                {mode === 'student' ? (
-                  <>
-                    <GraduationCap className="h-4 w-4" />
-                    <span className="hidden sm:inline">Student</span>
-                  </>
-                ) : (
-                  <>
-                    <Briefcase className="h-4 w-4" />
-                    <span className="hidden sm:inline">Work</span>
-                  </>
-                )}
-              </Button>
-            </motion.div>
-          )}
-
-          {/* Time Tracking Timer */}
-          {user && (
-            <motion.div 
-              className="flex items-center"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleTracking}
-                className={`gap-1 sm:gap-2 px-2 sm:px-4 py-2 h-8 sm:h-9 rounded-lg font-mono transition-all text-xs sm:text-sm ${
-                  isTracking 
-                    ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100 dark:bg-green-950 dark:border-green-800 dark:text-green-300' 
-                    : isPaused 
-                    ? 'bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-950 dark:border-yellow-800 dark:text-yellow-300'
-                    : 'hover:bg-accent/50'
-                }`}
-              >
-                {isTracking ? (
-                  <Pause className="h-3 w-3 sm:h-4 sm:w-4" />
-                ) : (
-                  <Play className="h-3 w-3 sm:h-4 sm:w-4" />
-                )}
-                <Clock className="h-3 w-3 sm:h-4 sm:w-4 hidden xs:block" />
-                <span className="text-xs sm:text-sm min-w-[45px] sm:min-w-[60px]">
-                  {formatTime(elapsedTime)}
-                </span>
-              </Button>
-            </motion.div>
           )}
 
           {/* Language Toggle - Hidden on very small screens */}

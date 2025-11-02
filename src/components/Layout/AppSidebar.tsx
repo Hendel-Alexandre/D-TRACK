@@ -26,7 +26,6 @@ import {
 import datatrackLogo from '@/assets/datatrack-logo.png'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useMode } from '@/contexts/ModeContext'
 import { useUserRole } from '@/hooks/useUserRole'
 import {
   Sidebar,
@@ -40,46 +39,8 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 
-// Student Mode Navigation
-const studentNavigation = [
-  {
-    label: 'overview',
-    items: [
-      { title: 'dashboard', url: '/dashboard', icon: Home },
-    ]
-  },
-  {
-    label: 'AI Assistant',
-    items: [
-      { title: 'Lumen AI', url: '/lumen', icon: Sparkles },
-    ]
-  },
-  {
-    label: 'study',
-    items: [
-      { title: 'Class Schedule', url: '/student-classes', icon: BookOpen },
-      { title: 'Assignments & Exams', url: '/student-assignments', icon: CheckSquare },
-      { title: 'calendar', url: '/calendar', icon: Calendar },
-      { title: 'Files', url: '/student-files', icon: Upload },
-      { title: 'notes', url: '/notes', icon: FileText },
-    ]
-  },
-  {
-    label: 'collaboration',
-    items: [
-      { title: 'messages', url: '/messages', icon: MessageCircle },
-    ]
-  },
-  {
-    label: 'system',
-    items: [
-      { title: 'settings', url: '/settings', icon: Settings },
-    ]
-  }
-];
-
 // Professional Mode Navigation - Financial Management
-const workNavigation = [
+const navigation = [
   {
     label: 'Overview',
     items: [
@@ -125,10 +86,8 @@ const workNavigation = [
     ]
   },
   {
-    label: 'Team',
+    label: 'Administration',
     items: [
-      { title: 'Team Members', url: '/team', icon: Users },
-      { title: 'Messages', url: '/messages', icon: MessageCircle },
       { title: 'Role Management', url: '/role-management', icon: Shield, adminOnly: true },
     ]
   },
@@ -144,10 +103,7 @@ export function AppSidebar() {
   const { state } = useSidebar()
   const location = useLocation()
   const { t } = useTranslation()
-  const { mode } = useMode()
   const { isAdmin } = useUserRole()
-  
-  const navigationGroups = mode === 'student' ? studentNavigation : workNavigation;
   
   const currentPath = location.pathname
   const isActive = (path: string) => currentPath === path
@@ -177,7 +133,7 @@ export function AppSidebar() {
         
         {/* Navigation Groups */}
         <div className="flex-1 py-4">
-          {navigationGroups.map((group) => (
+          {navigation.map((group) => (
             <SidebarGroup key={group.label} className="mb-4">
               {!isCollapsed && (
                 <SidebarGroupLabel className="px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">

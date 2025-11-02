@@ -25,9 +25,9 @@ export function ProfessionalDashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState({
     revenue: 0,
-    projects: 0,
-    team: 0,
-    tasks: 0,
+    clients: 0,
+    quotes: 0,
+    invoices: 0,
   });
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [activityData, setActivityData] = useState<any[]>([]);
@@ -62,9 +62,9 @@ export function ProfessionalDashboard() {
 
       setStats({
         revenue: totalRevenue,
-        projects: clients?.length || 0,
-        team: quotes?.length || 0,
-        tasks: completedInvoices,
+        clients: clients?.length || 0,
+        quotes: quotes?.length || 0,
+        invoices: completedInvoices,
       });
 
       setRevenueData([
@@ -77,13 +77,13 @@ export function ProfessionalDashboard() {
       ]);
       
       setActivityData([
-        { name: 'Mon', tasks: 12, projects: 4 },
-        { name: 'Tue', tasks: 19, projects: 3 },
-        { name: 'Wed', tasks: 15, projects: 5 },
-        { name: 'Thu', tasks: 22, projects: 4 },
-        { name: 'Fri', tasks: 18, projects: 6 },
-        { name: 'Sat', tasks: 8, projects: 2 },
-        { name: 'Sun', tasks: 5, projects: 1 },
+        { name: 'Mon', invoices: 12, quotes: 4 },
+        { name: 'Tue', invoices: 19, quotes: 3 },
+        { name: 'Wed', invoices: 15, quotes: 5 },
+        { name: 'Thu', invoices: 22, quotes: 4 },
+        { name: 'Fri', invoices: 18, quotes: 6 },
+        { name: 'Sat', invoices: 8, quotes: 2 },
+        { name: 'Sun', invoices: 5, quotes: 1 },
       ]);
       
       setRecentActivity([
@@ -107,20 +107,20 @@ export function ProfessionalDashboard() {
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
-          title="Active Projects"
-          value={stats.projects}
-          icon={BarChart3}
+          title="Total Clients"
+          value={stats.clients}
+          icon={Users}
           iconColor="text-blue-500"
         />
         <StatCard
-          title="Team Members"
-          value={stats.team}
-          icon={Users}
+          title="Pending Quotes"
+          value={stats.quotes}
+          icon={BarChart3}
           iconColor="text-purple-500"
         />
         <StatCard
-          title="Tasks Completed"
-          value={stats.tasks}
+          title="Paid Invoices"
+          value={stats.invoices}
           icon={Activity}
           iconColor="text-orange-500"
         />
@@ -193,7 +193,7 @@ export function ProfessionalDashboard() {
           {activityData.length > 0 && (
             <ChartCard
               title="Weekly Activity"
-              subtitle="Tasks and projects"
+              subtitle="Invoices and quotes"
               headerAction={
                 <Tabs defaultValue="week" className="w-fit">
                   <TabsList>
@@ -226,8 +226,8 @@ export function ProfessionalDashboard() {
                       borderRadius: "8px",
                     }}
                   />
-                  <Bar dataKey="tasks" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="projects" fill="hsl(var(--chart-3))" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="invoices" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="quotes" fill="hsl(var(--chart-3))" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
@@ -239,7 +239,7 @@ export function ProfessionalDashboard() {
       {recentActivity.length > 0 && (
         <ChartCard
           title="Recent Activity"
-          subtitle="Your team's latest updates"
+          subtitle="Your latest business updates"
           headerAction={
             <Button variant="ghost" size="sm">
               View All
@@ -272,9 +272,9 @@ export function ProfessionalDashboard() {
       {/* Empty State */}
       {revenueData.length === 0 && activityData.length === 0 && recentActivity.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">No data yet. Start tracking your time and creating projects!</p>
-          <Button onClick={() => window.location.href = '/timesheets'}>
-            Start Tracking
+          <p className="text-muted-foreground mb-4">No data yet. Start creating invoices and quotes!</p>
+          <Button onClick={() => window.location.href = '/invoices'}>
+            Create Invoice
           </Button>
         </div>
       )}

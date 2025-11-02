@@ -14,7 +14,7 @@ import { toast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/external-client'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { useTrialStatus } from '@/hooks/useOnboarding'
+import { useSubscription } from '@/hooks/useSubscription'
 import { useProfilePicture } from '@/hooks/useProfilePicture'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useRef } from 'react'
@@ -25,7 +25,7 @@ export default function Settings() {
   const { theme, setTheme } = useTheme()
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { trialDaysRemaining, isTrialActive, planType } = useTrialStatus()
+  const { daysRemaining, isTrialing, planType } = useSubscription()
   const { uploadProfilePicture, deleteProfilePicture, uploading } = useProfilePicture()
   const fileInputRef = useRef<HTMLInputElement>(null)
   

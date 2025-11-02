@@ -3,58 +3,43 @@ import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Crown, GraduationCap, Briefcase, Zap } from 'lucide-react';
+import { Check, Crown, Briefcase, Zap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTrialStatus } from '@/hooks/useOnboarding';
-import { useMode } from '@/contexts/ModeContext';
+import { useSubscription } from '@/hooks/useSubscription';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/external-client';
 
 export default function PlanManagement() {
   const { user } = useAuth();
-  const { trialDaysRemaining, isTrialActive, planType } = useTrialStatus();
-  const { mode } = useMode();
+  const { daysRemaining, isTrialing, planType } = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
   const plans = [
-    {
-      id: 'student',
-      name: 'Student Plan',
-      price: '$9.99',
-      icon: <GraduationCap className="h-6 w-6" />,
-      features: [
-        'Class scheduling & calendar',
-        'Assignment tracking',
-        'File storage & organization',
-        'Study analytics',
-        'Priority support',
-      ],
-    },
     {
       id: 'professional',
       name: 'Professional Plan',
       price: '$14.99',
       icon: <Briefcase className="h-6 w-6" />,
       features: [
-        'Project management',
-        'Task tracking & analytics',
-        'Time tracking',
-        'Team collaboration',
-        'Advanced reporting',
+        'Client & invoice management',
+        'Quote generation',
+        'Receipt tracking',
+        'Tax reporting',
+        'Product & service catalog',
       ],
     },
     {
-      id: 'combined',
-      name: 'Combined Plan',
-      price: '$19.99',
+      id: 'premium',
+      name: 'Premium Plan',
+      price: '$24.99',
       icon: <Zap className="h-6 w-6" />,
       badge: 'Best Value',
       features: [
-        'All Student features',
         'All Professional features',
-        'Seamless mode switching',
+        'Advanced analytics',
         'Priority support',
         'Early access to new features',
+        'Custom integrations',
       ],
       highlighted: true,
     },
@@ -96,7 +81,7 @@ export default function PlanManagement() {
       </div>
 
       {/* Current Plan Status */}
-      {isTrialActive && (
+      {isTrialing && (
         <Card className="p-6 border-primary">
           <div className="flex items-start gap-4">
             <div className="p-3 rounded-full bg-primary/10">
@@ -105,8 +90,8 @@ export default function PlanManagement() {
             <div className="flex-1">
               <h3 className="text-lg font-semibold mb-1">Active Trial</h3>
               <p className="text-muted-foreground">
-                {trialDaysRemaining !== null
-                  ? `${trialDaysRemaining} days remaining in your free trial`
+                {daysRemaining > 0
+                  ? `${daysRemaining} days remaining in your free trial`
                   : 'Trial active'}
               </p>
               <p className="text-sm text-muted-foreground mt-2">
@@ -118,7 +103,7 @@ export default function PlanManagement() {
       )}
 
       {/* Plan Cards */}
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-2 gap-6">
         {plans.map((plan) => (
           <motion.div
             key={plan.id}
@@ -155,7 +140,7 @@ export default function PlanManagement() {
                         /month
                       </span>
                     </div>
-                    {isTrialActive && (
+                    {isTrialing && (
                       <p className="text-sm text-muted-foreground mt-1">
                         After trial ends
                       </p>
@@ -201,10 +186,10 @@ export default function PlanManagement() {
             </p>
           </div>
           <div>
-            <h4 className="font-medium mb-1">What happens to my data if I switch modes?</h4>
+            <h4 className="font-medium mb-1">Is my data safe?</h4>
             <p className="text-sm text-muted-foreground">
-              All your data remains safe and accessible. Switching between Student
-              and Professional modes doesn't affect your stored information.
+              Yes! All your data is securely stored and regularly backed up. Your information
+              is encrypted and protected at all times.
             </p>
           </div>
           <div>

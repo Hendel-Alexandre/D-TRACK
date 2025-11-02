@@ -3,18 +3,17 @@ import { Clock, Crown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { useTrialStatus } from '@/hooks/useOnboarding';
+import { useSubscription } from '@/hooks/useSubscription';
 
 export function TrialBanner() {
   const navigate = useNavigate();
-  const { trialDaysRemaining, isTrialActive, planType } = useTrialStatus();
+  const { daysRemaining, isTrialing, planType } = useSubscription();
 
-  if (!isTrialActive || planType !== 'trial') return null;
+  if (!isTrialing || planType !== 'trial') return null;
 
   const getColorClass = () => {
-    if (trialDaysRemaining === null) return 'border-primary';
-    if (trialDaysRemaining <= 3) return 'border-red-500';
-    if (trialDaysRemaining <= 7) return 'border-yellow-500';
+    if (daysRemaining <= 3) return 'border-red-500';
+    if (daysRemaining <= 7) return 'border-yellow-500';
     return 'border-primary';
   };
 
@@ -32,9 +31,9 @@ export function TrialBanner() {
             </div>
             <div>
               <p className="font-semibold">
-                {trialDaysRemaining !== null ? (
+                {daysRemaining > 0 ? (
                   <>
-                    {trialDaysRemaining} day{trialDaysRemaining !== 1 ? 's' : ''} remaining in your free trial
+                    {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining in your free trial
                   </>
                 ) : (
                   'Trial Active'

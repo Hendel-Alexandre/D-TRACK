@@ -108,20 +108,12 @@ const resources = {
       lastName_placeholder: "Last name",
       noteTitle: "Note title...",
       noteContent: "Write your note content here...",
-      searchTasks: "Search tasks...",
-      searchProjects: "Search projects...",
       searchNotes: "Search notes...",
-      searchTeam: "Search team members...",
       searchTimeEntries: "Search time entries...",
-      searchConversations: "Search conversations...",
-      typeMessage: "Type your message...",
       workDescription: "What did you work on?",
-      selectProject: "Select project",
-      selectTask: "Select task",
       selectDepartment: "Select your department",
       selectTime: "Select time",
       pickDate: "Pick a date",
-      groupName: "Group name",
       
       // Departments
       marketing: "Marketing",
@@ -135,21 +127,6 @@ const resources = {
       away: "Away", 
       busy: "Busy",
       
-      // Task Status
-      todo: "Todo",
-      inProgress: "In Progress",
-      done: "Done",
-      
-      // Priority
-      high: "High",
-      medium: "Medium", 
-      low: "Low",
-      
-      // Project Status
-      active: "Active",
-      completed: "Completed",
-      onHold: "On Hold",
-      
       // Time periods
       daily: "Daily",
       weekly: "Weekly", 
@@ -159,7 +136,6 @@ const resources = {
       // Statistics
       totalHours: "Total Hours",
       dailyAverage: "Daily Average", 
-      topProject: "Top Project",
       mostProductive: "Most Productive",
       hourBankBalance: "Hour Bank Balance",
       thisWeek: "This Week",
@@ -168,29 +144,17 @@ const resources = {
       // Messages and Notifications
       success: "Success",
       error: "Error",
-      taskCreated: "Task created successfully",
-      taskUpdated: "Task updated successfully", 
-      taskDeleted: "Task deleted successfully",
       noteCreated: "Note created successfully",
       noteUpdated: "Note updated successfully",
       noteDeleted: "Note deleted successfully",
       noteSentCalendar: "Note created and added to calendar",
-      noteSentColleague: "Note created and sent to colleague",
-      projectCreated: "Project created successfully",
-      projectUpdated: "Project updated successfully", 
-      projectDeleted: "Project deleted successfully",
       entryCreated: "Time entry created successfully",
       adjustmentCreated: "Hour adjustment created successfully",
       profileUpdated: "Profile updated successfully",
       settingsUpdated: "Settings updated successfully",
       
       // Empty States
-      noTasksFound: "No tasks found",
-      noProjectsFound: "No projects found",
       noNotesFound: "No notes found", 
-      noTasksMatch: "No tasks match your filters.",
-      createFirstTask: "Create your first task to get started.",
-      createFirstProject: "Create your first project to get started.",
       createFirstNote: "Create your first note to get started.",
       
       // Validation and Errors
@@ -213,7 +177,6 @@ const resources = {
       help: "Help",
       faq: "Frequently Asked Questions",
       howToLogTime: "How do I log my time?",
-      howToCreateTask: "How do I create a task?",
       howToViewReports: "How do I view reports?",
       
       // Profile and Account
@@ -222,12 +185,6 @@ const resources = {
       preferences: "Preferences",
       language: "Language",
       theme: "Theme",
-      
-      // Teams and Collaboration
-      teamMembers: "Team Members",
-      addMember: "Add Member",
-      sendMessage: "Send Message",
-      startConversation: "Start Conversation",
       
       // Game-related (if needed)
       score: "Score",
