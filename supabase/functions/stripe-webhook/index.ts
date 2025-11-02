@@ -152,7 +152,8 @@ serve(async (req) => {
     });
   } catch (error) {
     const errorId = crypto.randomUUID();
-    console.error(`[${errorId}] Webhook error:`, error.message);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`[${errorId}] Webhook error:`, errorMessage);
     return new Response(
       JSON.stringify({ error: 'Webhook processing failed' }),
       {

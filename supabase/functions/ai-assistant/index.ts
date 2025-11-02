@@ -169,7 +169,7 @@ serve(async (req) => {
         await logUsage(action);
         return result;
       case 'lumen_chat':
-        result = await handleLumenChat(secureData, supabase);
+        result = await handleDarvisChat(secureData, supabase);
         await logUsage(action);
         return result;
       case 'generate_image':
@@ -1021,7 +1021,7 @@ User message: ${JSON.stringify(message)}`;
             if (args.count_only) {
               aiResponse = `You have ${tasks?.length || 0} task${tasks?.length === 1 ? '' : 's'}${args.status && args.status !== 'All' ? ` with status "${args.status}"` : ''}${args.priority && args.priority !== 'All' ? ` with priority "${args.priority}"` : ''}.`;
             } else {
-              const taskSummary = tasks?.slice(0, 10).map(t => `- ${t.title} (${t.status}, ${t.priority}${t.due_date ? ', due: ' + t.due_date : ''})`).join('\n') || 'No tasks found.';
+              const taskSummary = tasks?.slice(0, 10).map((t: any) => `- ${t.title} (${t.status}, ${t.priority}${t.due_date ? ', due: ' + t.due_date : ''})`).join('\n') || 'No tasks found.';
               aiResponse = `You have ${tasks?.length || 0} task${tasks?.length === 1 ? '' : 's'}:\n\n${taskSummary}${tasks && tasks.length > 10 ? '\n\n...and ' + (tasks.length - 10) + ' more' : ''}`;
             }
             break;
@@ -1041,7 +1041,7 @@ User message: ${JSON.stringify(message)}`;
             
             if (error) throw error;
             
-            const projectSummary = projects?.map(p => `- ${p.name} (${p.status}${p.start_date ? ', started: ' + p.start_date : ''})`).join('\n') || 'No projects found.';
+            const projectSummary = projects?.map((p: any) => `- ${p.name} (${p.status}${p.start_date ? ', started: ' + p.start_date : ''})`).join('\n') || 'No projects found.';
             aiResponse = `You have ${projects?.length || 0} project${projects?.length === 1 ? '' : 's'}:\n\n${projectSummary}`;
             break;
           }
@@ -1060,7 +1060,7 @@ User message: ${JSON.stringify(message)}`;
             
             if (error) throw error;
             
-            const noteSummary = notes?.map(n => `- ${n.title}${n.content ? ' - ' + n.content.substring(0, 50) + (n.content.length > 50 ? '...' : '') : ''}`).join('\n') || 'No notes found.';
+            const noteSummary = notes?.map((n: any) => `- ${n.title}${n.content ? ' - ' + n.content.substring(0, 50) + (n.content.length > 50 ? '...' : '') : ''}`).join('\n') || 'No notes found.';
             aiResponse = `Found ${notes?.length || 0} note${notes?.length === 1 ? '' : 's'}:\n\n${noteSummary}`;
             break;
           }
@@ -1096,9 +1096,8 @@ User message: ${JSON.stringify(message)}`;
               .single();
             
             if (error) throw error;
-            createdItems.push({ type: 'task', item: task });
+            createdItems.push({ type: 'task', item: task, itemType: 'task' });
             aiResponse = `✅ Task created: "${args.title}"${args.due_date ? ` (Due: ${args.due_date})` : ''}. What else can I help you with?`;
-            createdItems[createdItems.length - 1].itemType = 'task';
             break;
           }
           
@@ -1115,9 +1114,8 @@ User message: ${JSON.stringify(message)}`;
               .single();
             
             if (error) throw error;
-            createdItems.push({ type: 'note', item: note });
+            createdItems.push({ type: 'note', item: note, itemType: 'note' });
             aiResponse = `✅ Note created: "${args.title}". Anything else?`;
-            createdItems[createdItems.length - 1].itemType = 'note';
             break;
           }
           
@@ -1136,9 +1134,8 @@ User message: ${JSON.stringify(message)}`;
               .single();
             
             if (error) throw error;
-            createdItems.push({ type: 'project', item: project });
+            createdItems.push({ type: 'project', item: project, itemType: 'project' });
             aiResponse = `✅ Project created: "${args.name}". Ready to add tasks to it?`;
-            createdItems[createdItems.length - 1].itemType = 'project';
             break;
           }
           
@@ -1161,9 +1158,8 @@ User message: ${JSON.stringify(message)}`;
               .single();
             
             if (error) throw error;
-            createdItems.push({ type: 'calendar_event', item: event });
+            createdItems.push({ type: 'calendar_event', item: event, itemType: 'calendar' });
             aiResponse = `✅ Calendar event created: "${args.title}" on ${args.event_date}${args.description ? ` - ${args.description}` : ''}. What's next?`;
-            createdItems[createdItems.length - 1].itemType = 'calendar';
             break;
           }
           
@@ -1178,7 +1174,7 @@ User message: ${JSON.stringify(message)}`;
             
             if (error) throw error;
             
-            const totalHours = timesheets?.reduce((sum, t) => sum + parseFloat(t.hours || 0), 0) || 0;
+            const totalHours = timesheets?.reduce((sum: number, t: any) => sum + parseFloat(t.hours || 0), 0) || 0;
             aiResponse = `Found ${timesheets?.length || 0} timesheet entries with ${totalHours.toFixed(2)} total hours.`;
             break;
           }
@@ -1228,7 +1224,7 @@ User message: ${JSON.stringify(message)}`;
             if (!events || events.length === 0) {
               aiResponse = `You have no events scheduled between ${startDate} and ${endDate}.`;
             } else {
-              const eventSummary = events.map(e => `- ${e.title} on ${e.due_date} (${e.status})`).join('\n');
+              const eventSummary = events.map((e: any) => `- ${e.title} on ${e.due_date} (${e.status})`).join('\n');
               aiResponse = `You have ${events.length} event${events.length === 1 ? '' : 's'} scheduled:\n\n${eventSummary}`;
             }
             break;
@@ -1252,9 +1248,8 @@ User message: ${JSON.stringify(message)}`;
             
             if (error) throw error;
             
-            createdItems.push({ type: 'student_class', item: studentClass });
+            createdItems.push({ type: 'student_class', item: studentClass, itemType: 'class' });
             aiResponse = `✅ Class "${args.name}" added to your schedule!`;
-            createdItems[createdItems.length - 1].itemType = 'class';
             break;
           }
           
@@ -1329,9 +1324,8 @@ User message: ${JSON.stringify(message)}`;
             
             if (!imageUrl) throw new Error('No image data returned');
             
-            createdItems.push({ type: 'image', item: { url: imageUrl } });
+            createdItems.push({ type: 'image', item: { url: imageUrl }, itemType: 'image' });
             aiResponse = `✅ Image generated successfully!`;
-            createdItems[createdItems.length - 1].itemType = 'image';
             break;
           }
           
@@ -1362,10 +1356,10 @@ User message: ${JSON.stringify(message)}`;
                 content: docContent,
                 download: `data:text/plain;base64,${base64}`,
                 filename: `document_${Date.now()}.${extension}`
-              } 
+              },
+              itemType: 'document'
             });
             aiResponse = `✅ ${args.type} generated! You can download it.`;
-            createdItems[createdItems.length - 1].itemType = 'document';
             break;
           }
           
@@ -1396,10 +1390,10 @@ User message: ${JSON.stringify(message)}`;
                 content: convertedContent,
                 download: `data:text/plain;base64,${base64}`,
                 filename: `converted_${Date.now()}.${extension}`
-              } 
+              },
+              itemType: 'document'
             });
             aiResponse = `✅ Document converted from ${args.source_format} to ${args.target_format}!`;
-            createdItems[createdItems.length - 1].itemType = 'document';
             break;
           }
           
@@ -1436,7 +1430,7 @@ User message: ${JSON.stringify(message)}`;
             if (args.count_only) {
               aiResponse = `You have ${tasks?.length || 0} student task${tasks?.length === 1 ? '' : 's'}.`;
             } else {
-              const taskSummary = tasks?.slice(0, 10).map(t => `- ${t.title} (${t.status}, ${t.priority}${t.due_date ? ', due: ' + t.due_date : ''})`).join('\n') || 'No student tasks found.';
+              const taskSummary = tasks?.slice(0, 10).map((t: any) => `- ${t.title} (${t.status}, ${t.priority}${t.due_date ? ', due: ' + t.due_date : ''})`).join('\n') || 'No student tasks found.';
               aiResponse = `You have ${tasks?.length || 0} student task${tasks?.length === 1 ? '' : 's'}:\n\n${taskSummary}${tasks && tasks.length > 10 ? '\n\n...and ' + (tasks.length - 10) + ' more' : ''}`;
             }
             break;
@@ -1452,7 +1446,7 @@ User message: ${JSON.stringify(message)}`;
             if (error) throw error;
             
             const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            const classSummary = classes?.map(c => 
+            const classSummary = classes?.map((c: any) => 
               `- ${c.name} (${days[c.day_of_week]}, ${c.start_time}-${c.end_time})${c.instructor ? ' with ' + c.instructor : ''}${c.location ? ' at ' + c.location : ''}`
             ).join('\n') || 'No classes found.';
             aiResponse = `You have ${classes?.length || 0} class${classes?.length === 1 ? '' : 'es'}:\n\n${classSummary}`;
@@ -1468,7 +1462,7 @@ User message: ${JSON.stringify(message)}`;
             const { data: assignments, error } = await query.order('due_date');
             if (error) throw error;
             
-            const assignmentSummary = assignments?.map(a => 
+            const assignmentSummary = assignments?.map((a: any) => 
               `- ${a.title} (${a.type}, ${a.status}) - Due: ${new Date(a.due_date).toLocaleDateString()}`
             ).join('\n') || 'No assignments found.';
             aiResponse = `You have ${assignments?.length || 0} assignment${assignments?.length === 1 ? '' : 's'}:\n\n${assignmentSummary}`;
@@ -1518,7 +1512,7 @@ User message: ${JSON.stringify(message)}`;
             const { data: files, error } = await query.order('created_at', { ascending: false });
             if (error) throw error;
             
-            const fileSummary = files?.slice(0, 10).map(f => 
+            const fileSummary = files?.slice(0, 10).map((f: any) => 
               `- ${f.file_name} (${f.file_type || 'unknown'})${f.tags ? ' - Tags: ' + f.tags.join(', ') : ''}`
             ).join('\n') || 'No student files found.';
             aiResponse = `You have ${files?.length || 0} student file${files?.length === 1 ? '' : 's'}:\n\n${fileSummary}${files && files.length > 10 ? '\n\n...and ' + (files.length - 10) + ' more' : ''}`;
@@ -1533,7 +1527,7 @@ User message: ${JSON.stringify(message)}`;
             const { data: files, error } = await query.order('created_at', { ascending: false });
             if (error) throw error;
             
-            const fileSummary = files?.slice(0, 10).map(f => 
+            const fileSummary = files?.slice(0, 10).map((f: any) => 
               `- ${f.file_name} (${f.file_type || 'unknown'})${f.tags ? ' - Tags: ' + f.tags.join(', ') : ''}`
             ).join('\n') || 'No work files found.';
             aiResponse = `You have ${files?.length || 0} work file${files?.length === 1 ? '' : 's'}:\n\n${fileSummary}${files && files.length > 10 ? '\n\n...and ' + (files.length - 10) + ' more' : ''}`;
